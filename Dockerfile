@@ -2,6 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Force rebuild: $(date)
+
 # Install server dependencies
 COPY server/package*.json ./server/
 RUN cd server && npm install --production
