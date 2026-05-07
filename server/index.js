@@ -1,12 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const pool = require('./db');
+const initDB = require('./initdb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Initialize database tables
+initDB(pool);
 
 // API routes
 app.use('/api/services', require('./routes/services'));
