@@ -11,7 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize database tables
-initDB(pool);
+initDB(pool).then(() => {
+  console.log('Database initialized');
+}).catch(err => {
+  console.error('Database init failed:', err);
+});
 
 // API routes
 app.use('/api/services', require('./routes/services'));
