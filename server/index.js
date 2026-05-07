@@ -60,7 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_appointments_staff ON appointments(staff_id);
 `;
 
 const seed = `
-INSERT INTO services (name, description, duration_min, price, category) VALUES
+INSERT INTO services (name, description, duration_min, price, category)
+SELECT * FROM (VALUES
   ('Haircut', 'Classic haircut with styling', 30, 35.00, 'Hair'),
   ('Hair Coloring', 'Full color treatment', 90, 85.00, 'Hair'),
   ('Blow Dry', 'Wash and blow dry styling', 45, 40.00, 'Hair'),
@@ -69,16 +70,23 @@ INSERT INTO services (name, description, duration_min, price, category) VALUES
   ('Facial', 'Deep cleansing facial treatment', 60, 60.00, 'Skin'),
   ('Eyebrow Shaping', 'Eyebrow threading or waxing', 15, 15.00, 'Beauty'),
   ('Full Body Massage', 'Relaxation massage', 60, 70.00, 'Spa')
-ON CONFLICT DO NOTHING;
-INSERT INTO staff (name, role, phone, email) VALUES
+) AS t(name, description, duration_min, price, category)
+WHERE NOT EXISTS (SELECT 1 FROM services LIMIT 1);
+
+INSERT INTO staff (name, role, phone, email)
+SELECT * FROM (VALUES
   ('Mai Nguyen', 'Senior Stylist', '021-123-4567', 'mai@salon.com'),
   ('Linh Tran', 'Colorist', '021-234-5678', 'linh@salon.com'),
   ('Han Le', 'Nail Technician', '021-345-6789', 'han@salon.com'),
   ('Thu Pham', 'Esthetician', '021-456-7890', 'thu@salon.com')
-ON CONFLICT DO NOTHING;
-INSERT INTO staff_services (staff_id, service_id) VALUES
+) AS t(name, role, phone, email)
+WHERE NOT EXISTS (SELECT 1 FROM staff LIMIT 1);
+
+INSERT INTO staff_services (staff_id, service_id)
+SELECT * FROM (VALUES
   (1, 1), (1, 3), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6), (4, 7), (1, 8), (4, 8)
-ON CONFLICT DO NOTHING;
+) AS t(staff_id, service_id)
+WHERE NOT EXISTS (SELECT 1 FROM staff_services LIMIT 1);
 `;
 
 // Init endpoint
