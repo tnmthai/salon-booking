@@ -10,13 +10,6 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Initialize database tables
-initDB(pool).then(() => {
-  console.log('Database initialized');
-}).catch(err => {
-  console.error('Database init failed:', err);
-});
-
 // API routes
 app.use('/api/services', require('./routes/services'));
 app.use('/api/staff', require('./routes/staff'));
@@ -30,6 +23,17 @@ app.get('{*path}', (req, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Salon booking server running on port ${PORT}`);
-});
+// Init DB then start server
+async function start() {
+  try {
+    await initDB(pool);
+    console.log('Database initialized successfully');
+  } catch (err) {
+    console.error('Database init error:', err.message);
+  }
+  app.listen(PORT, () => {
+    console.log(`Salon booking server running on port ${PORT}`);
+  });
+}
+
+start();
