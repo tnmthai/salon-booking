@@ -38,67 +38,89 @@ export default function Register({ onLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
-      <div className="bg-white rounded-xl shadow p-8 w-full max-w-lg">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-2">✂️</div>
-          <h1 className="text-2xl font-bold">Register Salon</h1>
-          <p className="text-sm text-gray-500">Create an account and start receiving bookings</p>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top bar */}
+      <div className="p-4">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition">
+          ← Back to Home
+        </Link>
+      </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Salon Name *</label>
-              <input value={form.salon_name} onChange={e => {
-                setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
-              }} className="w-full border rounded-lg px-3 py-2" required />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">URL (slug) *</label>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">salon.com/</span>
-                <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})}
-                  className="flex-1 border rounded-lg px-3 py-2" pattern="[a-z0-9-]+" required />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Salon Owner *</label>
-              <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email *</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Password *</label>
-              <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2" minLength={6} required />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Address</label>
-              <input value={form.address} onChange={e => setForm({...form, address: e.target.value})}
-                className="w-full border rounded-lg px-3 py-2" />
-            </div>
+      {/* Register card */}
+      <div className="flex-1 flex items-center justify-center px-4 pb-16">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900">
+              <span className="text-3xl">✂️</span>
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
+            </Link>
+            <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">Create your salon</h1>
+            <p className="text-sm text-gray-500">Start receiving bookings in minutes</p>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 disabled:opacity-50 mt-6">
-            {loading ? 'Creating...' : 'Create Salon'}
-          </button>
-        </form>
 
-        <p className="text-center mt-4 text-sm text-gray-500">
-          Already have an account? <Link to="/login" className="text-pink-600 hover:underline">Sign In</Link>
-        </p>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm">{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Salon Name *</label>
+                  <input value={form.salon_name} onChange={e => {
+                    setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
+                  }} placeholder="e.g. Bella Hair Studio"
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Booking URL</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm shrink-0">yoursite.com/</span>
+                    <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})}
+                      placeholder="bella-hair"
+                      className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" pattern="[a-z0-9-]+" required />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Owner Name *</label>
+                  <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
+                    placeholder="Your name"
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                  <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                    placeholder="021 123 4567"
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
+                  <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+                    placeholder="you@example.com"
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Password *</label>
+                  <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
+                    placeholder="••••••••"
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" minLength={6} required />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+                  <input value={form.address} onChange={e => setForm({...form, address: e.target.value})}
+                    placeholder="123 Main St, Auckland"
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
+                </div>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 mt-6 text-sm font-medium transition">
+                {loading ? 'Creating...' : 'Create Salon'}
+              </button>
+            </form>
+          </div>
+
+          <p className="text-center mt-5 text-sm text-gray-500">
+            Already have an account? <Link to="/login" className="text-pink-600 font-medium hover:underline">Sign In</Link>
+          </p>
+        </div>
       </div>
     </div>
   )
