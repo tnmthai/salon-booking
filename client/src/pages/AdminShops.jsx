@@ -12,6 +12,8 @@ export default function AdminShops() {
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
   const [deleting, setDeleting] = useState(null)
+  const [editSalon, setEditSalon] = useState(null)
+  const [salonForm, setSalonForm] = useState({ name: '', slug: '', phone: '', email: '', address: '', description: '' })
 
   const load = () => {
     Promise.all([
@@ -93,6 +95,32 @@ export default function AdminShops() {
       alert(err.message)
     }
     setDeleting(null)
+  }
+
+  const startEditSalon = (s) => {
+    setSalonForm({ name: s.name, slug: s.slug, phone: s.phone || '', email: s.email || '', address: s.address || '', description: s.description || '' })
+    setEditSalon(s.id)
+  }
+
+  const handleSaveSalon = async (e) => {
+    e.preventDefault()
+    const token = localStorage.getItem('salon_token')
+    try {
+      const res = await fetch(`/api/salons/${editSalon}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(salonForm)
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error)
+        return
+      }
+      setEditSalon(null)
+      load()
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   if (loading) return <div className="p-8 text-center">Loading...</div>
@@ -180,19 +208,70 @@ export default function AdminShops() {
               </div>
 
               <div className="flex gap-2 ml-4 whitespace-nowrap">
+                <button onClick={() => startEditSalon(s)}
+                  className="bg-blue-50 text-blue-600 px-3 py-2 rounded-lg text-sm hover:bg-blue-100">
+                  ✏️ Edit
+                </button>
                 <a href={`/${s.slug}/book`} target="_blank" rel="noreferrer"
                   className="bg-pink-50 text-pink-600 px-4 py-2 rounded-lg text-sm hover:bg-pink-100">
                   Booking ↗
                 </a>
                 <button onClick={() => handleDeleteSalon(s)} disabled={deleting === s.id}
                   className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-100 disabled:opacity-50">
-                  {deleting === s.id ? '...' : '🗑️ Delete'}
+                  {deleting === s.id ? '...' : '🗑️'}
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Salon Modal */}
+      {editSalon && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setEditSalon(null)}>
+          <form onSubmit={handleSaveSalon} className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">✏️ Edit Shop</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
+                <input value={salonForm.name} onChange={e => setSalonForm({...salonForm, name: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
+                <input value={salonForm.slug} onChange={e => setSalonForm({...salonForm, slug: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input value={salonForm.phone} onChange={e => setSalonForm({...salonForm, phone: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" value={salonForm.email} onChange={e => setSalonForm({...salonForm, email: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input value={salonForm.address} onChange={e => setSalonForm({...salonForm, address: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea value={salonForm.description} onChange={e => setSalonForm({...salonForm, description: e.target.value})}
+                  className="border rounded-lg px-3 py-2 w-full" rows={2} />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setEditSalon(null)}
+                className="border px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              <button type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Save</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Users Section */}
       <div className="flex items-center justify-between mb-6">
