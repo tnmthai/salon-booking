@@ -28,11 +28,78 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// List all salons (public)
+// List all salons with owner info (public)
 app.get('/api/salons', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, name, slug, address, phone, description FROM salons ORDER BY name');
+    const { rows } = await pool.query(`
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description,
+        u.name as owner_name, u.email as owner_email, u.id as owner_id
+      FROM salons s
+      LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
+      ORDER BY s.name
+    `);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create owner for a salon (super admin only)
+app.post('/api/salons/:id/owner', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const bcrypt = require('bcryptjs');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    
+    const { name, email, password } = req.body;
+    const salonId = req.params.id;
+    
+    // Check email uniqueness
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length) return res.status(400).json({ error: 'Email already registered' });
+    
+    // Demote old owner
+    await pool.query("UPDATE users SET role = 'staff' WHERE salon_id = $1 AND role = 'owner'", [salonId]);
+    
+    // Create new owner
+    const password_hash = await bcrypt.hash(password, 10);
+    const { rows } = await pool.query(
+      "INSERT INTO users (salon_id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, 'owner') RETURNING id, email, name, role",
+      [salonId, email, password_hash, name]
+    );
+    
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update salon owner (super admin only)
+app.put('/api/salons/:id/owner', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    
+    const { user_id } = req.body;
+    const salonId = req.params.id;
+    
+    // Remove old owner role
+    await pool.query("UPDATE users SET role = 'staff' WHERE salon_id = $1 AND role = 'owner'", [salonId]);
+    
+    // Set new owner
+    if (user_id) {
+      await pool.query('UPDATE users SET salon_id = $1, role = $2 WHERE id = $3', [salonId, 'owner', user_id]);
+    }
+    
+    res.json({ message: 'Owner updated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
