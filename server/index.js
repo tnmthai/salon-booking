@@ -113,7 +113,7 @@ app.use('/api/customers', require('./routes/customers'));
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ status: 'ok', db: 'connected' });
+    res.json({ status: 'ok', db: 'connected', version: 'multi-tenant-v3' });
   } catch (err) {
     res.json({ status: 'error', db: err.message });
   }
