@@ -8,6 +8,9 @@ export default function AdminShops() {
   const [editingSalon, setEditingSalon] = useState(null)
   const [showCreateForm, setShowCreateForm] = useState(null)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [resetUser, setResetUser] = useState(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   const load = () => {
     Promise.all([
@@ -55,16 +58,32 @@ export default function AdminShops() {
     }
   }
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (!resetUser || !newPassword) return
+    setResetting(true)
+    try {
+      await api.resetPassword(resetUser.id, newPassword)
+      alert(`Password reset for ${resetUser.name} (${resetUser.email})`)
+      setResetUser(null)
+      setNewPassword('')
+    } catch (err) {
+      alert(err.message)
+    }
+    setResetting(false)
+  }
+
   if (loading) return <div className="p-8 text-center">Loading...</div>
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Shops Section */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">🏪 All Registered Shops</h1>
         <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-medium">{salons.length} shops</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 mb-10">
         {salons.map(s => (
           <div key={s.id} className="bg-white rounded-xl shadow hover:shadow-lg transition p-6">
             <div className="flex items-start justify-between">
@@ -100,12 +119,8 @@ export default function AdminShops() {
                           className="bg-white border rounded-lg px-3 py-2 text-sm hover:border-pink-300 hover:bg-pink-50 transition">
                           <span className="font-medium">{u.name}</span>
                           <span className="text-gray-400 ml-1">({u.email})</span>
-                          <span className="text-xs text-gray-400 ml-1">— {u.salon_name}</span>
                         </button>
                       ))}
-                      {users.filter(u => u.role !== 'owner' || u.salon_slug !== s.slug).length === 0 && (
-                        <span className="text-sm text-gray-400">No other users available</span>
-                      )}
                     </div>
                     <button onClick={() => { setShowCreateForm(s.id); setForm({ name: '', email: '', password: '' }) }}
                       className="text-sm text-pink-600 hover:text-pink-700 font-medium">
@@ -140,7 +155,6 @@ export default function AdminShops() {
 
                 {s.address && <p className="text-sm text-gray-500">📍 {s.address}</p>}
                 {s.phone && <p className="text-sm text-gray-500">📞 {s.phone}</p>}
-                {s.description && <p className="text-sm text-gray-400 mt-1">{s.description}</p>}
               </div>
 
               <a href={`/${s.slug}/book`} target="_blank" rel="noreferrer"
@@ -152,12 +166,71 @@ export default function AdminShops() {
         ))}
       </div>
 
-      {salons.length === 0 && (
-        <div className="text-center py-20 text-gray-400">
-          <div className="text-4xl mb-4">🏪</div>
-          <p>No shops registered yet</p>
+      {/* Users Section */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">👥 All Users</h2>
+        <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">{users.length} users</span>
+      </div>
+
+      {/* Reset Password Modal */}
+      {resetUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setResetUser(null); setNewPassword('') }}>
+          <form onSubmit={handleResetPassword} className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-1">🔑 Reset Password</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Reset password for <span className="font-medium text-gray-700">{resetUser.name}</span> ({resetUser.email})
+            </p>
+            <input type="password" placeholder="New password (min 6 chars)" value={newPassword}
+              onChange={e => setNewPassword(e.target.value)} className="border rounded-lg px-3 py-2 w-full mb-4" required minLength={6} autoFocus />
+            <div className="flex gap-2 justify-end">
+              <button type="button" onClick={() => { setResetUser(null); setNewPassword('') }}
+                className="border px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={resetting}
+                className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50">
+                {resetting ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
+
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Name</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Email</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Role</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Shop</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id} className="border-t hover:bg-gray-50">
+                <td className="p-3 text-sm font-medium">{u.name}</td>
+                <td className="p-3 text-sm text-gray-500">{u.email}</td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    u.role === 'super_admin' ? 'bg-orange-100 text-orange-700' :
+                    u.role === 'owner' ? 'bg-green-100 text-green-700' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {u.role === 'super_admin' ? '⭐ Super Admin' : u.role === 'owner' ? '👑 Owner' : '👤 Staff'}
+                  </span>
+                </td>
+                <td className="p-3 text-sm text-gray-500">{u.salon_name || '—'}</td>
+                <td className="p-3">
+                  <button onClick={() => { setResetUser(u); setNewPassword('') }}
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+                    🔑 Reset Password
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

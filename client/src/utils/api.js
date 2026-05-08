@@ -61,6 +61,7 @@ export const api = {
   getAllUsers: () => request('/users/all'),
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+  resetPassword: (id, password) => request(`/users/${id}/reset-password`, { method: 'PUT', body: JSON.stringify({ password }) }),
 
   // Working Hours
   getWorkingHours: (staffId) => request(`/working-hours/staff/${staffId}`),
