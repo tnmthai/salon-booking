@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { useI18n } from '../utils/i18n'
+
 
 export default function Staff() {
-  const { t } = useI18n()
+  const t = (k) => k
   const [staff, setStaff] = useState([])
   const [form, setForm] = useState({ name: '', role: '', phone: '', email: '' })
   const [editing, setEditing] = useState(null)

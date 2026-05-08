@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import './index.css'
 import { api, setToken, clearToken, isLoggedIn } from './utils/api'
-import { I18nProvider, useI18n } from './utils/i18n'
 
 // Pages
 import Landing from './pages/Landing'
@@ -22,17 +21,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function LangToggle() {
-  const { lang, toggleLang } = useI18n()
-  return (
-    <button onClick={toggleLang} className="text-xs border rounded-full px-2 py-1 hover:bg-gray-100" title="Switch language">
-      {lang === 'en' ? '🇻🇳 VI' : '🇬🇧 EN'}
-    </button>
-  )
-}
-
 function AdminLayout({ salon, onLogout, isSuperAdmin }) {
-  const { t } = useI18n()
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
@@ -41,22 +30,21 @@ function AdminLayout({ salon, onLogout, isSuperAdmin }) {
             ✂️ {salon?.name || 'Salon'}
           </Link>
           <div className="flex gap-3 text-sm items-center flex-wrap">
-            <Link to="/admin" className="text-gray-600 hover:text-pink-600">{t('dashboard')}</Link>
-            <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">{t('services')}</Link>
-            <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">{t('staff')}</Link>
-            <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">{t('calendar')}</Link>
-            <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">{t('users')}</Link>
+            <Link to="/admin" className="text-gray-600 hover:text-pink-600">Dashboard</Link>
+            <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">Services</Link>
+            <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Staff</Link>
+            <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">Calendar</Link>
+            <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">Users</Link>
             {isSuperAdmin && (
-              <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 {t('allShops')}</Link>
+              <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 All Shops</Link>
             )}
             {salon?.slug && (
               <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
                 className="bg-pink-600 text-white px-3 py-1 rounded-full hover:bg-pink-700">
-                {t('bookingPage')} ↗
+                Booking Page ↗
               </a>
             )}
-            <LangToggle />
-            <button onClick={onLogout} className="text-gray-400 hover:text-red-500 text-sm">{t('logout')}</button>
+            <button onClick={onLogout} className="text-gray-400 hover:text-red-500 text-sm">Logout</button>
           </div>
         </div>
       </nav>
@@ -109,21 +97,19 @@ function App() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-xl">Loading...</div></div>;
 
   return (
-    <I18nProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={isLoggedIn() ? <Navigate to="/admin" /> : <Login onLogin={handleLogin} />} />
-          <Route path="/register" element={isLoggedIn() ? <Navigate to="/admin" /> : <Register onLogin={handleLogin} />} />
-          <Route path="/:slug/book" element={<Booking />} />
-          <Route path="/admin/*" element={
-            <ProtectedRoute>
-              <AdminLayout salon={salon} onLogout={handleLogout} isSuperAdmin={isSuperAdmin} />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </BrowserRouter>
-    </I18nProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={isLoggedIn() ? <Navigate to="/admin" /> : <Login onLogin={handleLogin} />} />
+        <Route path="/register" element={isLoggedIn() ? <Navigate to="/admin" /> : <Register onLogin={handleLogin} />} />
+        <Route path="/:slug/book" element={<Booking />} />
+        <Route path="/admin/*" element={
+          <ProtectedRoute>
+            <AdminLayout salon={salon} onLogout={handleLogout} isSuperAdmin={isSuperAdmin} />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

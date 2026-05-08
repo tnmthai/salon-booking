@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { useI18n } from '../utils/i18n'
+
 
 export default function Services() {
-  const { t } = useI18n()
+  const t = (k) => k
   const [services, setServices] = useState([])
   const [form, setForm] = useState({ name: '', description: '', duration_min: 30, price: '', category: '' })
   const [editing, setEditing] = useState(null)

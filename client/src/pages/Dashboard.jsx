@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { useI18n } from '../utils/i18n'
+
 
 export default function Dashboard() {
-  const { t } = useI18n()
+  const t = (k) => k
   const [tab, setTab] = useState('bookings')
   const [appts, setAppts] = useState([])
   const [customers, setCustomers] = useState([])

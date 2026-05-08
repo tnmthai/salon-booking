@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { useI18n } from '../utils/i18n'
+
 
 export default function Calendar() {
-  const { t } = useI18n()
+  const t = (k) => k
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [staffList, setStaffList] = useState([])
   const [appointments, setAppointments] = useState([])
