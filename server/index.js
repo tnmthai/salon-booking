@@ -78,6 +78,23 @@ app.post('/api/salons/:id/owner', async (req, res) => {
   }
 });
 
+// Delete salon (super admin only)
+app.delete('/api/salons/:id', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    const { rows } = await pool.query('DELETE FROM salons WHERE id = $1 RETURNING id, name', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
+    res.json({ message: 'Salon deleted', salon: rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update salon owner (super admin only)
 app.put('/api/salons/:id/owner', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');

@@ -11,6 +11,7 @@ export default function AdminShops() {
   const [resetUser, setResetUser] = useState(null)
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
+  const [deleting, setDeleting] = useState(null)
 
   const load = () => {
     Promise.all([
@@ -71,6 +72,27 @@ export default function AdminShops() {
       alert(err.message)
     }
     setResetting(false)
+  }
+
+  const handleDeleteSalon = async (salon) => {
+    if (!confirm(`Delete "${salon.name}"? This will remove ALL data (services, staff, appointments, customers) for this shop. This cannot be undone.`)) return
+    setDeleting(salon.id)
+    try {
+      const token = localStorage.getItem('salon_token')
+      const res = await fetch(`/api/salons/${salon.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error)
+        return
+      }
+      load()
+    } catch (err) {
+      alert(err.message)
+    }
+    setDeleting(null)
   }
 
   if (loading) return <div className="p-8 text-center">Loading...</div>
@@ -157,10 +179,16 @@ export default function AdminShops() {
                 {s.phone && <p className="text-sm text-gray-500">📞 {s.phone}</p>}
               </div>
 
-              <a href={`/${s.slug}/book`} target="_blank" rel="noreferrer"
-                className="bg-pink-50 text-pink-600 px-4 py-2 rounded-lg text-sm hover:bg-pink-100 ml-4 whitespace-nowrap">
-                Booking ↗
-              </a>
+              <div className="flex gap-2 ml-4 whitespace-nowrap">
+                <a href={`/${s.slug}/book`} target="_blank" rel="noreferrer"
+                  className="bg-pink-50 text-pink-600 px-4 py-2 rounded-lg text-sm hover:bg-pink-100">
+                  Booking ↗
+                </a>
+                <button onClick={() => handleDeleteSalon(s)} disabled={deleting === s.id}
+                  className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-100 disabled:opacity-50">
+                  {deleting === s.id ? '...' : '🗑️ Delete'}
+                </button>
+              </div>
             </div>
           </div>
         ))}
