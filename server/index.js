@@ -153,9 +153,44 @@ app.get('{*path}', (req, res) => {
 // Auto-init on startup
 (async () => {
   try {
-    await pool.query(dropOld);
+    // Drop old tables
+    const drops = [
+      'DROP TABLE IF EXISTS appointments CASCADE',
+      'DROP TABLE IF EXISTS staff_services CASCADE',
+      'DROP TABLE IF EXISTS customers CASCADE',
+      'DROP TABLE IF EXISTS staff CASCADE',
+      'DROP TABLE IF EXISTS services CASCADE',
+      'DROP TABLE IF EXISTS users CASCADE',
+      'DROP TABLE IF EXISTS salons CASCADE',
+    ];
+    for (const sql of drops) await pool.query(sql);
     console.log('Old tables dropped');
-    await pool.query(schema);
+
+    // Create tables one by one
+    const tables = [
+      `CREATE TABLE salons (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, slug VARCHAR(100) UNIQUE NOT NULL, address TEXT, phone VARCHAR(20), email VARCHAR(100), logo_url TEXT, description TEXT, opening_hour INTEGER DEFAULT 9, closing_hour INTEGER DEFAULT 18, created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE users (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, email VARCHAR(100) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL, name VARCHAR(100), role VARCHAR(20) DEFAULT 'owner', created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE services (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, description TEXT, duration_min INTEGER NOT NULL DEFAULT 30, price DECIMAL(10,2) NOT NULL DEFAULT 0, category VARCHAR(50), active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE staff (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, role VARCHAR(50), phone VARCHAR(20), email VARCHAR(100), avatar_url TEXT, active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE staff_services (staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE, service_id INTEGER REFERENCES services(id) ON DELETE CASCADE, PRIMARY KEY (staff_id, service_id))`,
+      `CREATE TABLE customers (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, name VARCHAR(100) NOT NULL, phone VARCHAR(20), email VARCHAR(100), notes TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+      `CREATE TABLE appointments (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, customer_id INTEGER REFERENCES customers(id), staff_id INTEGER REFERENCES staff(id), service_id INTEGER REFERENCES services(id), start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NOT NULL, status VARCHAR(20) DEFAULT 'confirmed', notes TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+    ];
+    for (const sql of tables) await pool.query(sql);
+
+    // Create indexes
+    const indexes = [
+      'CREATE INDEX idx_services_salon ON services(salon_id)',
+      'CREATE INDEX idx_staff_salon ON staff(salon_id)',
+      'CREATE INDEX idx_customers_salon ON customers(salon_id)',
+      'CREATE INDEX idx_appointments_salon ON appointments(salon_id)',
+      'CREATE INDEX idx_appointments_start ON appointments(start_time)',
+      'CREATE INDEX idx_appointments_staff ON appointments(staff_id)',
+      'CREATE INDEX idx_users_email ON users(email)',
+      'CREATE INDEX idx_salons_slug ON salons(slug)',
+    ];
+    for (const sql of indexes) await pool.query(sql);
+
     console.log('Database schema applied');
   } catch (err) {
     console.error('DB init error:', err.message);
