@@ -55,6 +55,12 @@ export const api = {
   // Customers
   getCustomers: () => request('/customers'),
   createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Users
+  getUsers: () => request('/users'),
+  getAllUsers: () => request('/users/all'),
+  updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
 };
 
 export function setToken(token) {

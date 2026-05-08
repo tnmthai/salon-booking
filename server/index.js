@@ -15,6 +15,7 @@ app.use('/api/services', require('./routes/services'));
 app.use('/api/staff', require('./routes/staff'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/customers', require('./routes/customers'));
+app.use('/api/users', require('./routes/users'));
 
 // Health check
 app.get('/api/health', async (req, res) => {

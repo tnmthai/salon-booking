@@ -15,7 +15,7 @@ export default function Login({ onLogin }) {
     setLoading(true)
     try {
       const data = await api.login({ email, password })
-      onLogin(data.token, data.salon)
+      onLogin(data.token, data.salon, data.user)
       navigate('/admin')
     } catch (err) {
       setError(err.message)

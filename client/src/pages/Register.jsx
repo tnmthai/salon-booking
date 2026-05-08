@@ -29,7 +29,7 @@ export default function Register({ onLogin }) {
     setLoading(true)
     try {
       const data = await api.register(form)
-      onLogin(data.token, data.salon)
+      onLogin(data.token, data.salon, data.user)
       navigate('/admin')
     } catch (err) {
       setError(err.message)

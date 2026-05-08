@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Link, Navigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import './index.css'
 import { api, setToken, clearToken, isLoggedIn } from './utils/api'
 
@@ -13,13 +13,15 @@ import Services from './pages/Services'
 import Staff from './pages/Staff'
 import Calendar from './pages/Calendar'
 import Booking from './pages/Booking'
+import Users from './pages/Users'
+import AdminShops from './pages/AdminShops'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
   return children;
 }
 
-function AdminLayout({ salon, onLogout }) {
+function AdminLayout({ salon, onLogout, isSuperAdmin }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
@@ -27,17 +29,22 @@ function AdminLayout({ salon, onLogout }) {
           <Link to="/admin" className="text-xl font-bold text-pink-600 flex items-center gap-2">
             ✂️ {salon?.name || 'Salon'}
           </Link>
-          <div className="flex gap-4 text-sm items-center">
+          <div className="flex gap-3 text-sm items-center flex-wrap">
             <Link to="/admin" className="text-gray-600 hover:text-pink-600">Dashboard</Link>
             <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">Services</Link>
             <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Staff</Link>
             <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">Calendar</Link>
+            <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">Users</Link>
+            {isSuperAdmin && (
+              <Link to="/admin/shops" className="text-gray-600 hover:text-orange-600 font-medium">🏪 All Shops</Link>
+            )}
             {salon?.slug && (
-              <a href={`/${salon.slug}/book`} target="_blank" className="bg-pink-600 text-white px-3 py-1 rounded-full hover:bg-pink-700">
+              <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
+                className="bg-pink-600 text-white px-3 py-1 rounded-full hover:bg-pink-700">
                 Booking Page ↗
               </a>
             )}
-            <button onClick={onLogout} className="text-gray-400 hover:text-red-500 text-sm">Logout</button>
+            <button onClick={onLogout} className="text-gray-400 hover:text-red-500 text-sm ml-2">Logout</button>
           </div>
         </div>
       </nav>
@@ -46,6 +53,8 @@ function AdminLayout({ salon, onLogout }) {
         <Route path="/admin/services" element={<Services />} />
         <Route path="/admin/staff" element={<Staff />} />
         <Route path="/admin/calendar" element={<Calendar />} />
+        <Route path="/admin/users" element={<Users />} />
+        {isSuperAdmin && <Route path="/admin/shops" element={<AdminShops />} />}
       </Routes>
     </div>
   );
@@ -53,12 +62,14 @@ function AdminLayout({ salon, onLogout }) {
 
 function App() {
   const [salon, setSalon] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isLoggedIn()) {
       api.me().then(data => {
         setSalon(data.salon);
+        setUser(data.user);
         setLoading(false);
       }).catch(() => {
         clearToken();
@@ -69,15 +80,19 @@ function App() {
     }
   }, []);
 
-  const handleLogin = (token, salonData) => {
+  const handleLogin = (token, salonData, userData) => {
     setToken(token);
     setSalon(salonData);
+    setUser(userData);
   };
 
   const handleLogout = () => {
     clearToken();
     setSalon(null);
+    setUser(null);
   };
+
+  const isSuperAdmin = user?.email === 'admin@tnmthai.com';
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-xl">Loading...</div></div>;
 
@@ -95,7 +110,7 @@ function App() {
         {/* Admin (protected) */}
         <Route path="/admin/*" element={
           <ProtectedRoute>
-            <AdminLayout salon={salon} onLogout={handleLogout} />
+            <AdminLayout salon={salon} onLogout={handleLogout} isSuperAdmin={isSuperAdmin} />
           </ProtectedRoute>
         } />
       </Routes>
