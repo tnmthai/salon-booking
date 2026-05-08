@@ -28,7 +28,7 @@ export default function Login({ onLogin }) {
       <div className="bg-white rounded-xl shadow p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">✂️</div>
-          <h1 className="text-2xl font-bold">Đăng nhập</h1>
+          <h1 className="text-2xl font-bold">Sign In</h1>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{error}</div>}
@@ -46,12 +46,12 @@ export default function Login({ onLogin }) {
           </div>
           <button type="submit" disabled={loading}
             className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 disabled:opacity-50">
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="text-center mt-4 text-sm text-gray-500">
-          Chưa có tài khoản? <Link to="/register" className="text-pink-600 hover:underline">Đăng ký</Link>
+          Don't have an account? <Link to="/register" className="text-pink-600 hover:underline">Register</Link>
         </p>
       </div>
     </div>

@@ -42,8 +42,8 @@ export default function Register({ onLogin }) {
       <div className="bg-white rounded-xl shadow p-8 w-full max-w-lg">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">✂️</div>
-          <h1 className="text-2xl font-bold">Đăng ký Salon</h1>
-          <p className="text-sm text-gray-500">Tạo tài khoản và bắt đầu nhận booking</p>
+          <h1 className="text-2xl font-bold">Register Salon</h1>
+          <p className="text-sm text-gray-500">Create an account and start receiving bookings</p>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{error}</div>}
@@ -51,7 +51,7 @@ export default function Register({ onLogin }) {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Tên Salon *</label>
+              <label className="block text-sm font-medium mb-1">Salon Name *</label>
               <input value={form.salon_name} onChange={e => {
                 setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
               }} className="w-full border rounded-lg px-3 py-2" required />
@@ -65,7 +65,7 @@ export default function Register({ onLogin }) {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Chủ Salon *</label>
+              <label className="block text-sm font-medium mb-1">Salon Owner *</label>
               <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2" required />
             </div>
@@ -92,12 +92,12 @@ export default function Register({ onLogin }) {
           </div>
           <button type="submit" disabled={loading}
             className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 disabled:opacity-50 mt-6">
-            {loading ? 'Đang tạo...' : 'Tạo Salon'}
+            {loading ? 'Creating...' : 'Create Salon'}
           </button>
         </form>
 
         <p className="text-center mt-4 text-sm text-gray-500">
-          Đã có tài khoản? <Link to="/login" className="text-pink-600 hover:underline">Đăng nhập</Link>
+          Already have an account? <Link to="/login" className="text-pink-600 hover:underline">Sign In</Link>
         </p>
       </div>
     </div>
