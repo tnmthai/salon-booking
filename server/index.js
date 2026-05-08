@@ -10,6 +10,16 @@ app.use(cors());
 app.use(express.json());
 
 // DB schema (multi-tenant)
+const dropOld = `
+DROP TABLE IF EXISTS appointments CASCADE;
+DROP TABLE IF EXISTS staff_services CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS staff CASCADE;
+DROP TABLE IF EXISTS services CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS salons CASCADE;
+`;
+
 const schema = `
 CREATE TABLE IF NOT EXISTS salons (
   id SERIAL PRIMARY KEY,
@@ -143,6 +153,8 @@ app.get('{*path}', (req, res) => {
 // Auto-init on startup
 (async () => {
   try {
+    await pool.query(dropOld);
+    console.log('Old tables dropped');
     await pool.query(schema);
     console.log('Database schema applied');
   } catch (err) {
