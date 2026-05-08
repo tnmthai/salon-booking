@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { translations } from '../utils/translations'
 
 
 export default function Calendar() {
-  const t = (k) => k
+  const t = (k) => translations[k] || k
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [staffList, setStaffList] = useState([])
   const [appointments, setAppointments] = useState([])

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { translations } from '../utils/translations'
 
 export default function Users() {
   const [users, setUsers] = useState([])

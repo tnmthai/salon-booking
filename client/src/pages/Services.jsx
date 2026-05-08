@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { translations } from '../utils/translations'
 
 
 export default function Services() {
-  const t = (k) => k
+  const t = (k) => translations[k] || k
   const [services, setServices] = useState([])
   const [form, setForm] = useState({ name: '', description: '', duration_min: 30, price: '', category: '' })
   const [editing, setEditing] = useState(null)

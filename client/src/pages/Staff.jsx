@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { translations } from '../utils/translations'
 
 
 export default function Staff() {
-  const t = (k) => k
+  const t = (k) => translations[k] || k
   const [staff, setStaff] = useState([])
   const [form, setForm] = useState({ name: '', role: '', phone: '', email: '' })
   const [editing, setEditing] = useState(null)

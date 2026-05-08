@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { translations } from '../utils/translations'
 
 
 export default function Dashboard() {
-  const t = (k) => k
+  const t = (k) => translations[k] || k
   const [tab, setTab] = useState('bookings')
   const [appts, setAppts] = useState([])
   const [customers, setCustomers] = useState([])

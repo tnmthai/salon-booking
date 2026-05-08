@@ -49,12 +49,12 @@ function AdminLayout({ salon, onLogout, isSuperAdmin }) {
         </div>
       </nav>
       <Routes>
-        <Route path="/admin" element={<Dashboard />} />
-        <Route path="/admin/services" element={<Services />} />
-        <Route path="/admin/staff" element={<Staff />} />
-        <Route path="/admin/calendar" element={<Calendar />} />
-        <Route path="/admin/users" element={<Users />} />
-        {isSuperAdmin && <Route path="/admin/shops" element={<AdminShops />} />}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/staff" element={<Staff />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/users" element={<Users />} />
+        {isSuperAdmin && <Route path="/shops" element={<AdminShops />} />}
       </Routes>
     </div>
   );

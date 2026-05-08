@@ -2,6 +2,8 @@ const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 
+const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+
 // GET services for a salon (by slug — public)
 router.get('/public/:slug', async (req, res) => {
   try {
@@ -18,13 +20,18 @@ router.get('/public/:slug', async (req, res) => {
   }
 });
 
-// GET all services for authenticated salon
+// GET all services (super admin: all shops, normal: own salon)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM services WHERE salon_id = $1 AND active = true ORDER BY category, name',
-      [req.user.salon_id]
-    );
+    let query, params;
+    if (isSuperAdmin(req.user.email)) {
+      query = 'SELECT s.*, sal.name as salon_name FROM services s LEFT JOIN salons sal ON s.salon_id = sal.id WHERE s.active = true ORDER BY s.category, s.name';
+      params = [];
+    } else {
+      query = 'SELECT * FROM services WHERE salon_id = $1 AND active = true ORDER BY category, name';
+      params = [req.user.salon_id];
+    }
+    const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -34,10 +41,15 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET service by id
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM services WHERE id = $1 AND salon_id = $2',
-      [req.params.id, req.user.salon_id]
-    );
+    let query, params;
+    if (isSuperAdmin(req.user.email)) {
+      query = 'SELECT * FROM services WHERE id = $1';
+      params = [req.params.id];
+    } else {
+      query = 'SELECT * FROM services WHERE id = $1 AND salon_id = $2';
+      params = [req.params.id, req.user.salon_id];
+    }
+    const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'Service not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -47,11 +59,12 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 // POST create service
 router.post('/', authMiddleware, async (req, res) => {
-  const { name, description, duration_min, price, category } = req.body;
+  const { name, description, duration_min, price, category, salon_id } = req.body;
+  const targetSalonId = isSuperAdmin(req.user.email) ? (salon_id || req.user.salon_id) : req.user.salon_id;
   try {
     const { rows } = await db.query(
       'INSERT INTO services (salon_id, name, description, duration_min, price, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [req.user.salon_id, name, description, duration_min, price, category]
+      [targetSalonId, name, description, duration_min, price, category]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -63,10 +76,15 @@ router.post('/', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   const { name, description, duration_min, price, category, active } = req.body;
   try {
-    const { rows } = await db.query(
-      'UPDATE services SET name=$1, description=$2, duration_min=$3, price=$4, category=$5, active=$6 WHERE id=$7 AND salon_id=$8 RETURNING *',
-      [name, description, duration_min, price, category, active, req.params.id, req.user.salon_id]
-    );
+    let query, params;
+    if (isSuperAdmin(req.user.email)) {
+      query = 'UPDATE services SET name=$1, description=$2, duration_min=$3, price=$4, category=$5, active=$6 WHERE id=$7 RETURNING *';
+      params = [name, description, duration_min, price, category, active, req.params.id];
+    } else {
+      query = 'UPDATE services SET name=$1, description=$2, duration_min=$3, price=$4, category=$5, active=$6 WHERE id=$7 AND salon_id=$8 RETURNING *';
+      params = [name, description, duration_min, price, category, active, req.params.id, req.user.salon_id];
+    }
+    const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'Service not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -77,7 +95,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // DELETE service (soft delete)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    await db.query('UPDATE services SET active = false WHERE id = $1 AND salon_id = $2', [req.params.id, req.user.salon_id]);
+    if (isSuperAdmin(req.user.email)) {
+      await db.query('UPDATE services SET active = false WHERE id = $1', [req.params.id]);
+    } else {
+      await db.query('UPDATE services SET active = false WHERE id = $1 AND salon_id = $2', [req.params.id, req.user.salon_id]);
+    }
     res.json({ message: 'Service deactivated' });
   } catch (err) {
     res.status(500).json({ error: err.message });
