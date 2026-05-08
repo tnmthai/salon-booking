@@ -16,6 +16,7 @@ import Booking from './pages/Booking'
 import Users from './pages/Users'
 import AdminShops from './pages/AdminShops'
 import StaffSchedule from './pages/StaffSchedule'
+import Reports from './pages/Reports'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
@@ -44,6 +45,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <Link to="/admin/schedule" className="text-gray-600 hover:text-pink-600">📅 Schedule</Link>
                 <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">Calendar</Link>
                 <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">Users</Link>
+                <Link to="/admin/reports" className="text-gray-600 hover:text-pink-600">📊 Reports</Link>
               </>
             )}
             {isStaff && (
@@ -73,6 +75,7 @@ function AdminLayout({ salon, user, onLogout }) {
         {isStaff && <Route path="/schedule" element={<StaffSchedule />} />}
         {isOwner && <Route path="/calendar" element={<Calendar />} />}
         {isOwner && <Route path="/users" element={<Users />} />}
+        {isOwner && <Route path="/reports" element={<Reports />} />}
         {isSuperAdmin && <Route path="/shops" element={<AdminShops />} />}
       </Routes>
     </div>

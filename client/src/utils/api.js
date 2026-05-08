@@ -68,6 +68,12 @@ export const api = {
   getSalonWorkingHours: (salonId) => request(`/working-hours/salon/${salonId}`),
   setWorkingHours: (staffId, schedule) => request(`/working-hours/staff/${staffId}`, { method: 'POST', body: JSON.stringify({ schedule }) }),
   getPublicWorkingHours: (slug) => request(`/working-hours/public/${slug}`),
+
+  // Reports
+  getReportStats: (params) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/reports/stats?${qs}`);
+  },
 };
 
 export function setToken(token) {

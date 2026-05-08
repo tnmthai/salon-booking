@@ -17,6 +17,7 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/working-hours', require('./routes/working-hours'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -194,6 +195,7 @@ async function run(sql) {
 
   // Link staff to user accounts
   await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+  await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS price DECIMAL(10,2)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_staff_user ON staff(user_id)`);
 
   // Create indexes
