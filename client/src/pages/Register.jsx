@@ -70,7 +70,7 @@ export default function Register({ onLogin }) {
                 className="w-full border rounded-lg px-3 py-2" required />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">SĐT</label>
+              <label className="block text-sm font-medium mb-1">Phone</label>
               <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2" />
             </div>
@@ -85,7 +85,7 @@ export default function Register({ onLogin }) {
                 className="w-full border rounded-lg px-3 py-2" minLength={6} required />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Địa chỉ</label>
+              <label className="block text-sm font-medium mb-1">Address</label>
               <input value={form.address} onChange={e => setForm({...form, address: e.target.value})}
                 className="w-full border rounded-lg px-3 py-2" />
             </div>

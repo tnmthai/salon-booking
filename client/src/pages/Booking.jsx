@@ -77,7 +77,7 @@ export default function Booking() {
           <div className="mb-2"><strong>Service:</strong> {service?.name}</div>
           <div className="mb-2"><strong>Staff:</strong> {staff?.name}</div>
           <div className="mb-2"><strong>Date:</strong> {selected.date}</div>
-          <div className="mb-2"><strong>Time:</strong> {selected.slot && new Date(selected.slot.start).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div className="mb-2"><strong>Time:</strong> {selected.slot && new Date(selected.slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
           <div><strong>Price:</strong> ${service?.price}</div>
         </div>
         <button onClick={() => { setDone(false); setStep(1); setSelected({ service: null, staff: null, date: '', slot: null }); setCustomer({ name: '', phone: '', email: '', notes: '' }) }}
@@ -164,7 +164,7 @@ export default function Booking() {
                 {slots.map((slot, i) => (
                   <button key={i} onClick={() => setSelected({...selected, slot})}
                     className={`p-3 rounded-xl border-2 text-center transition ${selected.slot?.start === slot.start ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-green-300 bg-white'}`}>
-                    <div className="font-medium">{new Date(slot.start).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div className="font-medium">{new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                   </button>
                 ))}
               </div>
@@ -183,10 +183,10 @@ export default function Booking() {
             <h3 className="text-lg font-semibold mb-4">Your Information</h3>
             <div className="bg-white rounded-xl shadow p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input placeholder="Họ tên" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="border rounded-lg px-3 py-2" required />
-                <input placeholder="SĐT" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="border rounded-lg px-3 py-2" required />
+                <input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="border rounded-lg px-3 py-2" required />
+                <input placeholder="Phone" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="border rounded-lg px-3 py-2" required />
                 <input placeholder="Email (optional)" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="border rounded-lg px-3 py-2" />
-                <input placeholder="Ghi chú (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2" />
+                <input placeholder="Notes (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2" />
               </div>
             </div>
             <div className="bg-pink-50 rounded-xl p-6 mb-6">
@@ -195,7 +195,7 @@ export default function Booking() {
                 <div><strong>Service:</strong> {service?.name} (${service?.price})</div>
                 <div><strong>Staff:</strong> {staff?.name}</div>
                 <div><strong>Date:</strong> {selected.date}</div>
-                <div><strong>Time:</strong> {selected.slot && new Date(selected.slot.start).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
+                <div><strong>Time:</strong> {selected.slot && new Date(selected.slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                 <div><strong>Duration:</strong> {service?.duration_min} min</div>
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function Booking() {
               <button onClick={() => setStep(3)} className="border px-4 py-2 rounded-lg">Back</button>
               <button onClick={handleBook} disabled={!customer.name || !customer.phone || loading}
                 className="bg-pink-600 text-white px-6 py-2 rounded-lg disabled:opacity-50 flex-1">
-                {loading ? 'Booking...' : '✅ Confirm đặt lịch'}
+                {loading ? 'Booking...' : '✅ Confirm Booking'}
               </button>
             </div>
           </div>
