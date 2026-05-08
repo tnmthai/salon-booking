@@ -16,6 +16,7 @@ app.use('/api/staff', require('./routes/staff'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/working-hours', require('./routes/working-hours'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -80,6 +81,15 @@ async function run(sql) {
   for (const t of tables_needing_salon) {
     await run(`ALTER TABLE ${t} ADD COLUMN IF NOT EXISTS salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE`);
   }
+
+  // Working hours table
+  await run(`CREATE TABLE IF NOT EXISTS working_hours (id SERIAL PRIMARY KEY, staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE, day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6), start_time TIME NOT NULL, end_time TIME NOT NULL, is_active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_working_hours_staff ON working_hours(staff_id)`);
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_working_hours_unique ON working_hours(staff_id, day_of_week)`);
+
+  // Link staff to user accounts
+  await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_staff_user ON staff(user_id)`);
 
   // Create indexes
   await run(`CREATE INDEX IF NOT EXISTS idx_services_salon ON services(salon_id)`);

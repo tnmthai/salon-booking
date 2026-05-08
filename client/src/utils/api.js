@@ -61,6 +61,12 @@ export const api = {
   getAllUsers: () => request('/users/all'),
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+
+  // Working Hours
+  getWorkingHours: (staffId) => request(`/working-hours/staff/${staffId}`),
+  getSalonWorkingHours: (salonId) => request(`/working-hours/salon/${salonId}`),
+  setWorkingHours: (staffId, schedule) => request(`/working-hours/staff/${staffId}`, { method: 'POST', body: JSON.stringify({ schedule }) }),
+  getPublicWorkingHours: (slug) => request(`/working-hours/public/${slug}`),
 };
 
 export function setToken(token) {

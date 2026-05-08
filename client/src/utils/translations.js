@@ -50,4 +50,6 @@ export const translations = {
   selectRole: 'Select Role',
   salonName: 'Salon Name',
   noStaff: 'No staff yet',
+  schedule: 'Schedule',
+  workingHours: 'Working Hours',
 };
