@@ -8,10 +8,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
-    api.getAppointments({ date: today }).then(setTodayAppts).catch(console.error)
-    Promise.all([api.getServices(), api.getStaff()])
-      .then(([services, staff]) => {
-        setStats({ services: services.length, staff: staff.length, todayBookings: todayAppts.length })
+    Promise.all([api.getServices(), api.getStaff(), api.getAppointments({ date: today })])
+      .then(([services, staff, appts]) => {
+        setStats({ services: services.length, staff: staff.length })
+        setTodayAppts(appts)
       })
       .catch(console.error)
   }, [])
@@ -20,7 +20,6 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl shadow p-6">
           <div className="text-3xl font-bold text-pink-600">{stats.services}</div>
@@ -36,7 +35,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Today's Schedule */}
       <div className="bg-white rounded-xl shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">📅 Today's Schedule</h2>
         {todayAppts.length === 0 ? (
@@ -61,17 +59,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Quick Actions */}
       <div className="flex gap-4">
-        <Link to="/book" className="bg-pink-600 text-white px-6 py-3 rounded-xl hover:bg-pink-700 font-medium">
-          ➕ New Booking
-        </Link>
-        <Link to="/services" className="bg-white border px-6 py-3 rounded-xl hover:bg-gray-50 font-medium">
-          Manage Services
-        </Link>
-        <Link to="/staff" className="bg-white border px-6 py-3 rounded-xl hover:bg-gray-50 font-medium">
-          Manage Staff
-        </Link>
+        <Link to="/admin/services" className="bg-white border px-6 py-3 rounded-xl hover:bg-gray-50 font-medium">Manage Services</Link>
+        <Link to="/admin/staff" className="bg-white border px-6 py-3 rounded-xl hover:bg-gray-50 font-medium">Manage Staff</Link>
       </div>
     </div>
   )

@@ -1,7 +1,33 @@
--- Salon Booking Database Schema
+-- Salon Booking Multi-Tenant Schema
+
+CREATE TABLE IF NOT EXISTS salons (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  address TEXT,
+  phone VARCHAR(20),
+  email VARCHAR(100),
+  logo_url TEXT,
+  description TEXT,
+  opening_hour INTEGER DEFAULT 9,
+  closing_hour INTEGER DEFAULT 18,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
+  email VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(100),
+  role VARCHAR(20) DEFAULT 'owner',
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(email)
+);
 
 CREATE TABLE IF NOT EXISTS services (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   description TEXT,
   duration_min INTEGER NOT NULL DEFAULT 30,
@@ -13,6 +39,7 @@ CREATE TABLE IF NOT EXISTS services (
 
 CREATE TABLE IF NOT EXISTS staff (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   role VARCHAR(50),
   phone VARCHAR(20),
@@ -30,6 +57,7 @@ CREATE TABLE IF NOT EXISTS staff_services (
 
 CREATE TABLE IF NOT EXISTS customers (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
   email VARCHAR(100),
@@ -39,6 +67,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
 CREATE TABLE IF NOT EXISTS appointments (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   customer_id INTEGER REFERENCES customers(id),
   staff_id INTEGER REFERENCES staff(id),
   service_id INTEGER REFERENCES services(id),
@@ -49,27 +78,11 @@ CREATE TABLE IF NOT EXISTS appointments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE INDEX idx_services_salon ON services(salon_id);
+CREATE INDEX idx_staff_salon ON staff(salon_id);
+CREATE INDEX idx_customers_salon ON customers(salon_id);
+CREATE INDEX idx_appointments_salon ON appointments(salon_id);
 CREATE INDEX idx_appointments_start ON appointments(start_time);
 CREATE INDEX idx_appointments_staff ON appointments(staff_id);
-
--- Seed data
-INSERT INTO services (name, description, duration_min, price, category) VALUES
-  ('Haircut', 'Classic haircut with styling', 30, 35.00, 'Hair'),
-  ('Hair Coloring', 'Full color treatment', 90, 85.00, 'Hair'),
-  ('Blow Dry', 'Wash and blow dry styling', 45, 40.00, 'Hair'),
-  ('Manicure', 'Nail shaping, cuticle care, polish', 30, 25.00, 'Nails'),
-  ('Pedicure', 'Foot soak, nail care, polish', 45, 35.00, 'Nails'),
-  ('Facial', 'Deep cleansing facial treatment', 60, 60.00, 'Skin'),
-  ('Eyebrow Shaping', 'Eyebrow threading or waxing', 15, 15.00, 'Beauty'),
-  ('Full Body Massage', 'Relaxation massage', 60, 70.00, 'Spa')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO staff (name, role, phone, email) VALUES
-  ('Mai Nguyen', 'Senior Stylist', '021-123-4567', 'mai@salon.com'),
-  ('Linh Tran', 'Colorist', '021-234-5678', 'linh@salon.com'),
-  ('Han Le', 'Nail Technician', '021-345-6789', 'han@salon.com'),
-  ('Thu Pham', 'Esthetician', '021-456-7890', 'thu@salon.com')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO staff_services (staff_id, service_id) VALUES
-  (1, 1), (1, 3), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6), (4, 7), (1, 8), (4, 8);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_salons_slug ON salons(slug);

@@ -5,5 +5,9 @@
   "scripts": {
     "build": "cd server && npm install && cd ../client && npm install && npm run build",
     "start": "cd server && node index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3"
   }
 }

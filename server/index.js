@@ -9,10 +9,34 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// DB schema
+// DB schema (multi-tenant)
 const schema = `
+CREATE TABLE IF NOT EXISTS salons (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  address TEXT,
+  phone VARCHAR(20),
+  email VARCHAR(100),
+  logo_url TEXT,
+  description TEXT,
+  opening_hour INTEGER DEFAULT 9,
+  closing_hour INTEGER DEFAULT 18,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
+  email VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(100),
+  role VARCHAR(20) DEFAULT 'owner',
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(email)
+);
 CREATE TABLE IF NOT EXISTS services (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   description TEXT,
   duration_min INTEGER NOT NULL DEFAULT 30,
@@ -23,6 +47,7 @@ CREATE TABLE IF NOT EXISTS services (
 );
 CREATE TABLE IF NOT EXISTS staff (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   role VARCHAR(50),
   phone VARCHAR(20),
@@ -38,6 +63,7 @@ CREATE TABLE IF NOT EXISTS staff_services (
 );
 CREATE TABLE IF NOT EXISTS customers (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
   email VARCHAR(100),
@@ -46,6 +72,7 @@ CREATE TABLE IF NOT EXISTS customers (
 );
 CREATE TABLE IF NOT EXISTS appointments (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
   customer_id INTEGER REFERENCES customers(id),
   staff_id INTEGER REFERENCES staff(id),
   service_id INTEGER REFERENCES services(id),
@@ -55,50 +82,22 @@ CREATE TABLE IF NOT EXISTS appointments (
   notes TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS idx_services_salon ON services(salon_id);
+CREATE INDEX IF NOT EXISTS idx_staff_salon ON staff(salon_id);
+CREATE INDEX IF NOT EXISTS idx_customers_salon ON customers(salon_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_salon ON appointments(salon_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);
 CREATE INDEX IF NOT EXISTS idx_appointments_staff ON appointments(staff_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_salons_slug ON salons(slug);
 `;
 
-const seed = `
-INSERT INTO services (name, description, duration_min, price, category)
-SELECT * FROM (VALUES
-  ('Haircut', 'Classic haircut with styling', 30, 35.00, 'Hair'),
-  ('Hair Coloring', 'Full color treatment', 90, 85.00, 'Hair'),
-  ('Blow Dry', 'Wash and blow dry styling', 45, 40.00, 'Hair'),
-  ('Manicure', 'Nail shaping, cuticle care, polish', 30, 25.00, 'Nails'),
-  ('Pedicure', 'Foot soak, nail care, polish', 45, 35.00, 'Nails'),
-  ('Facial', 'Deep cleansing facial treatment', 60, 60.00, 'Skin'),
-  ('Eyebrow Shaping', 'Eyebrow threading or waxing', 15, 15.00, 'Beauty'),
-  ('Full Body Massage', 'Relaxation massage', 60, 70.00, 'Spa')
-) AS t(name, description, duration_min, price, category)
-WHERE NOT EXISTS (SELECT 1 FROM services LIMIT 1);
-
-INSERT INTO staff (name, role, phone, email)
-SELECT * FROM (VALUES
-  ('Mai Nguyen', 'Senior Stylist', '021-123-4567', 'mai@salon.com'),
-  ('Linh Tran', 'Colorist', '021-234-5678', 'linh@salon.com'),
-  ('Han Le', 'Nail Technician', '021-345-6789', 'han@salon.com'),
-  ('Thu Pham', 'Esthetician', '021-456-7890', 'thu@salon.com')
-) AS t(name, role, phone, email)
-WHERE NOT EXISTS (SELECT 1 FROM staff LIMIT 1);
-
-INSERT INTO staff_services (staff_id, service_id)
-SELECT * FROM (VALUES
-  (1, 1), (1, 3), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6), (4, 7), (1, 8), (4, 8)
-) AS t(staff_id, service_id)
-WHERE NOT EXISTS (SELECT 1 FROM staff_services LIMIT 1);
-`;
-
-// Init endpoint
-app.get('/api/init', async (req, res) => {
-  try {
-    await pool.query(schema);
-    await pool.query(seed);
-    res.json({ message: 'Database initialized' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// API routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/services', require('./routes/services'));
+app.use('/api/staff', require('./routes/staff'));
+app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/customers', require('./routes/customers'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -110,11 +109,29 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// API routes
-app.use('/api/services', require('./routes/services'));
-app.use('/api/staff', require('./routes/staff'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/customers', require('./routes/customers'));
+// List all salons (public)
+app.get('/api/salons', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT id, name, slug, address, phone, description FROM salons ORDER BY name');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get salon by slug (public)
+app.get('/api/salons/:slug', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, slug, address, phone, email, description, opening_hour, closing_hour FROM salons WHERE slug = $1',
+      [req.params.slug]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Serve static client build in production
 const clientPath = path.join(__dirname, '..', 'client', 'dist');
@@ -127,8 +144,7 @@ app.get('{*path}', (req, res) => {
 (async () => {
   try {
     await pool.query(schema);
-    await pool.query(seed);
-    console.log('Database schema and seed applied');
+    console.log('Database schema applied');
   } catch (err) {
     console.error('DB init error:', err.message);
   }
