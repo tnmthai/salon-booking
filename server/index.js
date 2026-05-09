@@ -100,6 +100,33 @@ app.put('/api/salons/:id', async (req, res) => {
   }
 });
 
+// Salon owner update own salon
+app.put('/api/salon/settings', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded.salon_id) return res.status(403).json({ error: 'No salon' });
+    const { name, phone, email, address, description } = req.body;
+    const fields = [];
+    const vals = [];
+    let i = 1;
+    if (name !== undefined) { fields.push(`name=$${i++}`); vals.push(name); }
+    if (phone !== undefined) { fields.push(`phone=$${i++}`); vals.push(phone); }
+    if (email !== undefined) { fields.push(`email=$${i++}`); vals.push(email); }
+    if (address !== undefined) { fields.push(`address=$${i++}`); vals.push(address); }
+    if (description !== undefined) { fields.push(`description=$${i++}`); vals.push(description); }
+    if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
+    vals.push(decoded.salon_id);
+    const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete salon (super admin only)
 app.delete('/api/salons/:id', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
