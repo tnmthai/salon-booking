@@ -74,21 +74,42 @@ router.get('/slots', async (req, res) => {
 
     const { start_time: workStart, end_time: workEnd } = wh.rows[0];
 
+    // Convert NZ working hours to UTC for slot generation
+    // NZ timezone: UTC+12 (NZST) in winter, UTC+13 (NZDT) in summer
+    // Use Intl to get the correct offset for the given date
+    function nzToUtc(d, hours, minutes) {
+      // Create a date string in NZ timezone, then parse as UTC
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const h = String(hours).padStart(2, '0');
+      const min = String(minutes).padStart(2, '0');
+      // Get NZ offset for this date
+      const nzDate = new Date(`${y}-${m}-${day}T${h}:${min}:00`);
+      // Figure out offset: format the NZ date in UTC and compare
+      const utcStr = nzDate.toLocaleString('en-US', { timeZone: 'UTC' });
+      const nzStr = nzDate.toLocaleString('en-US', { timeZone: 'Pacific/Auckland' });
+      const utcDate = new Date(utcStr);
+      const nzRef = new Date(nzStr);
+      const offsetMs = nzRef.getTime() - utcDate.getTime();
+      // Subtract offset to get UTC
+      return new Date(nzDate.getTime() - offsetMs);
+    }
+
     // Get existing appointments for this staff on this date
     const appts = await db.query(
       `SELECT start_time, end_time FROM appointments 
-       WHERE staff_id = $1 AND DATE(start_time) = $2 AND status != 'cancelled'`,
+       WHERE staff_id = $1 AND DATE(start_time AT TIME ZONE 'Pacific/Auckland') = $2 AND status != 'cancelled'`,
       [staff_id, date]
     );
 
-    // Generate slots at 30-min intervals
+    // Generate slots at 30-min intervals in UTC
     const slots = [];
     const [startH, startM] = workStart.split(':').map(Number);
     const [endH, endM] = workEnd.split(':').map(Number);
-    let current = new Date(date + 'T00:00:00');
-    current.setHours(startH, startM, 0, 0);
-    const end = new Date(date + 'T00:00:00');
-    end.setHours(endH, endM, 0, 0);
+    const baseDate = new Date(date + 'T12:00:00'); // noon to avoid date boundary issues
+    let current = nzToUtc(baseDate, startH, startM);
+    const end = nzToUtc(baseDate, endH, endM);
 
     const now = new Date();
 
