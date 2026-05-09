@@ -7,7 +7,7 @@ const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
 // GET appointments (super admin: all shops, normal: own salon)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { date, status } = req.query;
+    const { date, status, staff_id } = req.query;
     let where = [];
     let params = [];
     let idx = 1;
@@ -23,6 +23,10 @@ router.get('/', authMiddleware, async (req, res) => {
     if (status) {
       where.push(`a.status = $${idx++}`);
       params.push(status);
+    }
+    if (staff_id) {
+      where.push(`a.staff_id = $${idx++}`);
+      params.push(staff_id);
     }
 
     const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
@@ -181,16 +185,25 @@ router.post('/public', async (req, res) => {
     }
     const customer_id = customer.rows[0].id;
 
+    // Generate unique booking code (8 chars, alphanumeric)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let bookingCode;
+    for (let i = 0; i < 10; i++) {
+      bookingCode = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      const exists = await db.query('SELECT id FROM appointments WHERE booking_code = $1', [bookingCode]);
+      if (!exists.rows.length) break;
+    }
+
     const { rows } = await db.query(
-      'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
-      [salon_id, service_id, staff_id, customer_id, start_time, end_time, price, 'confirmed', notes || null]
+      'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status, booking_code, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
+      [salon_id, service_id, staff_id, customer_id, start_time, end_time, price, 'confirmed', bookingCode, notes || null]
     );
 
     // Send email notifications (non-blocking)
     const bookingDate = new Date(start_time);
     const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
-    const emailData = { customerName: customer_name, salonName: salon.name || 'Salon', serviceName, staffName, date: dateStr, time: timeStr, duration: duration_min, price, address: salon.address, customerPhone: customer_phone, customerEmail: customer_email, notes };
+    const emailData = { customerName: customer_name, salonName: salon.name || 'Salon', serviceName, staffName, date: dateStr, time: timeStr, duration: duration_min, price, address: salon.address, customerPhone: customer_phone, customerEmail: customer_email, notes, bookingCode };
 
     try {
       const { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail } = require('../utils/email');
@@ -215,6 +228,47 @@ router.post('/public', async (req, res) => {
     }
 
     res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET public lookup by booking code or phone
+router.get('/lookup', async (req, res) => {
+  const { code, phone } = req.query;
+  if (!code && !phone) return res.status(400).json({ error: 'Provide code or phone' });
+  try {
+    let query, params;
+    if (code) {
+      query = `
+        SELECT a.*, s.name as service_name, st.name as staff_name,
+               sal.name as salon_name, sal.address as salon_address,
+               c.name as customer_name, c.phone as customer_phone, c.email as customer_email
+        FROM appointments a
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        JOIN customers c ON a.customer_id = c.id
+        WHERE a.booking_code = $1
+        ORDER BY a.start_time DESC`;
+      params = [code.toUpperCase()];
+    } else {
+      query = `
+        SELECT a.*, s.name as service_name, st.name as staff_name,
+               sal.name as salon_name, sal.address as salon_address,
+               c.name as customer_name, c.phone as customer_phone, c.email as customer_email
+        FROM appointments a
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        JOIN customers c ON a.customer_id = c.id
+        WHERE c.phone = $1
+        ORDER BY a.start_time DESC`;
+      params = [phone];
+    }
+    const { rows } = await db.query(query, params);
+    if (!rows.length) return res.status(404).json({ error: 'No bookings found' });
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

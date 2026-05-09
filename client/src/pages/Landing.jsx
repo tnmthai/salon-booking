@@ -19,6 +19,9 @@ export default function Landing() {
             <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
+              Look up booking
+            </Link>
             <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
               Sign in
             </Link>

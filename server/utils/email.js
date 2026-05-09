@@ -31,7 +31,7 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-function bookingConfirmationEmail({ customerName, salonName, serviceName, staffName, date, time, duration, price, address }) {
+function bookingConfirmationEmail({ customerName, salonName, serviceName, staffName, date, time, duration, price, address, bookingCode }) {
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -42,6 +42,12 @@ function bookingConfirmationEmail({ customerName, salonName, serviceName, staffN
         </div>
         <p style="color:#555;font-size:16px;">Hi ${customerName},</p>
         <p style="color:#555;">Your appointment at <strong>${salonName}</strong> has been confirmed.</p>
+        ${bookingCode ? `
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:16px;margin:24px 0;text-align:center;">
+          <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Booking Code</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a;letter-spacing:3px;">${bookingCode}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px;">Use this code or your phone number to look up your booking</div>
+        </div>` : ''}
         <div style="background:#fdf2f8;border-radius:8px;padding:20px;margin:24px 0;">
           <table style="width:100%;font-size:14px;color:#333;">
             <tr><td style="padding:6px 0;color:#888;">Service</td><td style="padding:6px 0;font-weight:600;">${serviceName}</td></tr>

@@ -40,12 +40,15 @@ CREATE TABLE IF NOT EXISTS customers (
 
 CREATE TABLE IF NOT EXISTS appointments (
   id SERIAL PRIMARY KEY,
+  salon_id INTEGER REFERENCES salons(id),
   customer_id INTEGER REFERENCES customers(id),
   staff_id INTEGER REFERENCES staff(id),
   service_id INTEGER REFERENCES services(id),
   start_time TIMESTAMP NOT NULL,
   end_time TIMESTAMP NOT NULL,
+  price DECIMAL(10,2),
   status VARCHAR(20) DEFAULT 'confirmed',
+  booking_code VARCHAR(8) UNIQUE,
   notes TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );

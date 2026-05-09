@@ -224,6 +224,8 @@ async function run(sql) {
   await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);
   await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS price DECIMAL(10,2)`);
   await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS color VARCHAR(20) DEFAULT '#EC4899'`);
+  await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS booking_code VARCHAR(8)`);
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_booking_code ON appointments(booking_code) WHERE booking_code IS NOT NULL`);
   await run(`CREATE INDEX IF NOT EXISTS idx_staff_user ON staff(user_id)`);
 
   // Create indexes
