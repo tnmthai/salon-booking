@@ -62,13 +62,13 @@ export default function Login({ onLogin }) {
               </div>
               <button type="submit" disabled={loading}
                 className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 text-sm font-medium transition">
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
             </form>
           </div>
 
           <p className="text-center mt-5 text-sm text-gray-500">
-            Don't have an account? <Link to="/register" className="text-pink-600 font-medium hover:underline">Register</Link>
+            Don't have an account? <Link to="/register" className="text-pink-600 font-medium hover:underline">Sign up</Link>
           </p>
         </div>
       </div>

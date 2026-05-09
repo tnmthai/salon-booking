@@ -20,7 +20,7 @@ export default function Landing() {
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
-              Sign In
+              Sign in
             </Link>
             <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-full hover:bg-gray-800 transition">
               Get Started
@@ -35,21 +35,21 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />
-              Now serving salons across New Zealand
+              Now supporting salons across New Zealand
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
               The modern way to
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> manage your salon</span>
             </h1>
             <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-              Accept bookings 24/7, manage staff schedules, and grow your business — all from one beautiful dashboard.
+              Accept bookings 24/7, manage staff schedules, and grow your business — all from an easy-to-use dashboard.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Link to="/register" className="bg-gray-900 text-white px-8 py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10">
-                Start for Free →
+                Start for free →
               </Link>
               <Link to="/login" className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-full hover:bg-gray-50 font-medium transition">
-                Sign In
+                Sign in
               </Link>
             </div>
 
@@ -57,7 +57,7 @@ export default function Landing() {
             <div className="flex items-center justify-center gap-6 mt-10 text-sm text-gray-400">
               <span className="flex items-center gap-1.5">✓ Free to start</span>
               <span className="flex items-center gap-1.5">✓ No credit card</span>
-              <span className="flex items-center gap-1.5">✓ Setup in 5 min</span>
+              <span className="flex items-center gap-1.5">✓ Get set up in 5 minutes</span>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: '📅', title: 'Online Booking', desc: 'Let clients book appointments anytime, from any device. No phone calls needed.', color: 'from-blue-500 to-cyan-500' },
+              { icon: '📅', title: 'Online Booking', desc: 'Let clients book appointments anytime, from any device. No phone calls required.', color: 'from-blue-500 to-cyan-500' },
               { icon: '👥', title: 'Staff Management', desc: 'Assign services, manage schedules, and track performance for your whole team.', color: 'from-purple-500 to-pink-500' },
               { icon: '📊', title: 'Reports & Analytics', desc: 'See booking trends, revenue, peak hours, and top services at a glance.', color: 'from-orange-500 to-red-500' },
             ].map((f, i) => (
@@ -116,7 +116,7 @@ export default function Landing() {
         <section className="py-20 px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Browse Salons</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Browse salons</h2>
               <p className="text-gray-500">Find and book your next appointment.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -138,10 +138,10 @@ export default function Landing() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to modernize your salon?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to modernise your salon?</h2>
           <p className="text-gray-500 mb-8">Join salons already using SalonBook to manage their business.</p>
           <Link to="/register" className="inline-block bg-gray-900 text-white px-10 py-4 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10">
-            Create Your Salon — Free
+            Create your salon — free
           </Link>
         </div>
       </section>
@@ -154,8 +154,8 @@ export default function Landing() {
             <span>© 2026 SalonBook</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
-            <Link to="/login" className="hover:text-gray-600">Sign In</Link>
-            <Link to="/register" className="hover:text-gray-600">Register</Link>
+            <Link to="/login" className="hover:text-gray-600">Sign in</Link>
+            <Link to="/register" className="hover:text-gray-600">Sign up</Link>
           </div>
         </div>
       </footer>

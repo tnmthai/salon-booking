@@ -118,7 +118,7 @@ export default function Register({ onLogin }) {
           </div>
 
           <p className="text-center mt-5 text-sm text-gray-500">
-            Already have an account? <Link to="/login" className="text-pink-600 font-medium hover:underline">Sign In</Link>
+            Already have an account? <Link to="/login" className="text-pink-600 font-medium hover:underline">Sign in</Link>
           </p>
         </div>
       </div>

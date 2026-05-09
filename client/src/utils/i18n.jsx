@@ -36,14 +36,14 @@ const translations = {
   durationLabel: 'Duration', noSlots: 'No available slots. Try another date.',
   loadingServices: 'Loading services...',
   // Landing
-  salonBooking: 'Salon Booking Platform', registerSalon: 'Register Salon', signIn: 'Sign In',
-  subtitle: 'Salon booking platform. Register your salon in minutes.',
-  bookOnline: '24/7 Online Booking', bookOnlineDesc: 'Customers book anytime, no phone calls needed',
+  salonBooking: 'Salon Booking Platform', registerSalon: 'Sign up salon', signIn: 'Sign in',
+  subtitle: 'Salon booking platform. Sign up your salon in minutes.',
+  bookOnline: '24/7 Online Booking', bookOnlineDesc: 'Customers book anytime, no phone calls required',
   staffMgmt: 'Staff Management', staffMgmtDesc: 'Assign services, view schedules by day/week',
   dashOverview: 'Dashboard Overview', dashOverviewDesc: 'View booking stats, revenue, customers',
   salonsOnPlatform: 'Salons on Platform', bookNow: 'Book Now →',
   // Auth
-  loginTitle: 'Sign In', registerTitle: 'Register Salon',
+  loginTitle: 'Sign in', registerTitle: 'Sign up salon',
   registerSubtitle: 'Create an account and start receiving bookings',
   salonName: 'Salon Name', salonOwner: 'Salon Owner', createSalon: 'Create Salon',
   creating: 'Creating...', noAccount: "Don't have an account?", haveAccount: 'Already have an account?',
