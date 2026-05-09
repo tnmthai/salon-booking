@@ -46,7 +46,10 @@ function AdminLayout({ salon, user, onLogout }) {
           </Link>
           <div className="flex gap-3 text-sm items-center flex-wrap">
             <Link to="/admin" className="text-gray-600 hover:text-pink-600">Dashboard</Link>
-            {isOwner && (
+            {isSuperAdmin && (
+              <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 All Shops</Link>
+            )}
+            {!isSuperAdmin && isOwner && (
               <>
                 <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">Services</Link>
                 <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Team</Link>
@@ -65,10 +68,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <Link to="/admin/schedule" className="text-gray-600 hover:text-pink-600">📅 My Schedule</Link>
               </>
             )}
-            {isSuperAdmin && (
-              <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 All Shops</Link>
-            )}
-            {salon?.slug && isOwner && (
+            {salon?.slug && !isSuperAdmin && isOwner && (
               <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
                 className="bg-pink-600 text-white px-3 py-1 rounded-full hover:bg-pink-700">
                 Booking Page ↗
