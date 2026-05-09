@@ -17,7 +17,7 @@ router.get('/', authMiddleware, async (req, res) => {
       params.push(req.user.salon_id);
     }
     if (date) {
-      where.push(`DATE(a.start_time) = $${idx++}`);
+      where.push(`DATE(a.start_time AT TIME ZONE 'Pacific/Auckland') = $${idx++}`);
       params.push(date);
     }
     if (status) {
