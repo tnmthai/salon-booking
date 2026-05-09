@@ -112,7 +112,7 @@ export default function Calendar() {
   const gridH = totalSlots * SLOT_H
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 pt-20 pb-6">
       <h1 className="text-2xl font-bold mb-4">📅 {t('calendar')}</h1>
 
       {/* Controls */}
