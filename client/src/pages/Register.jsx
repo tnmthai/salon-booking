@@ -51,8 +51,8 @@ export default function Register({ onLogin }) {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900">
-              <span className="text-3xl">💅</span>
-              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
+              <span className="w-10 h-10 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">T</span>
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
             </Link>
             <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">Create your salon</h1>
             <p className="text-sm text-gray-500">Start receiving bookings in minutes</p>

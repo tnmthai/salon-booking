@@ -29,12 +29,12 @@ export default function Landing() {
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-gray-900">
-            <span className="text-2xl">💅</span>
-            <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
+            <span className="w-8 h-8 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">T</span>
+            <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
-              Look up booking
+              Find booking
             </Link>
             <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
               Sign in
@@ -52,11 +52,11 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />
-              Now supporting salons across New Zealand
+              Now supporting businesses across New Zealand
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
               The modern way to
-              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> manage your salon</span>
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> simplify your bookings</span>
             </h1>
             <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
               Accept bookings 24/7, manage staff schedules, and grow your business — all from an easy-to-use dashboard.
@@ -81,7 +81,7 @@ export default function Landing() {
                   className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 <button type="submit" className="px-6 py-3 bg-pink-600 text-white rounded-xl text-sm font-medium hover:bg-pink-700 transition whitespace-nowrap">
-                  🔍 Look up
+                  🔍 Find
                 </button>
               </form>
               <p className="text-xs text-gray-400 mt-2">Enter your booking code or phone number to view your appointment</p>
@@ -101,13 +101,13 @@ export default function Landing() {
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Everything you need to run your salon</h2>
-            <p className="text-gray-500 max-w-lg mx-auto">Powerful tools that save you time and help you deliver a better experience for your clients.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Everything you need to run your business</h2>
+            <p className="text-gray-500 max-w-lg mx-auto">Powerful tools that save you time and help you deliver a better experience for your customers.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: '📅', title: 'Online Booking', desc: 'Let clients book appointments anytime, from any device. No phone calls required.', color: 'from-blue-500 to-cyan-500' },
-              { icon: '👥', title: 'Staff Management', desc: 'Assign services, manage schedules, and track performance for your whole team.', color: 'from-purple-500 to-pink-500' },
+              { icon: '📅', title: 'Online Booking', desc: 'Let customers book appointments anytime, from any device. No phone calls required.', color: 'from-blue-500 to-cyan-500' },
+              { icon: '👥', title: 'Team Management', desc: 'Assign services, manage schedules, and track performance for your whole team.', color: 'from-purple-500 to-pink-500' },
               { icon: '📊', title: 'Reports & Analytics', desc: 'See booking trends, revenue, peak hours, and top services at a glance.', color: 'from-orange-500 to-red-500' },
             ].map((f, i) => (
               <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition group">
@@ -127,11 +127,11 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Get started in minutes</h2>
-            <p className="text-gray-500">Three simple steps to modern salon management.</p>
+            <p className="text-gray-500">Three simple steps to modern business management.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Create your salon', desc: 'Sign up and add your salon details, services, and pricing.' },
+              { step: '01', title: 'Create your business', desc: 'Sign up and add your business details, services, and pricing.' },
               { step: '02', title: 'Set up your team', desc: 'Add staff members, assign services, and set working hours.' },
               { step: '03', title: 'Start receiving bookings', desc: 'Share your booking page and watch appointments come in.' },
             ].map((s, i) => (
@@ -150,7 +150,7 @@ export default function Landing() {
         <section className="py-20 px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Browse salons</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Browse businesses</h2>
               <p className="text-gray-500">Find and book your next appointment.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -175,10 +175,10 @@ export default function Landing() {
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to modernise your salon?</h2>
-          <p className="text-gray-500 mb-8">Join salons already using SalonBook to manage their business.</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to simplify your bookings?</h2>
+          <p className="text-gray-500 mb-8">Join businesses already using Timia to manage their bookings.</p>
           <Link to="/register" className="inline-block bg-gray-900 text-white px-10 py-4 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10">
-            Create your salon — free
+            Create your business — free
           </Link>
         </div>
       </section>
@@ -187,8 +187,8 @@ export default function Landing() {
       <footer className="border-t border-gray-100 py-8 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span className="text-lg">💅</span>
-            <span>© 2026 SalonBook</span>
+            <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
+            <span>© 2026 Timia</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
             <Link to="/login" className="hover:text-gray-600">Sign in</Link>

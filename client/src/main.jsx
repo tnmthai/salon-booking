@@ -41,7 +41,7 @@ function AdminLayout({ salon, user, onLogout }) {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/admin" className="text-xl font-bold text-pink-600 flex items-center gap-2">
-            💅 {salon?.name || 'Salon'}
+            <span className="w-7 h-7 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</span> {salon?.name || 'Timia'}
             {isSuperAdmin && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Super Admin</span>}
           </Link>
           <div className="flex gap-3 text-sm items-center flex-wrap">
@@ -49,7 +49,7 @@ function AdminLayout({ salon, user, onLogout }) {
             {isOwner && (
               <>
                 <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">Services</Link>
-                <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Staff</Link>
+                <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Team</Link>
                 <Link to="/admin/schedule" className="text-gray-600 hover:text-pink-600">📅 Schedule</Link>
                 <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">Calendar</Link>
                 <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">Users</Link>
