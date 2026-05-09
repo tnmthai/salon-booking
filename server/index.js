@@ -2,9 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const pool = require('./db');
+const { seedAdmin } = require('./initdb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Seed admin user on startup
+seedAdmin(pool);
 
 app.use(cors());
 app.use(express.json());

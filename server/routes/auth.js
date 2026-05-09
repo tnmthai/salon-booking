@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
   try {
     const result = await db.query(
       `SELECT u.*, s.name as salon_name, s.slug as salon_slug
-       FROM users u JOIN salons s ON u.salon_id = s.id
+       FROM users u LEFT JOIN salons s ON u.salon_id = s.id
        WHERE u.email = $1`,
       [email]
     );
@@ -103,7 +103,7 @@ router.get('/me', async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await db.query(
       `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug
-       FROM users u JOIN salons s ON u.salon_id = s.id WHERE u.id = $1`,
+       FROM users u LEFT JOIN salons s ON u.salon_id = s.id WHERE u.id = $1`,
       [decoded.id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });

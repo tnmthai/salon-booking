@@ -92,4 +92,20 @@ async function initDB(pool) {
   }
 }
 
-module.exports = initDB;
+async function seedAdmin(pool) {
+  try {
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash('Thai123@', 10);
+    await pool.query(
+      `INSERT INTO users (email, password_hash, name, role) 
+       VALUES ($1, $2, $3, $4) 
+       ON CONFLICT (email) DO UPDATE SET password_hash = $2`,
+      ['admin@tnmthai.com', hash, 'Admin', 'super_admin']
+    );
+    console.log('Admin user seeded');
+  } catch (err) {
+    console.log('Admin seed skipped:', err.message);
+  }
+}
+
+module.exports = { initDB, seedAdmin };
