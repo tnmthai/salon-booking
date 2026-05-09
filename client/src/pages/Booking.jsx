@@ -88,7 +88,8 @@ export default function Booking() {
     <div className="min-h-screen bg-gray-50">
       {/* Salon Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+          <a href="/" className="text-gray-400 hover:text-gray-600 text-sm">← Home</a>
           <h1 className="text-xl font-bold text-pink-600">💅 {salon?.name || 'Loading...'}</h1>
           {salon?.address && <p className="text-sm text-gray-500">📍 {salon.address}</p>}
         </div>

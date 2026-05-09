@@ -11,6 +11,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Services from './pages/Services'
 import Staff from './pages/Staff'
+import StaffBookings from './pages/StaffBookings'
 import Calendar from './pages/Calendar'
 import Booking from './pages/Booking'
 import Users from './pages/Users'
@@ -71,6 +72,7 @@ function AdminLayout({ salon, user, onLogout }) {
         <Route path="/" element={<Dashboard />} />
         {isOwner && <Route path="/services" element={<Services />} />}
         {isOwner && <Route path="/staff" element={<Staff />} />}
+        {isOwner && <Route path="/staff/:staffId/bookings" element={<StaffBookings />} />}
         {isOwner && <Route path="/schedule" element={<StaffSchedule />} />}
         {isStaff && <Route path="/schedule" element={<StaffSchedule />} />}
         {isOwner && <Route path="/calendar" element={<Calendar />} />}
