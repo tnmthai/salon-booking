@@ -203,6 +203,17 @@ async function run(sql) {
   await run(`CREATE INDEX IF NOT EXISTS idx_staff_salon ON staff(salon_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_customers_salon ON customers(salon_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_appointments_salon ON appointments(salon_id)`);
+
+  // Backfill NULL salon_id to first available salon
+  const defaultSalon = await pool.query('SELECT id FROM salons ORDER BY id LIMIT 1');
+  if (defaultSalon.rows.length > 0) {
+    const defaultSalonId = defaultSalon.rows[0].id;
+    for (const t of tables_needing_salon) {
+      await pool.query(`UPDATE ${t} SET salon_id = $1 WHERE salon_id IS NULL`, [defaultSalonId]);
+    }
+    await pool.query('UPDATE users SET salon_id = $1 WHERE salon_id IS NULL', [defaultSalonId]);
+    console.log(`Backfilled NULL salon_id to salon ${defaultSalonId}`);
+  }
   await run(`CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_appointments_staff ON appointments(staff_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
