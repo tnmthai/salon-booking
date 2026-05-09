@@ -135,7 +135,7 @@ export default function Users() {
                 <td className="p-3">
                   <div className="flex gap-2">
                     <button onClick={() => startEdit(u)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                    {isSuperAdmin && (
+                    {(isSuperAdmin || u.role !== 'super_admin') && (
                       <button onClick={() => { setResetUser(u); setNewPassword('') }}
                         className="text-sm text-orange-600 hover:underline">🔑 Reset</button>
                     )}

@@ -131,7 +131,17 @@ router.put('/:id/reset-password', authMiddleware, async (req, res) => {
   const { password } = req.body;
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
   try {
-    if (!isSuperAdmin(req.user.email)) return res.status(403).json({ error: 'Forbidden' });
+    if (isSuperAdmin(req.user.email)) {
+      // Super admin can reset anyone
+      const password_hash = await bcrypt.hash(password, 10);
+      const { rows } = await db.query('UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email, name', [password_hash, req.params.id]);
+      if (!rows.length) return res.status(404).json({ error: 'User not found' });
+      return res.json({ message: 'Password reset successfully', user: rows[0] });
+    }
+    // Owner can reset users in their salon (not super admin)
+    const targetUser = await db.query('SELECT id, role FROM users WHERE id = $1 AND salon_id = $2', [req.params.id, req.user.salon_id]);
+    if (!targetUser.rows.length) return res.status(404).json({ error: 'User not found' });
+    if (targetUser.rows[0].role === 'super_admin') return res.status(403).json({ error: 'Cannot reset super admin password' });
     const password_hash = await bcrypt.hash(password, 10);
     const { rows } = await db.query('UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email, name', [password_hash, req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
