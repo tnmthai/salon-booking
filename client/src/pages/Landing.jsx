@@ -4,9 +4,21 @@ import { api } from '../utils/api'
 
 export default function Landing() {
   const [salons, setSalons] = useState([])
+  const [ratings, setRatings] = useState({})
 
   useEffect(() => {
-    api.getSalons().then(setSalons).catch(console.error)
+    api.getSalons().then(async (data) => {
+      setSalons(data)
+      // Fetch ratings for each salon
+      const r = {}
+      for (const s of data) {
+        try {
+          const rating = await api.getSalonRating(s.slug)
+          if (rating.total_reviews > 0) r[s.id] = rating
+        } catch {}
+      }
+      setRatings(r)
+    }).catch(console.error)
   }, [])
 
   return (
@@ -127,10 +139,13 @@ export default function Landing() {
                 <Link key={s.id} to={`/${s.slug}/book`} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg hover:border-pink-100 transition group">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold text-gray-900 text-lg group-hover:text-pink-600 transition">{s.name}</h3>
-                    <span className="text-pink-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition">Book →</span>
+                    {ratings[s.id] && (
+                      <span className="text-sm text-yellow-500">⭐ {ratings[s.id].average_rating} ({ratings[s.id].total_reviews})</span>
+                    )}
                   </div>
                   {s.address && <p className="text-sm text-gray-400 flex items-center gap-1">📍 {s.address}</p>}
                   {s.description && <p className="text-sm text-gray-400 mt-2 line-clamp-2">{s.description}</p>}
+                  <span className="text-pink-600 text-sm font-medium mt-3 inline-block">Book →</span>
                 </Link>
               ))}
             </div>

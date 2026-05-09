@@ -30,7 +30,11 @@ export default function Dashboard() {
   useEffect(() => { loadAppts() }, [filterDate, filterStatus, showAllDates])
 
   const updateStatus = async (id, status) => {
-    await api.updateAppointment(id, { status })
+    if (status === 'completed') {
+      await api.completeAppointment(id)
+    } else {
+      await api.updateAppointment(id, { status })
+    }
     loadAppts()
   }
 
@@ -101,7 +105,7 @@ export default function Dashboard() {
             {!showAllDates && (
               <div className="flex gap-1 ml-auto">
                 <button onClick={() => shiftDate(-1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('prev')}</button>
-                <button onClick={() => setFilterDate(new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' }))} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>>
+                <button onClick={() => setFilterDate(new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' }))} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>
                 <button onClick={() => shiftDate(1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('next')}</button>
               </div>
             )}

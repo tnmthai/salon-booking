@@ -18,6 +18,9 @@ app.use('/api/customers', require('./routes/customers'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/working-hours', require('./routes/working-hours'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/gallery', require('./routes/gallery'));
+app.use('/api/overrides', require('./routes/overrides'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -185,6 +188,146 @@ app.get('/api/salons/:slug', async (req, res) => {
   }
 });
 
+// --- Priority 3: Reminder email cron (runs every hour) ---
+async function sendReminders() {
+  try {
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+    const { rows } = await pool.query(`
+      SELECT a.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone,
+        s.name as service_name, s.duration_min,
+        st.name as staff_name,
+        sal.name as salon_name, sal.address as salon_address
+      FROM appointments a
+      JOIN customers c ON a.customer_id = c.id
+      JOIN services s ON a.service_id = s.id
+      JOIN staff st ON a.staff_id = st.id
+      JOIN salons sal ON a.salon_id = sal.id
+      WHERE a.status = 'confirmed'
+        AND a.reminder_sent = false
+        AND a.start_time >= $1
+        AND a.start_time <= $2
+        AND c.email IS NOT NULL
+        AND c.email != ''
+    `, [in24h.toISOString(), in25h.toISOString()]);
+
+    if (rows.length === 0) return;
+
+    console.log(`[REMINDER] Found ${rows.length} appointments needing reminders`);
+
+    const { sendEmail, reminderEmail } = require('./utils/email');
+
+    for (const appt of rows) {
+      try {
+        const bookingDate = new Date(appt.start_time);
+        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+
+        await sendEmail(appt.customer_email, `Reminder: Appointment Tomorrow at ${appt.salon_name}`,
+          reminderEmail({
+            customerName: appt.customer_name,
+            salonName: appt.salon_name,
+            serviceName: appt.service_name,
+            staffName: appt.staff_name,
+            date: dateStr,
+            time: timeStr,
+            duration: appt.duration_min,
+            price: appt.price,
+            address: appt.salon_address,
+            bookingCode: appt.booking_code,
+          })
+        );
+
+        await pool.query('UPDATE appointments SET reminder_sent = true WHERE id = $1', [appt.id]);
+        console.log(`[REMINDER] ✅ Sent to ${appt.customer_email} for appt #${appt.id}`);
+      } catch (e) {
+        console.error(`[REMINDER] ❌ Failed for appt #${appt.id}:`, e.message);
+      }
+    }
+  } catch (err) {
+    console.error('[REMINDER] ❌ Cron error:', err.message);
+  }
+}
+
+// Run reminders every hour
+setInterval(sendReminders, 60 * 60 * 1000);
+// Also run once on startup (after 30s delay)
+setTimeout(sendReminders, 30000);
+
+// --- Loyalty points endpoint ---
+app.get('/api/loyalty/:phone', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, name, loyalty_points FROM customers WHERE phone = $1 ORDER BY loyalty_points DESC LIMIT 1',
+      [req.params.phone]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Mark appointment completed + award loyalty points ---
+app.put('/api/appointments/:id/complete', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const appt = await pool.query('SELECT * FROM appointments WHERE id = $1', [req.params.id]);
+    if (!appt.rows.length) return res.status(404).json({ error: 'Appointment not found' });
+
+    const a = appt.rows[0];
+    // Allow owner, super admin, or staff linked to this appointment
+    if (decoded.role !== 'owner' && decoded.email !== 'admin@tnmthai.com') {
+      const staffCheck = await pool.query('SELECT id FROM staff WHERE user_id = $1 AND id = $2', [decoded.id, a.staff_id]);
+      if (!staffCheck.rows.length && a.salon_id !== decoded.salon_id) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+
+    await pool.query("UPDATE appointments SET status = 'completed' WHERE id = $1", [req.params.id]);
+
+    // Award loyalty points (1 point per $10 spent)
+    if (a.customer_id && a.price) {
+      const points = Math.floor(parseFloat(a.price) / 10);
+      if (points > 0) {
+        await pool.query('UPDATE customers SET loyalty_points = loyalty_points + $1 WHERE id = $2', [points, a.customer_id]);
+        console.log(`[LOYALTY] Awarded ${points} points to customer #${a.customer_id}`);
+      }
+    }
+
+    // Send review request email (non-blocking)
+    try {
+      const cust = await pool.query('SELECT * FROM customers WHERE id = $1', [a.customer_id]);
+      const salon = await pool.query('SELECT * FROM salons WHERE id = $1', [a.salon_id]);
+      const svc = await pool.query('SELECT * FROM services WHERE id = $1', [a.service_id]);
+      if (cust.rows[0]?.email) {
+        const bookingDate = new Date(a.start_time);
+        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const { sendEmail, reviewRequestEmail } = require('./utils/email');
+        sendEmail(cust.rows[0].email, `How was your visit? - ${salon.rows[0]?.name || 'Salon'}`,
+          reviewRequestEmail({
+            customerName: cust.rows[0].name,
+            salonName: salon.rows[0]?.name || 'Salon',
+            serviceName: svc.rows[0]?.name || 'Service',
+            date: dateStr,
+            bookingCode: a.booking_code,
+          })
+        ).catch(e => console.error('[EMAIL] Review request error:', e.message));
+      }
+    } catch (e) { console.error('[EMAIL] Review request module error:', e.message); }
+
+    res.json({ message: 'Marked as completed' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Serve static client build in production
 const clientPath = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientPath));
@@ -248,6 +391,33 @@ async function run(sql) {
   await run(`CREATE INDEX IF NOT EXISTS idx_appointments_staff ON appointments(staff_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_salons_slug ON salons(slug)`);
+
+  // --- NEW TABLES ---
+
+  // Reviews (Priority 4)
+  await run(`CREATE TABLE IF NOT EXISTS reviews (id SERIAL PRIMARY KEY, appointment_id INTEGER REFERENCES appointments(id) ON DELETE CASCADE, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, staff_id INTEGER REFERENCES staff(id) ON DELETE SET NULL, rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5), comment TEXT, customer_name VARCHAR(100), created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_reviews_salon ON reviews(salon_id)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_reviews_staff ON reviews(staff_id)`);
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_appointment ON reviews(appointment_id)`);
+
+  // Working hours overrides (Priority 5)
+  await run(`CREATE TABLE IF NOT EXISTS working_hours_overrides (id SERIAL PRIMARY KEY, staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE, date DATE NOT NULL, is_active BOOLEAN DEFAULT false, start_time TIME, end_time TIME, reason TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_wh_overrides_staff ON working_hours_overrides(staff_id)`);
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_wh_overrides_unique ON working_hours_overrides(staff_id, date)`);
+
+  // Appointment services junction (Priority 6)
+  await run(`CREATE TABLE IF NOT EXISTS appointment_services (id SERIAL PRIMARY KEY, appointment_id INTEGER REFERENCES appointments(id) ON DELETE CASCADE, service_id INTEGER REFERENCES services(id) ON DELETE CASCADE, price DECIMAL(10,2), duration_min INTEGER)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_appt_services_appt ON appointment_services(appointment_id)`);
+
+  // Gallery (Priority 7)
+  await run(`CREATE TABLE IF NOT EXISTS gallery (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, image_url TEXT NOT NULL, caption TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_gallery_salon ON gallery(salon_id)`);
+
+  // Loyalty points (Priority 8)
+  await run(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS loyalty_points INTEGER DEFAULT 0`);
+
+  // Reminder tracking (Priority 3)
+  await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT false`);
 
   console.log('Database initialized');
 

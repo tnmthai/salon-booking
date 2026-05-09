@@ -53,9 +53,9 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET available time slots for booking
 router.get('/slots', async (req, res) => {
   try {
-    const { slug, staff_id, service_id, date } = req.query;
-    if (!slug || !staff_id || !service_id || !date) {
-      return res.status(400).json({ error: 'Missing required params: slug, staff_id, service_id, date' });
+    const { slug, staff_id, service_id, date, duration: customDuration, service_ids } = req.query;
+    if (!slug || !staff_id || !date) {
+      return res.status(400).json({ error: 'Missing required params: slug, staff_id, date' });
     }
 
     // Get salon
@@ -63,20 +63,44 @@ router.get('/slots', async (req, res) => {
     if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
     const salon_id = salon.rows[0].id;
 
-    // Get service duration
-    const svc = await db.query('SELECT duration_min FROM services WHERE id = $1 AND salon_id = $2', [service_id, salon_id]);
-    if (!svc.rows.length) return res.status(404).json({ error: 'Service not found' });
-    const duration = svc.rows[0].duration_min;
+    // Get service duration — support multiple services (Priority 6)
+    let duration;
+    if (customDuration) {
+      duration = parseInt(customDuration);
+    } else if (service_ids) {
+      const ids = service_ids.split(',').map(Number);
+      const svcs = await db.query('SELECT duration_min FROM services WHERE id = ANY($1) AND salon_id = $2', [ids, salon_id]);
+      duration = svcs.rows.reduce((sum, s) => sum + s.duration_min, 0);
+    } else if (service_id) {
+      const svc = await db.query('SELECT duration_min FROM services WHERE id = $1 AND salon_id = $2', [service_id, salon_id]);
+      if (!svc.rows.length) return res.status(404).json({ error: 'Service not found' });
+      duration = svc.rows[0].duration_min;
+    } else {
+      return res.status(400).json({ error: 'Provide service_id, service_ids, or duration' });
+    }
 
-    // Get working hours for this staff on this day of week
-    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-    const wh = await db.query(
-      'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true',
-      [staff_id, dayOfWeek]
+    // Check for working hours overrides first (Priority 5)
+    const override = await db.query(
+      'SELECT is_active, start_time, end_time FROM working_hours_overrides WHERE staff_id = $1 AND date = $2',
+      [staff_id, date]
     );
-    if (!wh.rows.length) return res.json([]); // Staff doesn't work this day
 
-    const { start_time: workStart, end_time: workEnd } = wh.rows[0];
+    let workStart, workEnd;
+    if (override.rows.length > 0) {
+      if (!override.rows[0].is_active) return res.json([]); // Day off override
+      workStart = override.rows[0].start_time;
+      workEnd = override.rows[0].end_time;
+    } else {
+      // Fall back to regular working hours
+      const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+      const wh = await db.query(
+        'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true',
+        [staff_id, dayOfWeek]
+      );
+      if (!wh.rows.length) return res.json([]); // Staff doesn't work this day
+      workStart = wh.rows[0].start_time;
+      workEnd = wh.rows[0].end_time;
+    }
 
     // Convert NZ working hours to UTC for slot generation
     // NZ timezone: UTC+12 (NZST) in winter, UTC+13 (NZDT) in summer
@@ -164,12 +188,20 @@ router.get('/public/:slug', async (req, res) => {
 
 // POST create appointment (public — for booking page)
 router.post('/public', async (req, res) => {
-  const { salon_id, service_id, staff_id, customer_name, customer_phone, customer_email, start_time, notes } = req.body;
+  const { salon_id, service_id, service_ids, staff_id, customer_name, customer_phone, customer_email, start_time, notes } = req.body;
   try {
-    const svc = await db.query('SELECT id, name, duration_min, price FROM services WHERE id = $1', [service_id]);
-    if (!svc.rows.length) return res.status(400).json({ error: 'Service not found' });
-    const { name: serviceName, duration_min, price } = svc.rows[0];
-    const end_time = new Date(new Date(start_time).getTime() + duration_min * 60000).toISOString();
+    // Support multiple services (Priority 6)
+    const allServiceIds = service_ids && service_ids.length > 0 ? service_ids : [service_id];
+    const svcs = await db.query('SELECT id, name, duration_min, price FROM services WHERE id = ANY($1)', [allServiceIds]);
+    if (svcs.rows.length === 0) return res.status(400).json({ error: 'Service not found' });
+
+    const totalDuration = svcs.rows.reduce((sum, s) => sum + s.duration_min, 0);
+    const totalPrice = svcs.rows.reduce((sum, s) => sum + parseFloat(s.price), 0);
+    const serviceName = svcs.rows.map(s => s.name).join(', ');
+    const primaryService = svcs.rows[0];
+    const duration_min = totalDuration;
+    const price = totalPrice;
+    const end_time = new Date(new Date(start_time).getTime() + totalDuration * 60000).toISOString();
 
     // Get staff name
     const staffResult = await db.query('SELECT name FROM staff WHERE id = $1', [staff_id]);
@@ -196,8 +228,23 @@ router.post('/public', async (req, res) => {
 
     const { rows } = await db.query(
       'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status, booking_code, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-      [salon_id, service_id, staff_id, customer_id, start_time, end_time, price, 'confirmed', bookingCode, notes || null]
+      [salon_id, primaryService.id, staff_id, customer_id, start_time, end_time, price, 'confirmed', bookingCode, notes || null]
     );
+
+    // Store multiple services in junction table (Priority 6)
+    if (allServiceIds.length > 1) {
+      for (const svc of svcs.rows) {
+        await db.query(
+          'INSERT INTO appointment_services (appointment_id, service_id, price, duration_min) VALUES ($1, $2, $3, $4)',
+          [rows[0].id, svc.id, svc.price, svc.duration_min]
+        );
+      }
+    } else {
+      await db.query(
+        'INSERT INTO appointment_services (appointment_id, service_id, price, duration_min) VALUES ($1, $2, $3, $4)',
+        [rows[0].id, primaryService.id, primaryService.price, primaryService.duration_min]
+      );
+    }
 
     // Send email notifications (non-blocking)
     const bookingDate = new Date(start_time);
@@ -269,6 +316,159 @@ router.get('/lookup', async (req, res) => {
     const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'No bookings found' });
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT cancel appointment (public — by booking_code or phone)
+router.put('/:id/cancel', async (req, res) => {
+  const { booking_code, phone } = req.body;
+  if (!booking_code && !phone) return res.status(400).json({ error: 'Provide booking_code or phone' });
+  try {
+    // Verify ownership
+    let verifyQuery, verifyParams;
+    if (booking_code) {
+      verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
+        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        FROM appointments a
+        JOIN customers c ON a.customer_id = c.id
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        WHERE a.id = $1 AND a.booking_code = $2`;
+      verifyParams = [req.params.id, booking_code.toUpperCase()];
+    } else {
+      verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
+        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        FROM appointments a
+        JOIN customers c ON a.customer_id = c.id
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        WHERE a.id = $1 AND c.phone = $2`;
+      verifyParams = [req.params.id, phone];
+    }
+    const verify = await db.query(verifyQuery, verifyParams);
+    if (!verify.rows.length) return res.status(404).json({ error: 'Appointment not found or credentials do not match' });
+
+    const appt = verify.rows[0];
+
+    // Check 3-hour rule
+    const now = new Date();
+    const startTime = new Date(appt.start_time);
+    const hoursUntil = (startTime - now) / (1000 * 60 * 60);
+    if (hoursUntil < 3) {
+      return res.status(400).json({ error: 'Cannot cancel less than 3 hours before appointment' });
+    }
+
+    if (appt.status === 'cancelled') {
+      return res.status(400).json({ error: 'Appointment is already cancelled' });
+    }
+
+    const { rows } = await db.query(
+      "UPDATE appointments SET status = 'cancelled' WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+
+    // Send cancellation email (non-blocking)
+    try {
+      const { sendEmail, cancellationEmail } = require('../utils/email');
+      if (appt.customer_email) {
+        const bookingDate = new Date(appt.start_time);
+        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+        sendEmail(appt.customer_email, `Booking Cancelled - ${appt.salon_name}`,
+          cancellationEmail({ customerName: appt.customer_name, salonName: appt.salon_name, serviceName: appt.service_name, staffName: appt.staff_name, date: dateStr, time: timeStr })
+        ).catch(e => console.error('[EMAIL] Cancel email error:', e.message));
+      }
+    } catch (e) { console.error('[EMAIL] Cancel module error:', e.message); }
+
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT reschedule appointment (public — by booking_code or phone)
+router.put('/:id/reschedule', async (req, res) => {
+  const { booking_code, phone, start_time } = req.body;
+  if (!booking_code && !phone) return res.status(400).json({ error: 'Provide booking_code or phone' });
+  if (!start_time) return res.status(400).json({ error: 'Provide new start_time' });
+  try {
+    // Verify ownership
+    let verifyQuery, verifyParams;
+    if (booking_code) {
+      verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
+        s.name as service_name, s.duration_min, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        FROM appointments a
+        JOIN customers c ON a.customer_id = c.id
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        WHERE a.id = $1 AND a.booking_code = $2`;
+      verifyParams = [req.params.id, booking_code.toUpperCase()];
+    } else {
+      verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
+        s.name as service_name, s.duration_min, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        FROM appointments a
+        JOIN customers c ON a.customer_id = c.id
+        JOIN services s ON a.service_id = s.id
+        JOIN staff st ON a.staff_id = st.id
+        JOIN salons sal ON a.salon_id = sal.id
+        WHERE a.id = $1 AND c.phone = $2`;
+      verifyParams = [req.params.id, phone];
+    }
+    const verify = await db.query(verifyQuery, verifyParams);
+    if (!verify.rows.length) return res.status(404).json({ error: 'Appointment not found or credentials do not match' });
+
+    const appt = verify.rows[0];
+
+    // Check 3-hour rule
+    const now = new Date();
+    const startTime = new Date(appt.start_time);
+    const hoursUntil = (startTime - now) / (1000 * 60 * 60);
+    if (hoursUntil < 3) {
+      return res.status(400).json({ error: 'Cannot reschedule less than 3 hours before appointment' });
+    }
+
+    if (appt.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot reschedule a cancelled appointment' });
+    }
+
+    // Check for conflicts
+    const newStart = new Date(start_time);
+    const newEnd = new Date(newStart.getTime() + appt.duration_min * 60000);
+    const conflicts = await db.query(
+      `SELECT id FROM appointments WHERE staff_id = $1 AND status != 'cancelled' AND id != $2
+       AND start_time < $3 AND end_time > $4`,
+      [appt.staff_id, req.params.id, newEnd.toISOString(), newStart.toISOString()]
+    );
+    if (conflicts.rows.length) {
+      return res.status(400).json({ error: 'Time slot is already booked' });
+    }
+
+    const { rows } = await db.query(
+      'UPDATE appointments SET start_time = $1, end_time = $2 WHERE id = $3 RETURNING *',
+      [newStart.toISOString(), newEnd.toISOString(), req.params.id]
+    );
+
+    // Send reschedule email (non-blocking)
+    try {
+      const { sendEmail, rescheduleEmail } = require('../utils/email');
+      if (appt.customer_email) {
+        const oldDate = new Date(appt.start_time);
+        const oldDateStr = oldDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const oldTimeStr = oldDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+        const newDateStr = newStart.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const newTimeStr = newStart.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+        sendEmail(appt.customer_email, `Booking Rescheduled - ${appt.salon_name}`,
+          rescheduleEmail({ customerName: appt.customer_name, salonName: appt.salon_name, serviceName: appt.service_name, staffName: appt.staff_name, oldDate: oldDateStr, oldTime: oldTimeStr, newDate: newDateStr, newTime: newTimeStr })
+        ).catch(e => console.error('[EMAIL] Reschedule email error:', e.message));
+      }
+    } catch (e) { console.error('[EMAIL] Reschedule module error:', e.message); }
+
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

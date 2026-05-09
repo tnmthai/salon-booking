@@ -86,6 +86,30 @@ export const api = {
     const qs = new URLSearchParams(params).toString();
     return request(`/reports/stats?${qs}`);
   },
+
+  // Reviews
+  getReviews: () => request('/reviews'),
+  getPublicReviews: (slug) => request(`/reviews/public/${slug}`),
+  getSalonRating: (slug) => request(`/reviews/rating/${slug}`),
+  deleteReview: (id) => request(`/reviews/${id}`, { method: 'DELETE' }),
+
+  // Gallery
+  getGallery: () => request('/gallery'),
+  getPublicGallery: (slug) => request(`/gallery/public/${slug}`),
+  addGalleryImage: (data) => request('/gallery', { method: 'POST', body: JSON.stringify(data) }),
+  deleteGalleryImage: (id) => request(`/gallery/${id}`, { method: 'DELETE' }),
+
+  // Working Hours Overrides
+  getOverrides: () => request('/overrides/salon'),
+  getStaffOverrides: (staffId) => request(`/overrides/staff/${staffId}`),
+  createOverride: (data) => request('/overrides', { method: 'POST', body: JSON.stringify(data) }),
+  deleteOverride: (id) => request(`/overrides/${id}`, { method: 'DELETE' }),
+
+  // Loyalty
+  getLoyalty: (phone) => request(`/loyalty/${phone}`),
+
+  // Complete appointment (staff)
+  completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
 };
 
 export function setToken(token) {
