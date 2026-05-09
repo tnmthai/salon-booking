@@ -201,7 +201,7 @@ export default function Lookup() {
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-pink-600">💅 Lincoln Nails</Link>
+          <Link to="/" className="text-xl font-bold text-pink-600 flex items-center gap-2"><span className="w-7 h-7 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</span> Timia</Link>
           <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">← Home</Link>
         </div>
       </div>
