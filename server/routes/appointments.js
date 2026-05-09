@@ -188,20 +188,30 @@ router.post('/public', async (req, res) => {
 
     // Send email notifications (non-blocking)
     const bookingDate = new Date(start_time);
-    const dateStr = bookingDate.toLocaleDateString('en-NZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = bookingDate.toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
     const emailData = { customerName: customer_name, salonName: salon.name || 'Salon', serviceName, staffName, date: dateStr, time: timeStr, duration: duration_min, price, address: salon.address, customerPhone: customer_phone, customerEmail: customer_email, notes };
 
-    const { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail } = require('../utils/email');
+    try {
+      const { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail } = require('../utils/email');
 
-    // Email to customer
-    if (customer_email) {
-      sendEmail(customer_email, `Booking Confirmed - ${salon.name}`, bookingConfirmationEmail(emailData)).catch(() => {});
-    }
+      // Email to customer
+      if (customer_email) {
+        console.log(`[EMAIL] Sending confirmation to customer: ${customer_email}`);
+        sendEmail(customer_email, `Booking Confirmed - ${salon.name}`, bookingConfirmationEmail(emailData))
+          .then(r => { if(r) console.log(`[EMAIL] ✅ Customer email sent`); else console.log(`[EMAIL] ⚠️ Customer email skipped/failed`); })
+          .catch(e => console.error(`[EMAIL] ❌ Customer email error:`, e.message));
+      }
 
-    // Email to shop owner
-    if (salon.email) {
-      sendEmail(salon.email, `New Booking - ${customer_name} on ${dateStr}`, shopOwnerNotificationEmail(emailData)).catch(() => {});
+      // Email to shop owner
+      if (salon.email) {
+        console.log(`[EMAIL] Sending notification to owner: ${salon.email}`);
+        sendEmail(salon.email, `New Booking - ${customer_name} on ${dateStr}`, shopOwnerNotificationEmail(emailData))
+          .then(r => { if(r) console.log(`[EMAIL] ✅ Owner email sent`); else console.log(`[EMAIL] ⚠️ Owner email skipped/failed`); })
+          .catch(e => console.error(`[EMAIL] ❌ Owner email error:`, e.message));
+      }
+    } catch (emailErr) {
+      console.error(`[EMAIL] ❌ Email module error:`, emailErr.message);
     }
 
     res.status(201).json(rows[0]);

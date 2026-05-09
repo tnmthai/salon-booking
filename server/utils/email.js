@@ -9,7 +9,7 @@ function getTransporter() {
   
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.log('Email not configured (missing SMTP_HOST/SMTP_USER/SMTP_PASS)');
+    console.log(`[EMAIL] Not configured. SMTP_HOST=${SMTP_HOST||'(none)'} SMTP_USER=${SMTP_USER||'(none)'} SMTP_PASS=${SMTP_PASS?'***':'(none)'}`);
     return null;
   }
 
