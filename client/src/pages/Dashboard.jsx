@@ -11,9 +11,11 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ services: 0, staff: 0 })
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
   const [filterStatus, setFilterStatus] = useState('')
+  const [showAllDates, setShowAllDates] = useState(false)
 
   const loadAppts = () => {
-    const params = { date: filterDate }
+    const params = {}
+    if (!showAllDates) params.date = filterDate
     if (filterStatus) params.status = filterStatus
     api.getAppointments(params).then(setAppts).catch(console.error)
   }
@@ -25,7 +27,7 @@ export default function Dashboard() {
     api.getCustomers().then(setCustomers).catch(console.error)
   }, [])
 
-  useEffect(() => { loadAppts() }, [filterDate, filterStatus])
+  useEffect(() => { loadAppts() }, [filterDate, filterStatus, showAllDates])
 
   const updateStatus = async (id, status) => {
     await api.updateAppointment(id, { status })
@@ -79,9 +81,16 @@ export default function Dashboard() {
 
       {tab === 'bookings' && (
         <div>
-          <div className="flex gap-3 mb-4 flex-wrap">
-            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm" />
+          <div className="flex gap-3 mb-4 flex-wrap items-center">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)}
+                className="rounded border-gray-300" />
+              All dates
+            </label>
+            {!showAllDates && (
+              <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
+                className="border rounded-lg px-3 py-2 text-sm" />
+            )}
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
               className="border rounded-lg px-3 py-2 text-sm">
               <option value="">{t('allStatus')}</option>
@@ -89,11 +98,13 @@ export default function Dashboard() {
               <option value="completed">{t('completedStatus')}</option>
               <option value="cancelled">{t('cancelledStatus')}</option>
             </select>
-            <div className="flex gap-1 ml-auto">
-              <button onClick={() => shiftDate(-1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('prev')}</button>
-              <button onClick={() => setFilterDate(new Date().toISOString().split('T')[0])} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>
-              <button onClick={() => shiftDate(1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('next')}</button>
-            </div>
+            {!showAllDates && (
+              <div className="flex gap-1 ml-auto">
+                <button onClick={() => shiftDate(-1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('prev')}</button>
+                <button onClick={() => setFilterDate(new Date().toISOString().split('T')[0])} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>
+                <button onClick={() => shiftDate(1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('next')}</button>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-xl shadow overflow-hidden">
