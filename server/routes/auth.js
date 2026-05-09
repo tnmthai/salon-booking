@@ -117,8 +117,6 @@ router.get('/me', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // Test email endpoint (temporary)
 const { sendEmail, bookingConfirmationEmail } = require('../utils/email');
 router.get('/test-email', async (req, res) => {
@@ -133,3 +131,5 @@ router.get('/test-email', async (req, res) => {
     res.json({ error: err.message });
   }
 });
+
+module.exports = router;
