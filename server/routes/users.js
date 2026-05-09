@@ -45,6 +45,66 @@ router.get('/all', async (req, res) => {
   }
 });
 
+// POST create user (super admin only)
+router.post('/', authMiddleware, async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  const { email, password, name, role, salon_id } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  try {
+    if (!isSuperAdmin(req.user.email)) return res.status(403).json({ error: 'Forbidden' });
+    const password_hash = await bcrypt.hash(password, 10);
+    const { rows } = await db.query(
+      'INSERT INTO users (email, password_hash, name, role, salon_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, role, salon_id',
+      [email, password_hash, name || email.split('@')[0], role || 'staff', salon_id || null]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST bulk create staff users (super admin only)
+router.post('/bulk-create-staff', authMiddleware, async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  try {
+    if (!isSuperAdmin(req.user.email)) return res.status(403).json({ error: 'Forbidden' });
+    
+    // Get all staff without user accounts
+    const staff = await db.query(`
+      SELECT s.id, s.name, s.email, s.role as staff_role
+      FROM staff s
+      LEFT JOIN users u ON u.id = s.user_id
+      WHERE s.user_id IS NULL AND s.email IS NOT NULL
+    `);
+    
+    const created = [];
+    for (const s of staff.rows) {
+      const email = s.email;
+      const password = s.name.toLowerCase().replace(/\s+/g, '') + '123456';
+      const password_hash = await bcrypt.hash(password, 10);
+      
+      try {
+        const user = await db.query(
+          'INSERT INTO users (email, password_hash, name, role, salon_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, role',
+          [email, password_hash, s.name, 'staff', req.body.salon_id || 7]
+        );
+        
+        // Link staff to user
+        await db.query('UPDATE staff SET user_id = $1 WHERE id = $2', [user.rows[0].id, s.id]);
+        
+        created.push({ staff: s.name, email, password, user_id: user.rows[0].id });
+      } catch (e) {
+        // Skip if email already exists
+        created.push({ staff: s.name, email, error: e.message });
+      }
+    }
+    
+    res.json({ message: `Created ${created.filter(c => !c.error).length} users`, users: created });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // PUT update user (super admin can update anyone, owner can update their salon)
 router.put('/:id', authMiddleware, async (req, res) => {
   const { name, email, role } = req.body;
