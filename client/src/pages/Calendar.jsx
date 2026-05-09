@@ -446,9 +446,11 @@ export default function Calendar() {
                           draggable
                           onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                           onDragEnd={handleLunchDragEnd}
-                          className="absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
-                          style={ls}
+                          className="absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600"
+                          style={{ ...ls, zIndex: dragAppt ? 1 : 10 }}
                           title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
+                          onDragOver={(e) => { if (!dragAppt) handleDragOver(e, s.id, d) }}
+                          onDrop={(e) => { e.stopPropagation(); handleDrop(e, s.id, d) }}
                         >
                           <div className="font-semibold truncate">🍽️ Lunch</div>
                           <div className="truncate opacity-80 text-[10px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
