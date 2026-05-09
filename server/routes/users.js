@@ -13,7 +13,7 @@ router.get('/', authMiddleware, async (req, res) => {
         FROM users u LEFT JOIN salons s ON u.salon_id = s.id ORDER BY u.created_at`;
       params = [];
     } else {
-      query = 'SELECT id, email, name, role, created_at FROM users WHERE salon_id = $1 OR role = \'super_admin\' ORDER BY created_at';
+      query = 'SELECT id, email, name, role, created_at FROM users WHERE salon_id = $1 AND role != \'super_admin\' ORDER BY created_at';
       params = [req.user.salon_id];
     }
     const { rows } = await db.query(query, params);
