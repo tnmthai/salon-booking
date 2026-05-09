@@ -336,12 +336,14 @@ export default function Calendar() {
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
 
-    const ld = new Date(targetDate + 'T00:00:00')
-    ld.setHours(h, m, 0, 0)
-    const nzS = ld.toLocaleString('en-US', { timeZone: TZ })
-    const utcS = ld.toLocaleString('en-US', { timeZone: 'UTC' })
-    const off = new Date(nzS).getTime() - new Date(utcS).getTime()
-    const utcStart = new Date(ld.getTime() - off)
+    // Parse date parts from YYYY-MM-DD
+    const [yr, mo, dy] = targetDate.split('-').map(Number)
+    // Create UTC date then offset by NZ timezone
+    // NZ is UTC+12 (or +13 during DST), so subtract offset to get UTC
+    const tempDate = new Date(Date.UTC(yr, mo - 1, dy, h, m, 0))
+    // Get NZ offset for this date
+    const nzOffset = new Date(tempDate.toLocaleString('en-US', { timeZone: 'UTC' })).getTime() - new Date(tempDate.toLocaleString('en-US', { timeZone: TZ })).getTime()
+    const utcStart = new Date(tempDate.getTime() + nzOffset)
     const dur = new Date(dragAppt.end_time) - new Date(dragAppt.start_time)
     const utcEnd = new Date(utcStart.getTime() + dur)
 
