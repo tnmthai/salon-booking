@@ -33,6 +33,27 @@ function todayNZ() { return new Date().toLocaleDateString('en-CA', { timeZone: T
 function shiftDateNZ(d, off) { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + off); return dt.toLocaleDateString('en-CA', { timeZone: TZ }) }
 function fmtDateLabel(d) { return new Date(d + 'T12:00:00').toLocaleDateString('en-NZ', { timeZone: TZ, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }
 
+// Lunch break helpers
+const DEFAULT_LUNCH_START = 12 * 60 + 30 // 12:30 in minutes
+const DEFAULT_LUNCH_END = 13 * 60 // 13:00 in minutes
+const LUNCH_KEY = 'timia_lunch_breaks'
+
+function loadLunchBreaks() {
+  try {
+    return JSON.parse(localStorage.getItem(LUNCH_KEY)) || {}
+  } catch { return {} }
+}
+
+function saveLunchBreaks(data) {
+  localStorage.setItem(LUNCH_KEY, JSON.stringify(data))
+}
+
+function getLunchBreak(lunchBreaks, staffId, date) {
+  const key = `${staffId}_${date}`
+  if (lunchBreaks[key]) return lunchBreaks[key]
+  return { start: DEFAULT_LUNCH_START, end: DEFAULT_LUNCH_END }
+}
+
 function BookingModal({ appt, onClose, onUpdate, services }) {
   const [status, setStatus] = useState(appt.status)
   const [newDate, setNewDate] = useState(nzDateStr(appt.start_time))
@@ -201,7 +222,9 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false)
   const [selectedAppt, setSelectedAppt] = useState(null)
   const [dragAppt, setDragAppt] = useState(null)
+  const [dragLunch, setDragLunch] = useState(null)
   const [dragOver, setDragOver] = useState(null)
+  const [lunchBreaks, setLunchBreaks] = useState(loadLunchBreaks)
   const calendarRef = useRef(null)
 
   // Load staff + services once
@@ -211,6 +234,9 @@ export default function Calendar() {
       setServices(sv)
     }).catch(console.error)
   }, [])
+
+  // Save lunch breaks when changed
+  useEffect(() => { saveLunchBreaks(lunchBreaks) }, [lunchBreaks])
 
   const loadAppts = useCallback(() => {
     setLoading(true)
@@ -242,7 +268,13 @@ export default function Calendar() {
     return { top: `${top}px`, height: `${h}px` }
   }
 
-  // Drag handlers
+  const lunchStyle = (lunch) => {
+    const top = (lunch.start - START_HOUR * 60) / SLOT_MIN * SLOT_H
+    const h = Math.max((lunch.end - lunch.start) / SLOT_MIN * SLOT_H, SLOT_H)
+    return { top: `${top}px`, height: `${h}px` }
+  }
+
+  // Drag handlers for appointments
   const handleDragStart = (e, appt) => {
     setDragAppt(appt)
     e.dataTransfer.effectAllowed = 'move'
@@ -253,6 +285,21 @@ export default function Calendar() {
   const handleDragEnd = (e) => {
     e.currentTarget.style.opacity = '1'
     setDragAppt(null)
+    setDragLunch(null)
+    setDragOver(null)
+  }
+
+  // Drag handlers for lunch breaks
+  const handleLunchDragStart = (e, staffId, dateStr) => {
+    setDragLunch({ staffId, date: dateStr })
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', 'lunch')
+    e.currentTarget.style.opacity = '0.4'
+  }
+
+  const handleLunchDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1'
+    setDragLunch(null)
     setDragOver(null)
   }
 
@@ -265,13 +312,27 @@ export default function Calendar() {
   const handleDrop = async (e, targetStaffId, targetDate) => {
     e.preventDefault()
     setDragOver(null)
-    if (!dragAppt) return
 
     // Calculate new start time based on drop position
     const rect = e.currentTarget.getBoundingClientRect()
     const relY = e.clientY - rect.top
     const slotIndex = Math.floor(relY / SLOT_H)
     const minutes = START_HOUR * 60 + slotIndex * SLOT_MIN
+
+    // Handle lunch break drop
+    if (dragLunch) {
+      const lunch = getLunchBreak(lunchBreaks, dragLunch.staffId, dragLunch.date)
+      const duration = lunch.end - lunch.start
+      const newLunch = { start: minutes, end: minutes + duration }
+      const key = `${targetStaffId}_${targetDate}`
+      setLunchBreaks(prev => ({ ...prev, [key]: newLunch }))
+      setDragLunch(null)
+      return
+    }
+
+    // Handle appointment drop
+    if (!dragAppt) return
+
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
 
@@ -362,6 +423,8 @@ export default function Calendar() {
                   {staff.map(s => {
                     const c = colorMap[s.id]
                     const appts = getAppts(s.id, d)
+                    const lunch = getLunchBreak(lunchBreaks, s.id, d)
+                    const ls = lunchStyle(lunch)
                     const isDragOver = dragOver?.staffId === s.id && dragOver?.date === d
                     return (
                       <div
@@ -375,6 +438,21 @@ export default function Calendar() {
                         {Array.from({ length: totalSlots }, (_, i) => (
                           <div key={i} className="absolute w-full border-b border-gray-100" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }} />
                         ))}
+
+                        {/* Lunch break block */}
+                        <div
+                          draggable
+                          onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
+                          onDragEnd={handleLunchDragEnd}
+                          className="absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                          style={ls}
+                          title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
+                        >
+                          <div className="font-semibold truncate">🍽️ Lunch</div>
+                          <div className="truncate opacity-80 text-[10px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                        </div>
+
+                        {/* Appointment blocks */}
                         {appts.map(a => {
                           const st = blockStyle(a)
                           return (
@@ -384,8 +462,8 @@ export default function Calendar() {
                               onDragStart={(e) => handleDragStart(e, a)}
                               onDragEnd={handleDragEnd}
                               className={`absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
-                              style={st}
-                              onClick={(e) => { if (!dragAppt) setSelectedAppt(a) }}
+                              style={{ ...st, zIndex: 20 }}
+                              onClick={(e) => { if (!dragAppt && !dragLunch) setSelectedAppt(a) }}
                               title={`${a.customer_name} — ${a.service_name}\n${nzTimeStr(a.start_time)} - ${nzTimeStr(a.end_time)}`}
                             >
                               <div className="font-semibold truncate">{a.customer_name}</div>
@@ -395,6 +473,7 @@ export default function Calendar() {
                             </div>
                           )
                         })}
+
                         {appts.length === 0 && !showAllDates && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <span className="text-xs text-gray-300">No bookings</span>
