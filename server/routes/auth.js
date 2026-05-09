@@ -118,3 +118,18 @@ router.get('/me', async (req, res) => {
 });
 
 module.exports = router;
+
+// Test email endpoint (temporary)
+const { sendEmail, bookingConfirmationEmail } = require('../utils/email');
+router.get('/test-email', async (req, res) => {
+  try {
+    const result = await sendEmail(
+      'salonbooking86@gmail.com',
+      'Test Email from Salon Booking',
+      '<h1>Test Email</h1><p>If you receive this, email is working!</p>'
+    );
+    res.json({ sent: !!result, messageId: result?.messageId });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
