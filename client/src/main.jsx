@@ -47,7 +47,10 @@ function AdminLayout({ salon, user, onLogout }) {
           <div className="flex gap-3 text-sm items-center flex-wrap">
             <Link to="/admin" className="text-gray-600 hover:text-pink-600">Dashboard</Link>
             {isSuperAdmin && (
-              <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 All Shops</Link>
+              <>
+                <Link to="/admin/users" className="text-orange-600 hover:text-orange-700 font-medium">👥 Users</Link>
+                <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 All Shops</Link>
+              </>
             )}
             {!isSuperAdmin && isOwner && (
               <>
