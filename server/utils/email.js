@@ -23,8 +23,8 @@ async function sendEmail(to, subject, html) {
       console.log(`[EMAIL] ✅ Sent to ${to} | ID: ${data.id}`);
       return data;
     } else {
-      console.error(`[EMAIL] ❌ Error: ${JSON.stringify(data)}`);
-      return null;
+      console.error(`[EMAIL] ❌ Error ${res.status}: ${JSON.stringify(data)}`);
+      return { error: data.message || JSON.stringify(data), status: res.status };
     }
   } catch (err) {
     console.error(`[EMAIL] ❌ Fetch error: ${err.message}`);

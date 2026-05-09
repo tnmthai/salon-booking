@@ -122,11 +122,11 @@ const { sendEmail, bookingConfirmationEmail } = require('../utils/email');
 router.get('/test-email', async (req, res) => {
   try {
     const result = await sendEmail(
-      'salonbooking86@gmail.com',
-      'Test Email from Salon Booking',
+      'tnmthai@gmail.com',
+      'Test Email from Lincoln Nails',
       '<h1>Test Email</h1><p>If you receive this, email is working!</p>'
     );
-    res.json({ sent: !!result, messageId: result?.messageId });
+    res.json({ sent: !!result, messageId: result?.id || result?.messageId, error: result?.error });
   } catch (err) {
     res.json({ error: err.message });
   }
