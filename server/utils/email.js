@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Lincoln Nails <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@timia.nz';
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_API_KEY) {
