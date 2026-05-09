@@ -476,7 +476,7 @@ router.put('/:id/reschedule', async (req, res) => {
 
 // PUT update appointment status
 router.put('/:id', authMiddleware, async (req, res) => {
-  const { status, start_time, end_time } = req.body;
+  const { status, start_time, end_time, staff_id, price, service_name } = req.body;
   try {
     let query, params;
     const updates = [];
@@ -486,6 +486,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (status) { updates.push(`status=$${idx++}`); values.push(status); }
     if (start_time) { updates.push(`start_time=$${idx++}`); values.push(start_time); }
     if (end_time) { updates.push(`end_time=$${idx++}`); values.push(end_time); }
+    if (staff_id) { updates.push(`staff_id=$${idx++}`); values.push(staff_id); }
+    if (price !== undefined) { updates.push(`price=$${idx++}`); values.push(price); }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
 
