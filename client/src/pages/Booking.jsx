@@ -32,17 +32,13 @@ export default function Booking() {
   const handleBook = async () => {
     setLoading(true)
     try {
-      const customers = await api.getCustomers().catch(() => [])
-      let cust = customers.find(c => c.phone === customer.phone || c.email === customer.email)
-      if (!cust) {
-        cust = await api.createCustomer({ ...customer, slug })
-      }
-
-      await api.createAppointment({
-        slug,
-        customer_id: cust.id,
-        staff_id: selected.staff,
+      await api.createPublicAppointment({
+        salon_id: salon.id,
         service_id: selected.service,
+        staff_id: selected.staff,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        customer_email: customer.email,
         start_time: selected.slot.start,
         notes: customer.notes,
       })

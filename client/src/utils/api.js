@@ -49,6 +49,18 @@ export const api = {
   getSlots: (slug, staff_id, service_id, date) =>
     request(`/appointments/slots?slug=${slug}&staff_id=${staff_id}&service_id=${service_id}&date=${date}`),
   createAppointment: (data) => request('/appointments', { method: 'POST', body: JSON.stringify(data) }),
+  createPublicAppointment: async (data) => {
+    const res = await fetch('/api/appointments/public', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Booking failed');
+    }
+    return res.json();
+  },
   updateAppointment: (id, data) => request(`/appointments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   cancelAppointment: (id) => request(`/appointments/${id}`, { method: 'DELETE' }),
 
