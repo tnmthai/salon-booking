@@ -139,12 +139,20 @@ router.get('/public/:slug', async (req, res) => {
 
 // POST create appointment (public — for booking page)
 router.post('/public', async (req, res) => {
-  const { salon_id, service_id, staff_id, customer_name, customer_phone, customer_email, start_time } = req.body;
+  const { salon_id, service_id, staff_id, customer_name, customer_phone, customer_email, start_time, notes } = req.body;
   try {
-    const svc = await db.query('SELECT duration_min, price FROM services WHERE id = $1', [service_id]);
+    const svc = await db.query('SELECT id, name, duration_min, price FROM services WHERE id = $1', [service_id]);
     if (!svc.rows.length) return res.status(400).json({ error: 'Service not found' });
-    const { duration_min, price } = svc.rows[0];
+    const { name: serviceName, duration_min, price } = svc.rows[0];
     const end_time = new Date(new Date(start_time).getTime() + duration_min * 60000).toISOString();
+
+    // Get staff name
+    const staffResult = await db.query('SELECT name FROM staff WHERE id = $1', [staff_id]);
+    const staffName = staffResult.rows[0]?.name || 'Staff';
+
+    // Get salon info
+    const salonResult = await db.query('SELECT name, address, email FROM salons WHERE id = $1', [salon_id]);
+    const salon = salonResult.rows[0] || {};
 
     let customer = await db.query('SELECT id FROM customers WHERE salon_id = $1 AND phone = $2', [salon_id, customer_phone]);
     if (!customer.rows.length) {
@@ -153,9 +161,28 @@ router.post('/public', async (req, res) => {
     const customer_id = customer.rows[0].id;
 
     const { rows } = await db.query(
-      'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-      [salon_id, service_id, staff_id, customer_id, start_time, end_time, price, 'confirmed']
+      'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+      [salon_id, service_id, staff_id, customer_id, start_time, end_time, price, 'confirmed', notes || null]
     );
+
+    // Send email notifications (non-blocking)
+    const bookingDate = new Date(start_time);
+    const dateStr = bookingDate.toLocaleDateString('en-NZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = bookingDate.toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' });
+    const emailData = { customerName: customer_name, salonName: salon.name || 'Salon', serviceName, staffName, date: dateStr, time: timeStr, duration: duration_min, price, address: salon.address, customerPhone: customer_phone, customerEmail: customer_email, notes };
+
+    const { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail } = require('../utils/email');
+
+    // Email to customer
+    if (customer_email) {
+      sendEmail(customer_email, `Booking Confirmed - ${salon.name}`, bookingConfirmationEmail(emailData)).catch(() => {});
+    }
+
+    // Email to shop owner
+    if (salon.email) {
+      sendEmail(salon.email, `New Booking - ${customer_name} on ${dateStr}`, shopOwnerNotificationEmail(emailData)).catch(() => {});
+    }
+
     res.status(201).json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
