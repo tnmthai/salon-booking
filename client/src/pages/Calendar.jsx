@@ -22,10 +22,11 @@ export default function Calendar() {
 
   const hours = Array.from({ length: 11 }, (_, i) => i + 8)
 
-  const getApptForSlot = (staffId, hour) => {
+  const getApptForSlot = (staffId, hour, targetDate) => {
     return appointments.find(a => {
       const start = new Date(a.start_time)
-      return a.staff_id === staffId && start.getHours() === hour
+      const apptDate = start.toLocaleDateString('en-CA') // YYYY-MM-DD
+      return a.staff_id === staffId && start.getHours() === hour && apptDate === targetDate
     })
   }
 
@@ -42,15 +43,10 @@ export default function Calendar() {
 
   const filteredStaff = selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList
 
-  // Group appointments by date when showing all dates
-  const appointmentsByDate = {}
-  if (showAllDates) {
-    appointments.forEach(a => {
-      const d = new Date(a.start_time).toLocaleDateString('en-NZ')
-      if (!appointmentsByDate[d]) appointmentsByDate[d] = []
-      appointmentsByDate[d].push(a)
-    })
-  }
+  // Get unique dates from appointments when showing all
+  const allDates = showAllDates
+    ? [...new Set(appointments.map(a => new Date(a.start_time).toLocaleDateString('en-CA')))].sort()
+    : [date]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -80,74 +76,52 @@ export default function Calendar() {
         )}
       </div>
 
-      {showAllDates ? (
-        // List view when showing all dates
-        <div className="space-y-6">
-          {Object.keys(appointmentsByDate).sort().map(d => (
-            <div key={d} className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 font-semibold text-sm border-b">{d}</div>
-              <table className="w-full">
-                <tbody>
-                  {appointmentsByDate[d].map(a => (
-                    <tr key={a.id} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="p-3 text-sm w-24">
-                        {new Date(a.start_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
-                        -{new Date(a.end_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                      <td className="p-3 text-sm font-medium">{a.customer_name}</td>
-                      <td className="p-3 text-sm">{a.service_name}</td>
-                      <td className="p-3 text-sm text-pink-600">{a.staff_name}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor[a.status] || 'bg-gray-50'}`}>{a.status}</span>
-                      </td>
-                    </tr>
+      {allDates.map(d => (
+        <div key={d} className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-500 mb-2">
+            {new Date(d + 'T00:00:00').toLocaleDateString('en-NZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </h2>
+          <div className="bg-white rounded-xl shadow overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="p-3 text-left text-sm text-gray-500 w-20">{t('time')}</th>
+                  {filteredStaff.map(s => (
+                    <th key={s.id} className="p-3 text-left text-sm font-medium">{s.name}</th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-          {Object.keys(appointmentsByDate).length === 0 && (
-            <div className="text-center py-12 text-gray-400">No bookings found</div>
-          )}
-        </div>
-      ) : (
-        // Timetable grid for single day
-        <div className="bg-white rounded-xl shadow overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="p-3 text-left text-sm text-gray-500 w-20">{t('time')}</th>
-                {filteredStaff.map(s => (
-                  <th key={s.id} className="p-3 text-left text-sm font-medium">{s.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {hours.map(hour => (
-                <tr key={hour} className="border-b border-gray-100">
-                  <td className="p-3 text-sm text-gray-400">{hour}:00</td>
-                  {filteredStaff.map(s => {
-                    const appt = getApptForSlot(s.id, hour)
-                    return (
-                      <td key={s.id} className="p-1 border-l border-gray-50">
-                        {appt ? (
-                          <div className={`p-2 rounded-lg border text-xs ${statusColor[appt.status] || 'bg-gray-50'}`}>
-                            <div className="font-medium">{appt.customer_name}</div>
-                            <div>{appt.service_name}</div>
-                            <div className="text-gray-500">
-                              {new Date(appt.start_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
-                              -{new Date(appt.end_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </div>
-                        ) : null}
-                      </td>
-                    )
-                  })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {hours.map(hour => (
+                  <tr key={hour} className="border-b border-gray-100">
+                    <td className="p-3 text-sm text-gray-400">{hour}:00</td>
+                    {filteredStaff.map(s => {
+                      const appt = getApptForSlot(s.id, hour, d)
+                      return (
+                        <td key={s.id} className="p-1 border-l border-gray-50 min-w-[140px]">
+                          {appt ? (
+                            <div className={`p-2 rounded-lg border text-xs ${statusColor[appt.status] || 'bg-gray-50'}`}>
+                              <div className="font-medium">{appt.customer_name}</div>
+                              <div>{appt.service_name}</div>
+                              <div className="text-gray-500">
+                                {new Date(appt.start_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
+                                -{new Date(appt.end_time).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          ) : null}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+      ))}
+
+      {allDates.length === 0 && (
+        <div className="text-center py-12 text-gray-400">No bookings found</div>
       )}
     </div>
   )
