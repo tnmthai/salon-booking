@@ -48,6 +48,166 @@ function formatDateLabel(dateStr) {
   })
 }
 
+// Booking detail modal
+function BookingModal({ appt, onClose, onUpdate }) {
+  const [status, setStatus] = useState(appt.status)
+  const [newDate, setNewDate] = useState(nzDateStr(appt.start_time))
+  const [newTime, setNewTime] = useState(nzTimeStr(appt.start_time).replace(/\s/g, ''))
+  const [showReschedule, setShowReschedule] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const handleStatusChange = async (newStatus) => {
+    setSaving(true)
+    try {
+      await api.updateAppointment(appt.id, { status: newStatus })
+      setStatus(newStatus)
+      onUpdate()
+    } catch (err) {
+      alert(err.message)
+    }
+    setSaving(false)
+  }
+
+  const handleReschedule = async () => {
+    setSaving(true)
+    try {
+      // Calculate new start_time in UTC from NZ date/time
+      const [h, m] = newTime.split(':').map(Number)
+      const localDate = new Date(newDate + 'T00:00:00')
+      localDate.setHours(h, m, 0, 0)
+      // Convert NZ time to UTC
+      const nzStr = localDate.toLocaleString('en-US', { timeZone: TZ })
+      const utcStr = localDate.toLocaleString('en-US', { timeZone: 'UTC' })
+      const offset = new Date(nzStr).getTime() - new Date(utcStr).getTime()
+      const utcStart = new Date(localDate.getTime() - offset)
+
+      const duration = (new Date(appt.end_time).getTime() - new Date(appt.start_time).getTime()) / 60000
+      const utcEnd = new Date(utcStart.getTime() + duration * 60000)
+
+      await api.updateAppointment(appt.id, {
+        start_time: utcStart.toISOString(),
+        end_time: utcEnd.toISOString(),
+      })
+      onUpdate()
+      onClose()
+    } catch (err) {
+      alert(err.message)
+    }
+    setSaving(false)
+  }
+
+  const statusColors = {
+    confirmed: 'bg-green-100 text-green-700',
+    completed: 'bg-blue-100 text-blue-700',
+    cancelled: 'bg-red-100 text-red-700',
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="px-6 py-4 border-b flex items-center justify-between">
+          <h3 className="font-semibold text-lg">Booking Details</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {/* Customer info */}
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Customer</div>
+            <div className="font-semibold text-gray-900">{appt.customer_name}</div>
+            {appt.customer_phone && <div className="text-sm text-gray-500">📞 {appt.customer_phone}</div>}
+            {appt.customer_email && <div className="text-sm text-gray-500">✉️ {appt.customer_email}</div>}
+          </div>
+
+          {/* Appointment info */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Service</div>
+              <div className="text-sm font-medium">{appt.service_name}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Staff</div>
+              <div className="text-sm font-medium">{appt.staff_name}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Date</div>
+              <div className="text-sm font-medium">{formatDateLabel(nzDateStr(appt.start_time))}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Time</div>
+              <div className="text-sm font-medium">{nzTimeStr(appt.start_time)} - {nzTimeStr(appt.end_time)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Price</div>
+              <div className="text-sm font-medium">${appt.price || appt.service_price}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Status</div>
+              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status]}`}>
+                {status}
+              </span>
+            </div>
+          </div>
+
+          {appt.notes && (
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Notes</div>
+              <div className="text-sm text-gray-600">{appt.notes}</div>
+            </div>
+          )}
+
+          {/* Reschedule */}
+          {showReschedule && (
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <div className="text-sm font-medium">Reschedule</div>
+              <div className="flex gap-2">
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+                  className="border rounded-lg px-3 py-1.5 text-sm flex-1" />
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+                  className="border rounded-lg px-3 py-1.5 text-sm" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setShowReschedule(false)} className="flex-1 border py-1.5 rounded-lg text-sm">Cancel</button>
+                <button onClick={handleReschedule} disabled={saving}
+                  className="flex-1 bg-gray-900 text-white py-1.5 rounded-lg text-sm disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="px-6 py-4 border-t bg-gray-50 flex gap-2">
+          {status === 'confirmed' && !showReschedule && (
+            <>
+              <button onClick={() => setShowReschedule(true)}
+                className="flex-1 border border-gray-200 py-2 rounded-xl text-sm font-medium hover:bg-white transition">
+                📅 Reschedule
+              </button>
+              <button onClick={() => handleStatusChange('completed')} disabled={saving}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition">
+                ✅ Complete
+              </button>
+              <button onClick={() => { if(confirm('Cancel this booking?')) handleStatusChange('cancelled') }} disabled={saving}
+                className="flex-1 bg-red-50 text-red-600 py-2 rounded-xl text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition">
+                ❌ Cancel
+              </button>
+            </>
+          )}
+          {status !== 'confirmed' && !showReschedule && (
+            <button onClick={() => handleStatusChange('confirmed')} disabled={saving}
+              className="flex-1 border border-gray-200 py-2 rounded-xl text-sm font-medium hover:bg-white transition">
+              🔄 Restore to Confirmed
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Calendar() {
   const t = (k) => translations[k] || k
   const [date, setDate] = useState(todayNZ())
@@ -56,6 +216,7 @@ export default function Calendar() {
   const [selectedStaff, setSelectedStaff] = useState('')
   const [showAllDates, setShowAllDates] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [selectedAppt, setSelectedAppt] = useState(null)
 
   useEffect(() => { api.getStaff().then(setStaffList).catch(console.error) }, [])
 
@@ -71,7 +232,7 @@ export default function Calendar() {
 
   useEffect(() => { loadAppointments() }, [loadAppointments])
 
-  const SLOT_H = 32 // px per slot (compact)
+  const SLOT_H = 32
   const START_HOUR = 8
   const END_HOUR = 19
   const SLOT_MINUTES = 30
@@ -174,7 +335,7 @@ export default function Calendar() {
                 </div>
 
                 {/* Staff columns */}
-                {filteredStaff.map((s, si) => {
+                {filteredStaff.map((s) => {
                   const c = staffColorMap[s.id]
                   const appts = getAppts(s.id, d)
                   return (
@@ -198,9 +359,9 @@ export default function Calendar() {
                         return (
                           <div
                             key={appt.id}
-                            className={`absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden cursor-default text-[11px] leading-tight border ${c.bg} ${c.border} ${c.text} ${isCancelled ? 'opacity-40 line-through' : ''} ${isCompleted ? 'opacity-60' : ''}`}
+                            className={`absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-pointer hover:brightness-95 active:scale-[0.98] transition ${c.bg} ${c.border} ${c.text} ${isCancelled ? 'opacity-40 line-through' : ''} ${isCompleted ? 'opacity-60' : ''}`}
                             style={{ top: `${style.top + 28}px`, height: style.height }}
-                            title={`${appt.customer_name} — ${appt.service_name}\n${nzTimeStr(appt.start_time)} - ${nzTimeStr(appt.end_time)}`}
+                            onClick={() => setSelectedAppt(appt)}
                           >
                             <div className="font-semibold truncate text-[11px]">{appt.customer_name}</div>
                             {parseInt(style.height) > 30 && <div className="truncate opacity-80 text-[10px]">{appt.service_name}</div>}
@@ -225,6 +386,15 @@ export default function Calendar() {
 
       {allDates.length === 0 && (
         <div className="text-center py-12 text-gray-400">No bookings found</div>
+      )}
+
+      {/* Booking detail modal */}
+      {selectedAppt && (
+        <BookingModal
+          appt={selectedAppt}
+          onClose={() => setSelectedAppt(null)}
+          onUpdate={() => { loadAppointments(); setSelectedAppt(null) }}
+        />
       )}
     </div>
   )

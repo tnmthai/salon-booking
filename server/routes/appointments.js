@@ -222,16 +222,27 @@ router.post('/public', async (req, res) => {
 
 // PUT update appointment status
 router.put('/:id', authMiddleware, async (req, res) => {
-  const { status } = req.body;
+  const { status, start_time, end_time } = req.body;
   try {
     let query, params;
+    const updates = [];
+    const values = [];
+    let idx = 1;
+
+    if (status) { updates.push(`status=$${idx++}`); values.push(status); }
+    if (start_time) { updates.push(`start_time=$${idx++}`); values.push(start_time); }
+    if (end_time) { updates.push(`end_time=$${idx++}`); values.push(end_time); }
+
+    if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
     if (isSuperAdmin(req.user.email)) {
-      query = 'UPDATE appointments SET status=$1 WHERE id=$2 RETURNING *';
-      params = [status, req.params.id];
+      query = `UPDATE appointments SET ${updates.join(', ')} WHERE id=$${idx++} RETURNING *`;
+      values.push(req.params.id);
     } else {
-      query = 'UPDATE appointments SET status=$1 WHERE id=$2 AND salon_id=$3 RETURNING *';
-      params = [status, req.params.id, req.user.salon_id];
+      query = `UPDATE appointments SET ${updates.join(', ')} WHERE id=$${idx++} AND salon_id=$${idx++} RETURNING *`;
+      values.push(req.params.id, req.user.salon_id);
     }
+    params = values;
     const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'Appointment not found' });
     res.json(rows[0]);
