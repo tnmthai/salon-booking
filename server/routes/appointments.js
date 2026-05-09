@@ -46,6 +46,79 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// GET available time slots for booking
+router.get('/slots', async (req, res) => {
+  try {
+    const { slug, staff_id, service_id, date } = req.query;
+    if (!slug || !staff_id || !service_id || !date) {
+      return res.status(400).json({ error: 'Missing required params: slug, staff_id, service_id, date' });
+    }
+
+    // Get salon
+    const salon = await db.query('SELECT id FROM salons WHERE slug = $1', [slug]);
+    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
+    const salon_id = salon.rows[0].id;
+
+    // Get service duration
+    const svc = await db.query('SELECT duration_min FROM services WHERE id = $1 AND salon_id = $2', [service_id, salon_id]);
+    if (!svc.rows.length) return res.status(404).json({ error: 'Service not found' });
+    const duration = svc.rows[0].duration_min;
+
+    // Get working hours for this staff on this day of week
+    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+    const wh = await db.query(
+      'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true',
+      [staff_id, dayOfWeek]
+    );
+    if (!wh.rows.length) return res.json([]); // Staff doesn't work this day
+
+    const { start_time: workStart, end_time: workEnd } = wh.rows[0];
+
+    // Get existing appointments for this staff on this date
+    const appts = await db.query(
+      `SELECT start_time, end_time FROM appointments 
+       WHERE staff_id = $1 AND DATE(start_time) = $2 AND status != 'cancelled'`,
+      [staff_id, date]
+    );
+
+    // Generate slots at 30-min intervals
+    const slots = [];
+    const [startH, startM] = workStart.split(':').map(Number);
+    const [endH, endM] = workEnd.split(':').map(Number);
+    let current = new Date(date + 'T00:00:00');
+    current.setHours(startH, startM, 0, 0);
+    const end = new Date(date + 'T00:00:00');
+    end.setHours(endH, endM, 0, 0);
+
+    const now = new Date();
+
+    while (current.getTime() + duration * 60000 <= end.getTime()) {
+      const slotStart = new Date(current);
+      const slotEnd = new Date(current.getTime() + duration * 60000);
+
+      // Skip past slots
+      if (slotStart > now) {
+        // Check overlap with existing appointments
+        const overlaps = appts.rows.some(a => {
+          const aStart = new Date(a.start_time);
+          const aEnd = new Date(a.end_time);
+          return slotStart < aEnd && slotEnd > aStart;
+        });
+
+        if (!overlaps) {
+          slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
+        }
+      }
+
+      current.setMinutes(current.getMinutes() + 30);
+    }
+
+    res.json(slots);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET appointments for a salon (by slug — public, for booking page)
 router.get('/public/:slug', async (req, res) => {
   try {
