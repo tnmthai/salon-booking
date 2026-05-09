@@ -37,7 +37,7 @@ function bookingConfirmationEmail({ customerName, salonName, serviceName, staffN
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
       <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-size:40px;margin-bottom:8px;">✂️</div>
+          <div style="font-size:40px;margin-bottom:8px;">💅</div>
           <h1 style="color:#111;font-size:24px;margin:0;">Booking Confirmed!</h1>
         </div>
         <p style="color:#555;font-size:16px;">Hi ${customerName},</p>

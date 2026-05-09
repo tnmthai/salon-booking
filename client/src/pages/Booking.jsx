@@ -89,7 +89,7 @@ export default function Booking() {
       {/* Salon Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-pink-600">✂️ {salon?.name || 'Loading...'}</h1>
+          <h1 className="text-xl font-bold text-pink-600">💅 {salon?.name || 'Loading...'}</h1>
           {salon?.address && <p className="text-sm text-gray-500">📍 {salon.address}</p>}
         </div>
       </div>

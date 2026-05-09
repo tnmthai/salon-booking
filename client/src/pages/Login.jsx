@@ -37,7 +37,7 @@ export default function Login({ onLogin }) {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900">
-              <span className="text-3xl">✂️</span>
+              <span className="text-3xl">💅</span>
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
             </Link>
             <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">Welcome back</h1>

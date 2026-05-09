@@ -15,7 +15,7 @@ export default function Landing() {
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-gray-900">
-            <span className="text-2xl">✂️</span>
+            <span className="text-2xl">💅</span>
             <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">SalonBook</span>
           </Link>
           <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ export default function Landing() {
       <footer className="border-t border-gray-100 py-8 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span className="text-lg">✂️</span>
+            <span className="text-lg">💅</span>
             <span>© 2026 SalonBook</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-400">

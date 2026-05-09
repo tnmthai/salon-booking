@@ -33,7 +33,7 @@ function AdminLayout({ salon, user, onLogout }) {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/admin" className="text-xl font-bold text-pink-600 flex items-center gap-2">
-            ✂️ {salon?.name || 'Salon'}
+            💅 {salon?.name || 'Salon'}
             {isSuperAdmin && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Super Admin</span>}
           </Link>
           <div className="flex gap-3 text-sm items-center flex-wrap">
