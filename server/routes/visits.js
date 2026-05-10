@@ -25,6 +25,16 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Public total visits (no auth, for landing page)
+router.get('/public', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT COUNT(*) as total FROM page_visits');
+    res.json({ total: parseInt(rows[0].total) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get visit stats (owner / super_admin)
 router.get('/stats', async (req, res) => {
   try {

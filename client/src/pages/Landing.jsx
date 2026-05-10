@@ -5,6 +5,7 @@ import { api } from '../utils/api'
 export default function Landing() {
   const [salons, setSalons] = useState([])
   const [ratings, setRatings] = useState({})
+  const [totalVisits, setTotalVisits] = useState(null)
   const [lookupCode, setLookupCode] = useState('')
   const navigate = useNavigate()
 
@@ -21,6 +22,7 @@ export default function Landing() {
       }
       setRatings(r)
     }).catch(console.error)
+    api.getPublicVisitCount().then(data => setTotalVisits(data.total)).catch(() => {})
   }, [])
 
   return (
@@ -186,9 +188,16 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
-            <span>© 2026 Timia</span>
+          <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
+              <span>© 2026 Timia</span>
+            </div>
+            {totalVisits !== null && (
+              <span className="flex items-center gap-1 text-xs bg-gray-50 px-3 py-1 rounded-full">
+                👁 {totalVisits.toLocaleString()} page visits
+              </span>
+            )}
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
             <Link to="/terms" className="hover:text-gray-600">Terms</Link>

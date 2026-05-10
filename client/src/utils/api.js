@@ -111,6 +111,7 @@ export const api = {
   // Visits
   trackVisit: (salon_id, page) => fetch('/api/visits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ salon_id, page }) }),
   getVisitStats: () => request('/visits/stats'),
+  getPublicVisitCount: () => fetch('/api/visits/public').then(r => r.json()),
 
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
