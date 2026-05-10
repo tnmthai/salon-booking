@@ -23,7 +23,7 @@ export default function Overrides() {
       
       // Check appointments for each override date
       if (o.length > 0) {
-        const dates = [...new Set(o.map(ov => ov.date))]
+        const dates = [...new Set(o.map(ov => new Date(ov.date).toLocaleDateString('en-CA', { timeZone: TZ })))]
         const apptsByDate = {}
         for (const date of dates) {
           try {
@@ -103,7 +103,8 @@ export default function Overrides() {
             </thead>
             <tbody>
               {overrides.map(o => {
-                const dateAppts = appointments[o.date] || []
+                const overrideDate = new Date(o.date).toLocaleDateString('en-CA', { timeZone: TZ })
+                const dateAppts = appointments[overrideDate] || []
                 const staffAppts = dateAppts.filter(a => a.staff_id === o.staff_id && a.status !== 'cancelled')
                 const hasBookings = staffAppts.length > 0
                 const isDayOff = !o.is_active
@@ -112,7 +113,7 @@ export default function Overrides() {
                 <tr key={o.id} className={`border-t hover:bg-gray-50 ${isDayOff && hasBookings ? 'bg-red-50' : ''}`}>
                   <td className="p-3 text-sm font-medium">{o.staff_name}</td>
                   <td className="p-3 text-sm">
-                    {new Date(o.date + 'T12:00:00').toLocaleDateString('en-NZ', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(o.date).toLocaleDateString('en-NZ', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
