@@ -177,27 +177,23 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
         </div>
         <div className="px-6 py-4 border-t bg-gray-50 rounded-b-2xl sticky bottom-0">
           {(status === 'confirmed' || status === 'checked_in') && !showReschedule && !showAddService && (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                {status === 'confirmed' && (
-                  <button onClick={handleCheckIn} disabled={saving}
-                    className="flex-1 bg-yellow-50 text-yellow-700 py-2 rounded-xl text-sm font-medium hover:bg-yellow-100 border border-yellow-200 disabled:opacity-50">
-                    ✋ Check In
-                  </button>
-                )}
-                <button onClick={() => setShowAddService(true)}
-                  className="flex-1 bg-purple-50 text-purple-700 py-2 rounded-xl text-sm font-medium hover:bg-purple-100 border border-purple-200">
-                  ➕ Add Service
+            <div className="flex gap-1.5">
+              {status === 'confirmed' && (
+                <button onClick={handleCheckIn} disabled={saving}
+                  className="flex-1 bg-yellow-50 text-yellow-700 py-2 rounded-lg text-xs font-medium hover:bg-yellow-100 border border-yellow-200 disabled:opacity-50">
+                  ✋ Check In
                 </button>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setShowReschedule(true)}
-                  className="flex-1 border py-2 rounded-xl text-sm font-medium hover:bg-white">📅 Reschedule</button>
-                <button onClick={() => handleStatus('completed')} disabled={saving}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50">✅ Complete</button>
-                <button onClick={() => { if (confirm('Cancel this booking?')) handleStatus('cancelled') }} disabled={saving}
-                  className="flex-1 bg-red-50 text-red-600 py-2 rounded-xl text-sm font-medium hover:bg-red-100 disabled:opacity-50">❌ Cancel</button>
-              </div>
+              )}
+              <button onClick={() => setShowAddService(true)}
+                className="flex-1 bg-purple-50 text-purple-700 py-2 rounded-lg text-xs font-medium hover:bg-purple-100 border border-purple-200">
+                ➕ Service
+              </button>
+              <button onClick={() => setShowReschedule(true)}
+                className="flex-1 border py-2 rounded-lg text-xs font-medium hover:bg-gray-50">📅 Reschedule</button>
+              <button onClick={() => handleStatus('completed')} disabled={saving}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50">✅ Complete</button>
+              <button onClick={() => { if (confirm('Cancel this booking?')) handleStatus('cancelled') }} disabled={saving}
+                className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50">❌ Cancel</button>
             </div>
           )}
           {status === 'completed' && !showReschedule && !showAddService && (

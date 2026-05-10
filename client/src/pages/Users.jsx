@@ -3,13 +3,17 @@ import { api } from '../utils/api'
 
 export default function Users() {
   const [users, setUsers] = useState([])
+  const [staff, setStaff] = useState([])
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', email: '', role: 'owner' })
   const [resetUser, setResetUser] = useState(null)
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
 
-  const load = () => api.getUsers().then(setUsers).catch(console.error)
+  const load = () => {
+    api.getUsers().then(setUsers).catch(console.error)
+    api.getStaff().then(setStaff).catch(console.error)
+  }
   useEffect(() => { load() }, [])
 
   const handleUpdate = async (e) => {
@@ -46,6 +50,18 @@ export default function Users() {
     setForm({ name: u.name, email: u.email, role: u.role })
     setEditing(u.id)
   }
+
+  const toggleStaffActive = async (s) => {
+    const newActive = !s.is_active
+    if (!confirm(newActive ? `Activate ${s.name}?` : `Deactivate ${s.name}? They won't appear in schedules.`)) return
+    try {
+      await api.updateStaff(s.id, { ...s, is_active: newActive, active: newActive })
+      load()
+    } catch (err) { alert(err.message) }
+  }
+
+  const activeStaff = staff.filter(s => s.is_active !== false)
+  const inactiveStaff = staff.filter(s => s.is_active === false)
 
   const isSuperAdmin = (() => {
     try {
@@ -147,6 +163,71 @@ export default function Users() {
           </tbody>
         </table>
       </div>
+      {/* Inactive Staff Section */}
+      {inactiveStaff.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-4 text-gray-500">⏸ Inactive / Paused Staff</h2>
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Name</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Role</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Phone</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Email</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inactiveStaff.map(s => (
+                  <tr key={s.id} className="border-t bg-gray-50 opacity-60">
+                    <td className="p-3 text-sm font-medium text-gray-500">{s.name}</td>
+                    <td className="p-3 text-sm text-gray-400">{s.role}</td>
+                    <td className="p-3 text-sm text-gray-400">{s.phone}</td>
+                    <td className="p-3 text-sm text-gray-400">{s.email}</td>
+                    <td className="p-3">
+                      <button onClick={() => toggleStaffActive(s)} className="text-sm text-green-600 hover:underline font-medium">▶ Activate</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Active Staff with Pause option */}
+      {activeStaff.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-4">👥 Active Staff</h2>
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Name</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Role</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Phone</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Email</th>
+                  <th className="text-left p-3 text-sm font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeStaff.map(s => (
+                  <tr key={s.id} className="border-t hover:bg-gray-50">
+                    <td className="p-3 text-sm font-medium">{s.name}</td>
+                    <td className="p-3 text-sm text-gray-500">{s.role}</td>
+                    <td className="p-3 text-sm text-gray-500">{s.phone}</td>
+                    <td className="p-3 text-sm text-gray-500">{s.email}</td>
+                    <td className="p-3">
+                      <button onClick={() => toggleStaffActive(s)} className="text-sm text-orange-500 hover:underline">⏸ Pause</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
