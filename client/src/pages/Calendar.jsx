@@ -361,37 +361,37 @@ export default function Calendar() {
   }
 
   return (
-    <div className="w-full px-2 pt-14 pb-6">
-      <h1 className="text-3xl font-bold mb-5">📅 {t('calendar')}</h1>
-
-      <div className="flex gap-4 mb-5 flex-wrap items-center">
+    <div className="w-full px-2 pt-2 pb-6">
+      <div className="flex items-center gap-4 mb-4 flex-wrap">
+        <h1 className="text-2xl font-bold">📅 {t('calendar')}</h1>
+        <div className="h-6 w-px bg-gray-300" />
         <label className="flex items-center gap-2 text-base cursor-pointer select-none">
           <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300 w-4 h-4" />
           All dates
         </label>
-        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-3 py-2 text-base" />}
-        <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
+        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base" />}
+        <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base">
           <option value="">{t('allStaff')}</option>
           {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         {!showAllDates && (
-          <div className="flex gap-2 ml-auto">
-            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50">← {t('prev')}</button>
-            <button onClick={() => setDate(todayNZ())} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50 font-medium">{t('today')}</button>
-            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50">{t('next')} →</button>
+          <div className="flex gap-1.5">
+            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">← {t('prev')}</button>
+            <button onClick={() => setDate(todayNZ())} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50 font-medium">{t('today')}</button>
+            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">{t('next')} →</button>
           </div>
         )}
-        {loading && <span className="text-sm text-gray-400 ml-2">Loading...</span>}
+        {loading && <span className="text-sm text-gray-400">Loading...</span>}
       </div>
 
       {staff.length > 1 && (
-        <div className="flex gap-5 mb-4 flex-wrap">
+        <div className="flex gap-5 mb-3 flex-wrap">
           {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-2 text-sm text-gray-600"><span className={`w-3 h-3 rounded-full ${c.dot}`} />{s.name}</div> })}
         </div>
       )}
 
       {dates.map(d => (
-        <div key={d} className="mb-6">
+        <div key={d} className="mb-4">
           <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
             <div className="overflow-x-auto">
