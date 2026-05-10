@@ -11,8 +11,15 @@ export default function Users() {
   const [resetting, setResetting] = useState(false)
 
   const load = () => {
-    api.getUsers().then(setUsers).catch(console.error)
-    api.getStaff().then(setStaff).catch(console.error)
+    api.getUsers().then(users => {
+      // Sort: active first, then inactive
+      const sorted = users.sort((a, b) => {
+        if (a.is_active === false && b.is_active !== false) return 1;
+        if (a.is_active !== false && b.is_active === false) return -1;
+        return 0;
+      });
+      setUsers(sorted);
+    }).catch(console.error)
   }
   useEffect(() => { load() }, [])
 
@@ -141,7 +148,7 @@ export default function Users() {
             {users.length === 0 ? (
               <tr><td colSpan={5} className="p-8 text-center text-gray-400">No users</td></tr>
             ) : users.map(u => (
-              <tr key={u.id} className="border-t hover:bg-gray-50">
+              <tr key={u.id} className={`border-t hover:bg-gray-50 ${u.is_active === false ? 'bg-gray-50 opacity-60' : ''}`}>
                 <td className="p-3 text-sm font-medium">{u.name}</td>
                 <td className="p-3 text-sm text-gray-500">{u.email}</td>
                 <td className="p-3">

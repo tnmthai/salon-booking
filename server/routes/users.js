@@ -9,11 +9,11 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     let query, params;
     if (isSuperAdmin(req.user.email)) {
-      query = `SELECT u.id, u.email, u.name, u.role, u.created_at, s.name as salon_name, s.slug as salon_slug
+      query = `SELECT u.id, u.email, u.name, u.role, u.created_at, u.is_active, s.name as salon_name, s.slug as salon_slug
         FROM users u LEFT JOIN salons s ON u.salon_id = s.id ORDER BY u.created_at`;
       params = [];
     } else {
-      query = 'SELECT id, email, name, role, created_at FROM users WHERE salon_id = $1 AND role != \'super_admin\' ORDER BY created_at';
+      query = 'SELECT id, email, name, role, created_at, is_active FROM users WHERE salon_id = $1 AND role != \'super_admin\' ORDER BY created_at';
       params = [req.user.salon_id];
     }
     const { rows } = await db.query(query, params);
@@ -36,7 +36,7 @@ router.get('/all', async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { rows } = await db.query(
-      `SELECT u.id, u.email, u.name, u.role, u.created_at, s.name as salon_name, s.slug as salon_slug
+      `SELECT u.id, u.email, u.name, u.role, u.created_at, u.is_active, s.name as salon_name, s.slug as salon_slug
        FROM users u JOIN salons s ON u.salon_id = s.id ORDER BY u.created_at`
     );
     res.json(rows);
