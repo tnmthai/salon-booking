@@ -120,4 +120,15 @@ async function addTimezoneColumn(pool) {
 }
 
 // Update exports
-module.exports = { initDB, seedAdmin, addTimezoneColumn };
+
+// Add is_active column to staff if not exists
+async function addStaffActiveColumn(pool) {
+  try {
+    await pool.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true");
+    console.log('Staff is_active column added');
+  } catch (err) {
+    console.log('Staff is_active column skipped:', err.message);
+  }
+}
+
+module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn };

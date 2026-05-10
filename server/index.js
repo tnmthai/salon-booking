@@ -2,14 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const pool = require('./db');
-const { seedAdmin, addTimezoneColumn } = require('./initdb');
+const { seedAdmin, addTimezoneColumn, addStaffActiveColumn } = require('./initdb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Seed admin user and add timezone column on startup
+// Seed admin user and add columns on startup
 seedAdmin(pool);
 addTimezoneColumn(pool);
+addStaffActiveColumn(pool);
 
 app.use(cors());
 app.use(express.json());

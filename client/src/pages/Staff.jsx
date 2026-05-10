@@ -31,6 +31,18 @@ export default function Staff() {
     setEditing(s.id)
   }
 
+  const toggleActive = async (s) => {
+    const newActive = !s.is_active
+    if (!confirm(newActive ? `Activate ${s.name}?` : `Deactivate ${s.name}? They won't appear in current schedules.`)) return
+    try {
+      await api.updateStaff(s.id, { ...s, is_active: newActive, active: newActive })
+      load()
+    } catch (err) { alert(err.message) }
+  }
+
+  const activeStaff = staff.filter(s => s.is_active !== false)
+  const inactiveStaff = staff.filter(s => s.is_active === false)
+
   const roles = ['Senior Stylist', 'Stylist', 'Colorist', 'Nail Technician', 'Esthetician', 'Massage Therapist', 'Receptionist']
 
   return (
@@ -62,7 +74,7 @@ export default function Staff() {
       </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {staff.map(s => (
+        {activeStaff.map(s => (
           <Link key={s.id} to={`/admin/staff/${s.id}/bookings`}
             className="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition block">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600">
@@ -76,11 +88,38 @@ export default function Staff() {
             <div className="flex gap-2 shrink-0">
               <span className="text-xs text-purple-600 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); handleEdit(s) }}>{t('edit')}</span>
               <span className="text-xs text-gray-400">|</span>
+              <span className="text-xs text-orange-500 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); toggleActive(s) }}>⏸ Pause</span>
+              <span className="text-xs text-gray-400">|</span>
               <span className="text-xs text-purple-600 hover:underline">📋 Bookings</span>
             </div>
           </Link>
         ))}
       </div>
+
+      {inactiveStaff.length > 0 && (
+        <>
+          <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-500">⏸ Inactive / Paused</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {inactiveStaff.map(s => (
+              <div key={s.id} className="bg-gray-50 rounded-xl shadow p-4 flex items-center gap-4 opacity-60">
+                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-400">
+                  {s.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-500">{s.name}</h3>
+                  <p className="text-sm text-gray-400">{s.role}</p>
+                  <p className="text-xs text-gray-300">{s.phone} {s.email && `• ${s.email}`}</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <span className="text-xs text-green-600 hover:underline font-medium" onClick={() => toggleActive(s)}>▶ Activate</span>
+                  <span className="text-xs text-gray-400">|</span>
+                  <span className="text-xs text-purple-600 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); handleEdit(s) }}>{t('edit')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

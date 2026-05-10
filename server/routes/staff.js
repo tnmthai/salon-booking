@@ -20,15 +20,15 @@ router.get('/public/:slug', async (req, res) => {
   }
 });
 
-// GET all staff (super admin: all shops, normal: own salon)
+// GET all staff (super admin: all shops, normal: own salon) — includes inactive
 router.get('/', authMiddleware, async (req, res) => {
   try {
     let query, params;
     if (isSuperAdmin(req.user.email)) {
-      query = 'SELECT st.*, sal.name as salon_name FROM staff st LEFT JOIN salons sal ON st.salon_id = sal.id WHERE st.active = true ORDER BY st.name';
+      query = 'SELECT st.*, sal.name as salon_name FROM staff st LEFT JOIN salons sal ON st.salon_id = sal.id ORDER BY st.is_active DESC, st.name';
       params = [];
     } else {
-      query = 'SELECT * FROM staff WHERE salon_id = $1 AND active = true ORDER BY name';
+      query = 'SELECT * FROM staff WHERE salon_id = $1 ORDER BY is_active DESC, name';
       params = [req.user.salon_id];
     }
     const { rows } = await db.query(query, params);
