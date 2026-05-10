@@ -101,9 +101,12 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
       const svc = services.find(s => s.id === serviceId)
       if (!svc) return
       const newEnd = new Date(new Date(appt.end_time).getTime() + svc.duration_min * 60000)
+      const currentName = appt.service_name || ''
+      const newName = currentName ? `${currentName}, ${svc.name}` : svc.name
       await api.updateAppointment(appt.id, {
         end_time: newEnd.toISOString(),
         price: parseFloat(appt.price || 0) + parseFloat(svc.price),
+        service_name: newName,
       })
       onUpdate(); setShowAddService(false)
     } catch (e) { alert(e.message) }

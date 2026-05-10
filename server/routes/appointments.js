@@ -58,7 +58,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const { rows } = await db.query(`
       SELECT a.*, 
         c.name as customer_name, c.phone as customer_phone, c.email as customer_email,
-        s.name as service_name, s.price as service_price,
+        COALESCE(a.service_name, s.name) as service_name, s.price as service_price,
         st.name as staff_name,
         sal.name as salon_name
       FROM appointments a
@@ -532,6 +532,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (end_time) { updates.push(`end_time=$${idx++}`); values.push(end_time); }
     if (staff_id) { updates.push(`staff_id=$${idx++}`); values.push(staff_id); }
     if (price !== undefined) { updates.push(`price=$${idx++}`); values.push(price); }
+    if (service_name) { updates.push(`service_name=$${idx++}`); values.push(service_name); }
 
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
 

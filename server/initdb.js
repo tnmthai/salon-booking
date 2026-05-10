@@ -131,4 +131,14 @@ async function addStaffActiveColumn(pool) {
   }
 }
 
-module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn };
+// Add service_name column to appointments if not exists
+async function addServiceNameColumn(pool) {
+  try {
+    await pool.query("ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_name VARCHAR(255)");
+    console.log('Service_name column added');
+  } catch (err) {
+    console.log('Service_name column skipped:', err.message);
+  }
+}
+
+module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn };
