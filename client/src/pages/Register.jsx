@@ -99,7 +99,7 @@ export default function Register({ onLogin }) {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Business Name *</label>
                   <input value={form.salon_name} onChange={e => {
-                    setForm({...form, salon_name: sanitizeName(e.target.value), slug: generateSlug(e.target.value)})
+                    setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
                   }} placeholder="e.g. Bella Hair Studio"
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
@@ -114,13 +114,13 @@ export default function Register({ onLogin }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Owner Name *</label>
-                  <input value={form.owner_name} onChange={e => setForm({...form, owner_name: sanitizeName(e.target.value)})}
+                  <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
                     placeholder="Your name"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
-                  <input value={form.phone} onChange={e => setForm({...form, phone: sanitizePhone(e.target.value)})}
+                  <input value={form.phone} type="tel" onChange={e => setForm({...form, phone: e.target.value})}
                     placeholder="021 123 4567"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
