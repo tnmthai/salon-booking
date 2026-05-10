@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { api } from '../utils/api'
+import { api, getSalonTimezone } from '../utils/api'
 
-const TZ = 'Pacific/Auckland'
+const TZ = getSalonTimezone()
 
 export default function Overrides() {
   const [staff, setStaff] = useState([])
   const [overrides, setOverrides] = useState([])
+  const [appointments, setAppointments] = useState({})
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '17:00', reason: '' })
@@ -19,6 +20,19 @@ export default function Overrides() {
       const [s, o] = await Promise.all([api.getStaff(), api.getOverrides()])
       setStaff(s)
       setOverrides(o)
+      
+      // Check appointments for each override date
+      if (o.length > 0) {
+        const dates = [...new Set(o.map(ov => ov.date))]
+        const apptsByDate = {}
+        for (const date of dates) {
+          try {
+            const appts = await api.getAppointments({ date })
+            apptsByDate[date] = appts
+          } catch { apptsByDate[date] = [] }
+        }
+        setAppointments(apptsByDate)
+      }
     } catch (err) {}
     setLoading(false)
   }
@@ -88,17 +102,24 @@ export default function Overrides() {
               </tr>
             </thead>
             <tbody>
-              {overrides.map(o => (
-                <tr key={o.id} className="border-t hover:bg-gray-50">
+              {overrides.map(o => {
+                const dateAppts = appointments[o.date] || []
+                const staffAppts = dateAppts.filter(a => a.staff_id === o.staff_id && a.status !== 'cancelled')
+                const hasBookings = staffAppts.length > 0
+                const isDayOff = !o.is_active
+                
+                return (
+                <tr key={o.id} className={`border-t hover:bg-gray-50 ${isDayOff && hasBookings ? 'bg-red-50' : ''}`}>
                   <td className="p-3 text-sm font-medium">{o.staff_name}</td>
                   <td className="p-3 text-sm">
                     {new Date(o.date + 'T12:00:00').toLocaleDateString('en-NZ', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      isDayOff && hasBookings ? 'bg-red-100 text-red-700' :
                       o.is_active ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
                     }`}>
-                      {o.is_active ? 'Custom Hours' : 'Day Off'}
+                      {isDayOff && hasBookings ? `⚠️ Day Off (${staffAppts.length} bookings)` : o.is_active ? 'Custom Hours' : 'Day Off'}
                     </span>
                   </td>
                   <td className="p-3 text-sm text-gray-500">
@@ -110,7 +131,8 @@ export default function Overrides() {
                       className="text-red-400 hover:text-red-600 text-sm">🗑</button>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
