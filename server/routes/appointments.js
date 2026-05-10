@@ -20,7 +20,7 @@ router.get('/', authMiddleware, async (req, res) => {
     let params = [];
     let idx = 1;
 
-    // Get salon timezone
+    // Get salon timezone for date filtering
     let tz = 'Pacific/Auckland';
     if (req.user.salon_id) {
       const salonResult = await db.query('SELECT timezone FROM salons WHERE id = $1', [req.user.salon_id]);
@@ -32,8 +32,18 @@ router.get('/', authMiddleware, async (req, res) => {
       params.push(req.user.salon_id);
     }
     if (date) {
-      where.push(`DATE(a.start_time AT TIME ZONE $${idx++}) = $${idx++}`);
-      params.push(tz, date);
+      // Convert NZ date to UTC range in JS (AT TIME ZONE can't use params)
+      const dayStart = new Date(date + 'T00:00:00');
+      const dayEnd = new Date(date + 'T23:59:59');
+      // Get UTC offsets for this timezone
+      const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
+      const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
+      const startOff = new Date(startStr).getTime() - dayStart.getTime();
+      const endOff = new Date(endStr).getTime() - dayEnd.getTime();
+      const utcStart = new Date(dayStart.getTime() - startOff);
+      const utcEnd = new Date(dayEnd.getTime() - endOff);
+      where.push(`a.start_time >= $${idx++} AND a.start_time <= $${idx++}`);
+      params.push(utcStart.toISOString(), utcEnd.toISOString());
     }
     if (status) {
       where.push(`a.status = $${idx++}`);
@@ -144,10 +154,19 @@ router.get('/slots', async (req, res) => {
     }
 
     // Get existing appointments for this staff on this date
+    // Convert date to UTC range using timezone
+    const dayStart = new Date(date + 'T00:00:00');
+    const dayEnd = new Date(date + 'T23:59:59');
+    const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
+    const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
+    const startOff = new Date(startStr).getTime() - dayStart.getTime();
+    const endOff = new Date(endStr).getTime() - dayEnd.getTime();
+    const utcStart = new Date(dayStart.getTime() - startOff);
+    const utcEnd = new Date(dayEnd.getTime() - endOff);
     const appts = await db.query(
       `SELECT start_time, end_time FROM appointments 
-       WHERE staff_id = $1 AND DATE(start_time AT TIME ZONE tz) = $2 AND status != 'cancelled'`,
-      [staff_id, date]
+       WHERE staff_id = $1 AND start_time >= $2 AND start_time <= $3 AND status != 'cancelled'`,
+      [staff_id, utcStart.toISOString(), utcEnd.toISOString()]
     );
 
     // Generate slots at 30-min intervals in UTC
