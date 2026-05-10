@@ -14,13 +14,13 @@ const STAFF_COLORS = [
 ]
 
 const TZ = getSalonTimezone()
-const SLOT_H = 28
+const SLOT_H = 36
 const START_HOUR = 8
 const END_HOUR = 19
 const SLOT_MIN = 30
 const totalSlots = ((END_HOUR - START_HOUR) * 60) / SLOT_MIN
 const gridH = totalSlots * SLOT_H
-const HEADER_H = 32
+const HEADER_H = 40
 
 function nzDateStr(utc) { return new Date(utc).toLocaleDateString('en-CA', { timeZone: TZ }) }
 function nzTimeStr(utc) { return new Date(utc).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }) }
@@ -361,38 +361,38 @@ export default function Calendar() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 pt-16 pb-6">
-      <h1 className="text-2xl font-bold mb-4">📅 {t('calendar')}</h1>
+    <div className="w-full px-2 pt-14 pb-6">
+      <h1 className="text-3xl font-bold mb-5">📅 {t('calendar')}</h1>
 
-      <div className="flex gap-3 mb-4 flex-wrap items-center">
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-          <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300" />
+      <div className="flex gap-4 mb-5 flex-wrap items-center">
+        <label className="flex items-center gap-2 text-base cursor-pointer select-none">
+          <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300 w-4 h-4" />
           All dates
         </label>
-        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-3 py-1.5 text-sm" />}
-        <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-sm">
+        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-3 py-2 text-base" />}
+        <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
           <option value="">{t('allStaff')}</option>
           {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         {!showAllDates && (
-          <div className="flex gap-1 ml-auto">
-            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">← {t('prev')}</button>
-            <button onClick={() => setDate(todayNZ())} className="border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>
-            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">{t('next')} →</button>
+          <div className="flex gap-2 ml-auto">
+            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50">← {t('prev')}</button>
+            <button onClick={() => setDate(todayNZ())} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50 font-medium">{t('today')}</button>
+            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-4 py-2 rounded-lg text-base hover:bg-gray-50">{t('next')} →</button>
           </div>
         )}
-        {loading && <span className="text-xs text-gray-400 ml-2">Loading...</span>}
+        {loading && <span className="text-sm text-gray-400 ml-2">Loading...</span>}
       </div>
 
       {staff.length > 1 && (
-        <div className="flex gap-4 mb-3 flex-wrap">
-          {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-1.5 text-xs text-gray-600"><span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />{s.name}</div> })}
+        <div className="flex gap-5 mb-4 flex-wrap">
+          {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-2 text-sm text-gray-600"><span className={`w-3 h-3 rounded-full ${c.dot}`} />{s.name}</div> })}
         </div>
       )}
 
       {dates.map(d => (
         <div key={d} className="mb-6">
-          <h2 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
+          <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
             <div className="overflow-x-auto">
               <div style={{ minWidth: `${52 + staff.length * 150}px` }}>
@@ -403,8 +403,8 @@ export default function Calendar() {
                     const c = colorMap[s.id]
                     return (
                       <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, minWidth: '150px' }}>
-                        <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                        <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
+                        <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
+                        <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
                       </div>
                     )
                   })}
@@ -416,7 +416,7 @@ export default function Calendar() {
                   <div className="w-[52px] shrink-0 relative" style={{ height: `${gridH}px` }}>
                     {timeLabels.map((label, i) => (
                       <div key={i} className="absolute w-full flex items-start justify-end pr-1.5" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }}>
-                        {label && <span className="text-[10px] text-gray-400 -mt-2">{label}</span>}
+                        {label && <span className="text-xs text-gray-400 -mt-2">{label}</span>}
                       </div>
                     ))}
                   </div>
@@ -447,12 +447,12 @@ export default function Calendar() {
                             draggable
                             onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                             onDragEnd={handleLunchDragEnd}
-                            className="absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                            className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
                             style={ls}
                             title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
                           >
-                            <div className="font-semibold truncate">🍽️ Lunch</div>
-                            <div className="truncate opacity-80 text-[10px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                            <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
+                            <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
                           </div>
                         )}
 
@@ -465,22 +465,22 @@ export default function Calendar() {
                               draggable
                               onDragStart={(e) => handleDragStart(e, a)}
                               onDragEnd={handleDragEnd}
-                              className={`absolute left-0.5 right-0.5 rounded px-1 py-0.5 overflow-hidden text-[11px] leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
+                              className={`absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
                               style={{ ...st, zIndex: 20 }}
                               onClick={(e) => { if (!dragAppt && !dragLunch) setSelectedAppt(a) }}
                               title={`${a.customer_name} — ${a.service_name}\n${nzTimeStr(a.start_time)} - ${nzTimeStr(a.end_time)}`}
                             >
-                              <div className="font-semibold truncate">{a.customer_name}</div>
-                              {parseInt(st.height) > 26 && <div className="truncate opacity-80 text-[10px]">{a.service_name}</div>}
-                              {parseInt(st.height) > 42 && <div className="opacity-60 text-[10px]">{nzTimeStr(a.start_time)}-{nzTimeStr(a.end_time)}</div>}
-                              {a.status === 'checked_in' && parseInt(st.height) > 26 && <div className="text-[9px] font-bold text-yellow-600">✋ CHECKED IN</div>}
+                              <div className="font-semibold truncate text-sm">{a.customer_name}</div>
+                              {parseInt(st.height) > 30 && <div className="truncate opacity-80 text-xs">{a.service_name}</div>}
+                              {parseInt(st.height) > 50 && <div className="opacity-60 text-xs">{nzTimeStr(a.start_time)}-{nzTimeStr(a.end_time)}</div>}
+                              {a.status === 'checked_in' && parseInt(st.height) > 30 && <div className="text-xs font-bold text-yellow-600">✋ CHECKED IN</div>}
                             </div>
                           )
                         })}
 
                         {appts.length === 0 && !showAllDates && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className="text-xs text-gray-300">No bookings</span>
+                            <span className="text-sm text-gray-300">No bookings</span>
                           </div>
                         )}
                       </div>
