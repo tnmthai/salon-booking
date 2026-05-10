@@ -17,6 +17,7 @@ import Calendar from './pages/Calendar'
 import Booking from './pages/Booking'
 import Lookup from './pages/Lookup'
 import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 import Users from './pages/Users'
 import AdminShops from './pages/AdminShops'
 import StaffSchedule from './pages/StaffSchedule'
@@ -153,6 +154,7 @@ function AppInner() {
         <Route path="/register" element={isLoggedIn() ? <Navigate to="/admin" /> : <Register onLogin={handleLogin} />} />
         <Route path="/lookup" element={<Lookup />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/:slug/book" element={<Booking />} />
         <Route path="/admin/*" element={
           <ProtectedRoute>
