@@ -7,6 +7,7 @@ export default function Register({ onLogin }) {
   const [form, setForm] = useState({
     salon_name: '', slug: '', email: '', password: '', owner_name: '', phone: '', address: '', website: ''
   })
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -148,8 +149,15 @@ export default function Register({ onLogin }) {
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
               </div>
-              <button type="submit" disabled={loading}
-                className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 mt-6 text-sm font-medium transition">
+              <label className="flex items-start gap-2 mt-6 cursor-pointer">
+                <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                  className="rounded border-gray-300 mt-0.5" required />
+                <span className="text-sm text-gray-500">
+                  I agree to the <Link to="/terms" className="text-pink-600 hover:underline" target="_blank">Terms & Conditions</Link>
+                </span>
+              </label>
+              <button type="submit" disabled={loading || !agreed}
+                className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 mt-4 text-sm font-medium transition">
                 {loading ? 'Creating...' : 'Create Business'}
               </button>
             </form>

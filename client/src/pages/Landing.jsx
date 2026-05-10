@@ -191,6 +191,7 @@ export default function Landing() {
             <span>© 2026 Timia</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
+            <Link to="/terms" className="hover:text-gray-600">Terms</Link>
             <Link to="/login" className="hover:text-gray-600">Sign in</Link>
             <Link to="/register" className="hover:text-gray-600">Sign up</Link>
           </div>
