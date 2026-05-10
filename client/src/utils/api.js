@@ -108,6 +108,10 @@ export const api = {
   // Loyalty
   getLoyalty: (phone) => request(`/loyalty/${phone}`),
 
+  // Visits
+  trackVisit: (salon_id, page) => fetch('/api/visits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ salon_id, page }) }),
+  getVisitStats: () => request('/visits/stats'),
+
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
 };

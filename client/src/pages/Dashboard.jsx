@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [appts, setAppts] = useState([])
   const [customers, setCustomers] = useState([])
   const [stats, setStats] = useState({ services: 0, staff: 0 })
+  const [visitStats, setVisitStats] = useState(null)
   const [filterDate, setFilterDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: getSalonTimezone() }))
   const [filterStatus, setFilterStatus] = useState('')
   const [showAllDates, setShowAllDates] = useState(false)
@@ -27,6 +28,7 @@ export default function Dashboard() {
       .then(([s, st]) => setStats({ services: s.length, staff: st.length }))
       .catch(console.error)
     api.getCustomers().then(setCustomers).catch(console.error)
+    api.getVisitStats().then(setVisitStats).catch(console.error)
   }, [])
 
   useEffect(() => { loadAppts() }, [filterDate, filterStatus, showAllDates])
@@ -73,6 +75,27 @@ export default function Dashboard() {
           <div className="text-gray-500 text-sm">{t('totalCustomers')}</div>
         </div>
       </div>
+
+      {visitStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow p-4">
+            <div className="text-2xl font-bold text-indigo-600">{visitStats.total}</div>
+            <div className="text-gray-500 text-sm">👁 Total Visits</div>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <div className="text-2xl font-bold text-blue-600">{visitStats.today}</div>
+            <div className="text-gray-500 text-sm">📅 Visits Today</div>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <div className="text-2xl font-bold text-cyan-600">{visitStats.week}</div>
+            <div className="text-gray-500 text-sm">📆 This Week</div>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4">
+            <div className="text-2xl font-bold text-teal-600">{visitStats.month}</div>
+            <div className="text-gray-500 text-sm">📊 This Month</div>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
         <button onClick={() => setTab('bookings')}

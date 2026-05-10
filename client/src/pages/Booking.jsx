@@ -26,7 +26,11 @@ export default function Booking() {
   const [doneData, setDoneData] = useState(null)
 
   useEffect(() => {
-    api.getSalon(slug).then(setSalon).catch(() => setError('Salon not found'))
+    api.getSalon(slug).then(salonData => {
+      setSalon(salonData)
+      // Track page visit
+      api.trackVisit(salonData.id, 'booking').catch(() => {})
+    }).catch(() => setError('Salon not found'))
     api.getPublicServices(slug).then(setServices).catch(console.error)
     api.getPublicStaff(slug).then(setStaffList).catch(console.error)
     api.getPublicGallery(slug).then(setGallery).catch(console.error)

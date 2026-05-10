@@ -30,6 +30,7 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/overrides', require('./routes/overrides'));
+app.use('/api/visits', require('./routes/visits'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -425,6 +426,11 @@ async function run(sql) {
 
   // Loyalty points (Priority 8)
   await run(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS loyalty_points INTEGER DEFAULT 0`);
+
+  // Page visits tracking
+  await run(`CREATE TABLE IF NOT EXISTS page_visits (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, page VARCHAR(100) DEFAULT 'booking', ip_address VARCHAR(100), user_agent TEXT, referrer TEXT, visited_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_page_visits_salon ON page_visits(salon_id)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_page_visits_date ON page_visits(visited_at)`);
 
   // Reminder tracking (Priority 3)
   await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT false`);
