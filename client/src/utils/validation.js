@@ -2,12 +2,14 @@
 
 // Sanitize name: remove special characters, allow letters, spaces, hyphens, apostrophes
 export function sanitizeName(value) {
-  return value.replace(/[^a-zA-ZÀ-ỹ\s\-']/g, '')
+  // Allow letters (including Vietnamese), spaces, hyphens, apostrophes
+  return value.replace(/[^a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯưẠ-ỹ\s\-']/g, '')
 }
 
 // Sanitize phone: only numbers, spaces, +, -, ()
 export function sanitizePhone(value) {
-  return value.replace(/[^0-9\s\+\-\(\)]/g, '')
+  // Allow numbers, spaces, +, -, (), and dots
+  return value.replace(/[^0-9\s\+\-\(\)\.]/g, '')
 }
 
 // Validate email format
