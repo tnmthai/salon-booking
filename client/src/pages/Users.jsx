@@ -5,7 +5,7 @@ export default function Users() {
   const [users, setUsers] = useState([])
   const [staff, setStaff] = useState([])
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', email: '', role: 'owner' })
+  const [form, setForm] = useState({ name: '', email: '', role: 'owner', is_active: true })
   const [resetUser, setResetUser] = useState(null)
   const [newPassword, setNewPassword] = useState('')
   const [resetting, setResetting] = useState(false)
@@ -47,7 +47,7 @@ export default function Users() {
   }
 
   const startEdit = (u) => {
-    setForm({ name: u.name, email: u.email, role: u.role })
+    setForm({ name: u.name, email: u.email, role: u.role, is_active: u.is_active !== false })
     setEditing(u.id)
   }
 
@@ -79,7 +79,7 @@ export default function Users() {
       {editing && (
         <form onSubmit={handleUpdate} className="bg-white rounded-xl shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Edit User</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
               className="border rounded-lg px-3 py-2" required />
             <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
@@ -88,6 +88,11 @@ export default function Users() {
               className="border rounded-lg px-3 py-2">
               <option value="owner">Owner</option>
               <option value="staff">Staff</option>
+            </select>
+            <select value={form.is_active ? 'active' : 'inactive'} onChange={e => setForm({...form, is_active: e.target.value === 'active'})}
+              className="border rounded-lg px-3 py-2">
+              <option value="active">✅ Active</option>
+              <option value="inactive">⏸ Inactive</option>
             </select>
           </div>
           <div className="mt-4 flex gap-2">
@@ -127,6 +132,7 @@ export default function Users() {
               <th className="text-left p-3 text-sm font-medium text-gray-500">Name</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Email</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Role</th>
+              <th className="text-left p-3 text-sm font-medium text-gray-500">Status</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Joined</th>
               <th className="text-left p-3 text-sm font-medium text-gray-500">Actions</th>
             </tr>
@@ -145,6 +151,13 @@ export default function Users() {
                     'bg-gray-100 text-gray-600'
                   }`}>
                     {u.role === 'super_admin' ? '⭐ Super Admin' : u.role === 'owner' ? '👑 Owner' : '👤 Staff'}
+                  </span>
+                </td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    u.is_active === false ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
+                  }`}>
+                    {u.is_active === false ? '⏸ Inactive' : '✅ Active'}
                   </span>
                 </td>
                 <td className="p-3 text-sm text-gray-400">{new Date(u.created_at).toLocaleDateString('en-NZ')}</td>

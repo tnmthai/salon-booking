@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const pool = require('./db');
-const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn } = require('./initdb');
+const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn } = require('./initdb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +12,7 @@ seedAdmin(pool);
 addTimezoneColumn(pool);
 addStaffActiveColumn(pool);
 addServiceNameColumn(pool);
+addUserActiveColumn(pool);
 
 app.use(cors());
 app.use(express.json());

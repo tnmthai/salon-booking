@@ -141,4 +141,15 @@ async function addServiceNameColumn(pool) {
   }
 }
 
-module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn };
+
+// Add is_active column to users if not exists
+async function addUserActiveColumn(pool) {
+  try {
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true");
+    console.log('Users is_active column added');
+  } catch (err) {
+    console.log('Users is_active column skipped:', err.message);
+  }
+}
+
+module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn };

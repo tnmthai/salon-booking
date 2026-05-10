@@ -107,15 +107,15 @@ router.post('/bulk-create-staff', authMiddleware, async (req, res) => {
 
 // PUT update user (super admin can update anyone, owner can update their salon)
 router.put('/:id', authMiddleware, async (req, res) => {
-  const { name, email, role } = req.body;
+  const { name, email, role, is_active } = req.body;
   try {
     let query, params;
     if (isSuperAdmin(req.user.email)) {
-      query = 'UPDATE users SET name=$1, email=$2, role=$3 WHERE id=$4 RETURNING id, email, name, role';
-      params = [name, email, role, req.params.id];
+      query = 'UPDATE users SET name=$1, email=$2, role=$3, is_active=$4 WHERE id=$5 RETURNING id, email, name, role, is_active';
+      params = [name, email, role, is_active !== false, req.params.id];
     } else {
-      query = 'UPDATE users SET name=$1, email=$2, role=$3 WHERE id=$4 AND salon_id=$5 RETURNING id, email, name, role';
-      params = [name, email, role, req.params.id, req.user.salon_id];
+      query = 'UPDATE users SET name=$1, email=$2, role=$3, is_active=$4 WHERE id=$5 AND salon_id=$6 RETURNING id, email, name, role, is_active';
+      params = [name, email, role, is_active !== false, req.params.id, req.user.salon_id];
     }
     const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
