@@ -96,7 +96,7 @@ function shopOwnerNotificationEmail({ salonName, customerName, customerPhone, cu
           </table>
         </div>
         <div style="text-align:center;margin-top:24px;">
-          <a href="${appUrl || 'https://salon-booking.up.railway.app'}/admin" style="display:inline-block;background:#111;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View in Dashboard →</a>
+          <a href="${appUrl || 'https://www.timia.nz'}/admin" style="display:inline-block;background:#111;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View in Dashboard →</a>
         </div>
       </div>
     </body></html>
@@ -206,7 +206,7 @@ function reviewRequestEmail({ customerName, salonName, serviceName, date, bookin
         <p style="color:#555;">Thank you for visiting <strong>${salonName}</strong>! We hope you enjoyed your ${serviceName} on ${date}.</p>
         <p style="color:#555;">We'd love to hear about your experience. Your feedback helps us improve!</p>
         <div style="text-align:center;margin:24px 0;">
-          <a href="https://salon-booking.up.railway.app/lookup?code=${bookingCode}" style="display:inline-block;background:#ec4899;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Leave a Review ⭐</a>
+          <a href="https://www.timia.nz/lookup?code=${bookingCode}" style="display:inline-block;background:#ec4899;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Leave a Review ⭐</a>
         </div>
         <p style="color:#888;font-size:13px;margin-top:32px;text-align:center;">Thank you for choosing ${salonName}!</p>
       </div>
