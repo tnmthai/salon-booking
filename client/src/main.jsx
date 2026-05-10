@@ -18,6 +18,7 @@ import Booking from './pages/Booking'
 import Lookup from './pages/Lookup'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import Cookies from './pages/Cookies'
 import Users from './pages/Users'
 import AdminShops from './pages/AdminShops'
 import StaffSchedule from './pages/StaffSchedule'
@@ -155,6 +156,7 @@ function AppInner() {
         <Route path="/lookup" element={<Lookup />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/cookies" element={<Cookies />} />
         <Route path="/:slug/book" element={<Booking />} />
         <Route path="/admin/*" element={
           <ProtectedRoute>
