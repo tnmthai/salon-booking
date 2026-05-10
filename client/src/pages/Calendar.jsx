@@ -440,23 +440,8 @@ export default function Calendar() {
                     ))}
                   </div>
 
-                  {/* Staff columns + current time line container */}
+                  {/* Staff columns container */}
                   <div className="flex-1 relative">
-                    {/* Current time line - spans across all staff */}
-                    {date === todayNZ() && (() => {
-                      const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
-                      const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
-                      const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
-                      if (topPx < 0 || topPx > gridH) return null
-                      return (
-                        <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
-                          <div className="flex items-center">
-                            <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5" />
-                            <div className="flex-1 h-0.5 bg-red-500" />
-                          </div>
-                        </div>
-                      )
-                    })()}
 
                   {/* Staff columns */}
                   {staff.map(s => {
@@ -465,10 +450,17 @@ export default function Calendar() {
                     const lunch = getLunchBreak(lunchBreaks, s.id, d)
                     const ls = lunchStyle(lunch)
                     const isDragOver = dragOver?.staffId === s.id && dragOver?.date === d
+                    
+                    // Current time position
+                    const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
+                    const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
+                    const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
+                    const showTimeLine = date === todayNZ() && topPx >= 0 && topPx <= gridH
+                    
                     return (
                       <div
                         key={s.id}
-                        className={`flex-1 relative border-l transition-colors ${isDragOver ? 'bg-pink-50' : ''}`}
+                        className={`flex-1 relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
                         style={{ height: `${gridH}px`, minWidth: '150px' }}
                         onDragOver={(e) => handleDragOver(e, s.id, d)}
                         onDragLeave={() => setDragOver(null)}
@@ -490,6 +482,16 @@ export default function Calendar() {
                           >
                             <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
                             <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                          </div>
+                        )}
+
+                        {/* Current time line */}
+                        {showTimeLine && (
+                          <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
+                              <div className="flex-1 h-[2px] bg-red-500" />
+                            </div>
                           </div>
                         )}
 
