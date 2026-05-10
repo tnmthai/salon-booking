@@ -88,8 +88,6 @@ export default function Staff() {
             <div className="flex gap-2 shrink-0">
               <span className="text-xs text-purple-600 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); handleEdit(s) }}>{t('edit')}</span>
               <span className="text-xs text-gray-400">|</span>
-              <span className="text-xs text-orange-500 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); toggleActive(s) }}>⏸ Pause</span>
-              <span className="text-xs text-gray-400">|</span>
               <span className="text-xs text-purple-600 hover:underline">📋 Bookings</span>
             </div>
           </Link>
