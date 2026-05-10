@@ -27,9 +27,40 @@ export default function Register({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    
+    // Validate inputs
+    if (!form.salon_name || form.salon_name.trim().length < 2) {
+      setError('Business name must be at least 2 characters')
+      return
+    }
+    if (!form.owner_name || form.owner_name.trim().length < 2) {
+      setError('Owner name must be at least 2 characters')
+      return
+    }
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    if (!form.password || form.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+    if (form.phone && form.phone.replace(/\D/g, '').length < 7) {
+      setError('Please enter a valid phone number (at least 7 digits)')
+      return
+    }
+    
     setLoading(true)
     try {
-      const data = await api.register(form)
+      const data = await api.register({
+        ...form,
+        salon_name: form.salon_name.trim(),
+        owner_name: form.owner_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone?.trim() || '',
+        address: form.address?.trim() || '',
+        website: form.website?.trim() || '',
+      })
       onLogin(data.token, data.salon, data.user)
       navigate('/admin')
     } catch (err) {

@@ -25,8 +25,17 @@ export default function Users() {
 
   const handleUpdate = async (e) => {
     e.preventDefault()
+    // Validate
+    if (!form.name || form.name.trim().length < 2) {
+      alert('Name must be at least 2 characters')
+      return
+    }
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      alert('Please enter a valid email address')
+      return
+    }
     try {
-      await api.updateUser(editing, form)
+      await api.updateUser(editing, { ...form, name: form.name.trim(), email: form.email.trim().toLowerCase() })
       setEditing(null)
       load()
     } catch (err) { alert(err.message) }

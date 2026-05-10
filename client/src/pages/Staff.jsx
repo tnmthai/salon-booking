@@ -15,12 +15,25 @@ export default function Staff() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Validate
+    if (!form.name || form.name.trim().length < 2) {
+      alert('Staff name must be at least 2 characters')
+      return
+    }
+    if (form.phone && form.phone.replace(/\D/g, '').length < 7) {
+      alert('Please enter a valid phone number (at least 7 digits)')
+      return
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      alert('Please enter a valid email address')
+      return
+    }
     try {
       if (editing) {
         await api.updateStaff(editing, { ...form, active: true })
         setEditing(null)
       } else {
-        await api.createStaff(form)
+        await api.createStaff({ ...form, name: form.name.trim(), phone: form.phone?.trim() || '', email: form.email?.trim() || '' })
       }
       setForm({ name: '', role: '', phone: '', email: '' })
       load()

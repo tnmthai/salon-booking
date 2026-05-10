@@ -15,12 +15,25 @@ export default function Services() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Validate
+    if (!form.name || form.name.trim().length < 2) {
+      alert('Service name must be at least 2 characters')
+      return
+    }
+    if (!form.duration_min || form.duration_min < 5) {
+      alert('Duration must be at least 5 minutes')
+      return
+    }
+    if (!form.price || form.price <= 0) {
+      alert('Price must be greater than 0')
+      return
+    }
     try {
       if (editing) {
         await api.updateService(editing, { ...form, active: true })
         setEditing(null)
       } else {
-        await api.createService(form)
+        await api.createService({ ...form, name: form.name.trim(), category: form.category?.trim() || '' })
       }
       setForm({ name: '', description: '', duration_min: 30, price: '', category: '' })
       load()

@@ -68,6 +68,23 @@ export default function Booking() {
   }
 
   const handleBook = async () => {
+    // Validate inputs
+    if (!customer.name || customer.name.trim().length < 2) {
+      alert('Please enter a valid name (at least 2 characters)')
+      return
+    }
+    if (!customer.phone || customer.phone.replace(/\D/g, '').length < 7) {
+      alert('Please enter a valid phone number (at least 7 digits)')
+      return
+    }
+    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+      alert('Please enter a valid email address')
+      return
+    }
+    if (!selectedSlot) {
+      alert('Please select a time slot')
+      return
+    }
     setLoading(true)
     try {
       const result = await api.createPublicAppointment({
@@ -75,11 +92,11 @@ export default function Booking() {
         service_id: selectedServices[0], // Primary service
         service_ids: selectedServices, // All services (Priority 6)
         staff_id: selectedStaff,
-        customer_name: customer.name,
-        customer_phone: customer.phone,
-        customer_email: customer.email,
+        customer_name: customer.name.trim(),
+        customer_phone: customer.phone.trim(),
+        customer_email: customer.email?.trim() || '',
         start_time: selectedSlot.start,
-        notes: customer.notes,
+        notes: customer.notes?.trim() || '',
       })
       setDoneData(result)
       setDone(true)
