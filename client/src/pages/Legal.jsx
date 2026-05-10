@@ -55,7 +55,7 @@ export default function Legal() {
                   </ul>
                 </li>
                 <li><strong>Removal:</strong> We reserve the right to remove any image that violates these standards without notice.</li>
-                <li><strong>License:</strong> By uploading, you grant Timia a non-exclusive license to display the images on your business page.</li>
+                <li><strong>Licence:</strong> By uploading, you grant Timia a non-exclusive licence to display the images on your business page.</li>
               </ul>
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
                 <p className="text-blue-800 text-sm">
