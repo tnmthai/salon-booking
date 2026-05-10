@@ -225,6 +225,8 @@ export default function Calendar() {
   const [dragLunch, setDragLunch] = useState(null)
   const [dragOver, setDragOver] = useState(null)
   const [lunchBreaks, setLunchBreaks] = useState(loadLunchBreaks)
+  const [now, setNow] = useState(new Date())
+  const scrollRef = useRef(null)
   const calendarRef = useRef(null)
 
   // Load staff + services once
@@ -247,6 +249,23 @@ export default function Calendar() {
   }, [date, selectedStaff, showAllDates])
 
   useEffect(() => { loadAppts() }, [loadAppts])
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Auto-scroll to current time on load
+  useEffect(() => {
+    if (scrollRef.current && date === todayNZ()) {
+      const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
+      const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
+      const pxFromTop = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
+      const viewportH = scrollRef.current.clientHeight
+      scrollRef.current.scrollTop = Math.max(0, pxFromTop - viewportH / 3)
+    }
+  }, [date, appointments])
 
   const timeLabels = Array.from({ length: totalSlots }, (_, i) => {
     const m = START_HOUR * 60 + i * SLOT_MIN
@@ -411,7 +430,7 @@ export default function Calendar() {
                 </div>
 
                 {/* Grid body */}
-                <div className="flex">
+                <div className="flex" ref={scrollRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
                   {/* Time column */}
                   <div className="w-[52px] shrink-0 relative" style={{ height: `${gridH}px` }}>
                     {timeLabels.map((label, i) => (
@@ -420,6 +439,24 @@ export default function Calendar() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Staff columns + current time line container */}
+                  <div className="flex-1 relative">
+                    {/* Current time line - spans across all staff */}
+                    {date === todayNZ() && (() => {
+                      const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
+                      const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
+                      const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
+                      if (topPx < 0 || topPx > gridH) return null
+                      return (
+                        <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
+                          <div className="flex items-center">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1.5" />
+                            <div className="flex-1 h-0.5 bg-red-500" />
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                   {/* Staff columns */}
                   {staff.map(s => {
@@ -486,6 +523,7 @@ export default function Calendar() {
                       </div>
                     )
                   })}
+                  </div>
                 </div>
               </div>
             </div>
