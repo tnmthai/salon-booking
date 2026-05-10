@@ -278,7 +278,7 @@ export default function Calendar() {
   staff.forEach((s, i) => { colorMap[s.id] = STAFF_COLORS[i % STAFF_COLORS.length] })
 
   const dates = showAllDates ? [...new Set(appointments.map(a => nzDateStr(a.start_time)))].sort() : [date]
-  const getAppts = (sid, d) => appointments.filter(a => a.staff_id === sid && nzDateStr(a.start_time) === d)
+  const getAppts = (sid, d) => appointments.filter(a => a.staff_id == sid && nzDateStr(a.start_time) === d)
 
   const blockStyle = (a) => {
     const s = nzParts(a.start_time), e = nzParts(a.end_time)
