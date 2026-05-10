@@ -194,6 +194,7 @@ export default function Landing() {
             <Link to="/terms" className="hover:text-gray-600">Terms</Link>
             <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link to="/cookies" className="hover:text-gray-600">Cookies</Link>
+            <Link to="/legal" className="hover:text-gray-600">Legal</Link>
             <Link to="/login" className="hover:text-gray-600">Sign in</Link>
             <Link to="/register" className="hover:text-gray-600">Sign up</Link>
           </div>
