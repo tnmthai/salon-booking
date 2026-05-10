@@ -204,6 +204,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
             <button onClick={() => handleStatus('confirmed')} disabled={saving}
               className="w-full border py-2 rounded-xl text-sm font-medium hover:bg-white">🔄 Restore</button>
           )}
+          <button onClick={onClose} className="w-full mt-2 border py-2 rounded-xl text-sm font-medium hover:bg-gray-100 text-gray-500">✕ Close</button>
         </div>
       </div>
     </div>
