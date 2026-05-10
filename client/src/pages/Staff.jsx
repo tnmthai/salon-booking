@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
+import { sanitizeName, sanitizePhone } from '../utils/validation'
 import { translations } from '../utils/translations'
 
 export default function Staff() {
@@ -52,14 +53,14 @@ export default function Staff() {
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">{editing ? t('editStaff') : t('addStaff')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder={t('staffName')} value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+          <input placeholder={t('staffName')} value={form.name} onChange={e => setForm({...form, name: sanitizeName(e.target.value)})}
             className="border rounded-lg px-3 py-2" required />
           <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
             className="border rounded-lg px-3 py-2">
             <option value="">{t('selectRole')}</option>
             {roles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          <input placeholder={t('phone')} value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+          <input placeholder={t('phone')} value={form.phone} onChange={e => setForm({...form, phone: sanitizePhone(e.target.value)})}
             className="border rounded-lg px-3 py-2" />
           <input placeholder={t('email')} value={form.email} onChange={e => setForm({...form, email: e.target.value})}
             className="border rounded-lg px-3 py-2" />

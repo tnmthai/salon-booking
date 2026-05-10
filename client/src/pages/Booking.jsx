@@ -256,8 +256,8 @@ export default function Booking() {
             <h3 className="text-lg font-semibold mb-4">Your Information</h3>
             <div className="bg-white rounded-xl shadow p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="border rounded-lg px-3 py-2" required />
-                <input placeholder="Phone" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="border rounded-lg px-3 py-2" required />
+                <input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: sanitizeName(e.target.value)})} className="border rounded-lg px-3 py-2" required />
+                <input placeholder="Phone" value={customer.phone} onChange={e => setCustomer({...customer, phone: sanitizePhone(e.target.value)})} className="border rounded-lg px-3 py-2" required pattern="[0-9\s\+\-\(\)]{7,}" title="Please enter a valid phone number (at least 7 digits)" />
                 <input placeholder="Email (optional)" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="border rounded-lg px-3 py-2" />
                 <input placeholder="Notes (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2" />
               </div>

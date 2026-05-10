@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { sanitizeName, sanitizePhone } from '../utils/validation'
 
 export default function AdminShops() {
   const [salons, setSalons] = useState([])
@@ -184,7 +185,7 @@ export default function AdminShops() {
                   <form onSubmit={handleCreateOwner} className="bg-pink-50 rounded-lg p-4 mb-3">
                     <p className="text-sm font-medium text-pink-700 mb-3">Create new owner for {s.name}:</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <input placeholder="Full name" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                      <input placeholder="Full name" value={form.name} onChange={e => setForm({...form, name: sanitizeName(e.target.value)})}
                         className="border rounded-lg px-3 py-2 text-sm" required />
                       <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
                         className="border rounded-lg px-3 py-2 text-sm" required />
@@ -244,7 +245,7 @@ export default function AdminShops() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input value={salonForm.phone} onChange={e => setSalonForm({...salonForm, phone: e.target.value})}
+                <input value={salonForm.phone} onChange={e => setSalonForm({...salonForm, phone: sanitizePhone(e.target.value)})}
                   className="border rounded-lg px-3 py-2 w-full" />
               </div>
               <div>

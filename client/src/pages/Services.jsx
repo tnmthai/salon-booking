@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { sanitizeName } from '../utils/validation'
 import { translations } from '../utils/translations'
 
 
@@ -46,7 +47,7 @@ export default function Services() {
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">{editing ? t('editService') : t('addService')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder={t('serviceName')} value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+          <input placeholder={t('serviceName')} value={form.name} onChange={e => setForm({...form, name: sanitizeName(e.target.value)})}
             className="border rounded-lg px-3 py-2" required />
           <input placeholder={t('category')} value={form.category} onChange={e => setForm({...form, category: e.target.value})}
             className="border rounded-lg px-3 py-2" list="categories" />

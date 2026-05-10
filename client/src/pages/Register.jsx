@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
+import { sanitizeName, sanitizePhone, sanitizeSlug } from '../utils/validation'
 
 export default function Register({ onLogin }) {
   const [form, setForm] = useState({
@@ -66,7 +67,7 @@ export default function Register({ onLogin }) {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Business Name *</label>
                   <input value={form.salon_name} onChange={e => {
-                    setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
+                    setForm({...form, salon_name: sanitizeName(e.target.value), slug: generateSlug(e.target.value)})
                   }} placeholder="e.g. Bella Hair Studio"
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
@@ -74,20 +75,20 @@ export default function Register({ onLogin }) {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Booking URL</label>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-sm shrink-0">www.timia.nz/</span>
-                    <input value={form.slug} onChange={e => setForm({...form, slug: e.target.value})}
+                    <input value={form.slug} onChange={e => setForm({...form, slug: sanitizeSlug(e.target.value)})}
                       placeholder="bella-hair"
                       className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" pattern="[a-z0-9-]+" required />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Owner Name *</label>
-                  <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
+                  <input value={form.owner_name} onChange={e => setForm({...form, owner_name: sanitizeName(e.target.value)})}
                     placeholder="Your name"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
-                  <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                  <input value={form.phone} onChange={e => setForm({...form, phone: sanitizePhone(e.target.value)})}
                     placeholder="021 123 4567"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
