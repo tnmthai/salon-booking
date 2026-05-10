@@ -6,7 +6,7 @@ const { JWT_SECRET } = require('../middleware/auth');
 
 // POST /api/auth/register — register new salon + owner
 router.post('/register', async (req, res) => {
-  const { salon_name, slug, email, password, owner_name, phone, address } = req.body;
+  const { salon_name, slug, email, password, owner_name, phone, address, website } = req.body;
   if (!salon_name || !slug || !email || !password) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -26,8 +26,8 @@ router.post('/register', async (req, res) => {
 
     // Create salon
     const salon = await db.query(
-      'INSERT INTO salons (name, slug, phone, email, address) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [salon_name, slug, phone, email, address]
+      'INSERT INTO salons (name, slug, phone, email, address, website) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [salon_name, slug, phone, email, address, website || null]
     );
 
     // Create owner user

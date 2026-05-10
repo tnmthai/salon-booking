@@ -152,4 +152,15 @@ async function addUserActiveColumn(pool) {
   }
 }
 
-module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn };
+
+// Add website column to salons if not exists
+async function addWebsiteColumn(pool) {
+  try {
+    await pool.query("ALTER TABLE salons ADD COLUMN IF NOT EXISTS website VARCHAR(255)");
+    console.log('Website column added');
+  } catch (err) {
+    console.log('Website column skipped:', err.message);
+  }
+}
+
+module.exports = { initDB, seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn };
