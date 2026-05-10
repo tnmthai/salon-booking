@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT u.*, s.name as salon_name, s.slug as salon_slug
+      `SELECT u.*, s.name as salon_name, s.slug as salon_slug, s.timezone
        FROM users u LEFT JOIN salons s ON u.salon_id = s.id
        WHERE u.email = $1`,
       [email]
@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, salon_id: user.salon_id },
-      salon: { id: user.salon_id, name: user.salon_name, slug: user.salon_slug },
+      salon: { id: user.salon_id, name: user.salon_name, slug: user.salon_slug, timezone: user.timezone || 'Pacific/Auckland' },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -102,7 +102,7 @@ router.get('/me', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await db.query(
-      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug
+      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug, s.timezone
        FROM users u LEFT JOIN salons s ON u.salon_id = s.id WHERE u.id = $1`,
       [decoded.id]
     );
@@ -110,7 +110,7 @@ router.get('/me', async (req, res) => {
     const u = result.rows[0];
     res.json({
       user: { id: u.id, email: u.email, name: u.name, role: u.role, salon_id: u.salon_id },
-      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug },
+      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug, timezone: u.timezone || 'Pacific/Auckland' },
     });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });

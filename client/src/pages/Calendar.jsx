@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { api } from '../utils/api'
+import { api, getSalonTimezone } from '../utils/api'
 import { translations } from '../utils/translations'
 
 const STAFF_COLORS = [
@@ -13,7 +13,7 @@ const STAFF_COLORS = [
   { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', dot: 'bg-teal-500' },
 ]
 
-const TZ = 'Pacific/Auckland'
+const TZ = getSalonTimezone()
 const SLOT_H = 28
 const START_HOUR = 8
 const END_HOUR = 19

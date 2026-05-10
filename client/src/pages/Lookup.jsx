@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
-const TZ = 'Pacific/Auckland'
+const TZ = getSalonTimezone()
 
 const statusColors = {
   confirmed: 'bg-green-100 text-green-700 border-green-200',

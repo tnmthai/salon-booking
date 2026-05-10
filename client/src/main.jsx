@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import './index.css'
-import { api, setToken, clearToken, isLoggedIn } from './utils/api'
+import { api, setToken, clearToken, isLoggedIn, setSalonTimezone } from './utils/api'
 import { I18nProvider, useI18n } from './utils/i18n'
 
 // Pages
@@ -118,6 +118,7 @@ function AppInner() {
       api.me().then(data => {
         setSalon(data.salon);
         setUser(data.user);
+        if (data.salon?.timezone) setSalonTimezone(data.salon.timezone);
         setLoading(false);
       }).catch(() => {
         clearToken();
@@ -132,6 +133,7 @@ function AppInner() {
     setToken(token);
     setSalon(salonData);
     setUser(userData);
+    if (salonData?.timezone) setSalonTimezone(salonData.timezone);
   };
 
   const handleLogout = () => {

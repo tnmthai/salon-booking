@@ -108,4 +108,16 @@ async function seedAdmin(pool) {
   }
 }
 
-module.exports = { initDB, seedAdmin };
+
+// Add timezone column if not exists
+async function addTimezoneColumn(pool) {
+  try {
+    await pool.query("ALTER TABLE salons ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) DEFAULT 'Pacific/Auckland'");
+    console.log('Timezone column added');
+  } catch (err) {
+    console.log('Timezone column skipped:', err.message);
+  }
+}
+
+// Update exports
+module.exports = { initDB, seedAdmin, addTimezoneColumn };

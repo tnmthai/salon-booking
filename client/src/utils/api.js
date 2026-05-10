@@ -118,8 +118,17 @@ export function setToken(token) {
 
 export function clearToken() {
   localStorage.removeItem('salon_token');
+  localStorage.removeItem('salon_timezone');
 }
 
 export function isLoggedIn() {
   return !!getToken();
+}
+
+export function setSalonTimezone(tz) {
+  localStorage.setItem('salon_timezone', tz || 'Pacific/Auckland');
+}
+
+export function getSalonTimezone() {
+  return localStorage.getItem('salon_timezone') || 'Pacific/Auckland';
 }

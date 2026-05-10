@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { api } from '../utils/api'
+import { api, getSalonTimezone } from '../utils/api'
 
-const TZ = 'Pacific/Auckland'
+const TZ = getSalonTimezone()
 
 export default function Booking() {
   const { slug } = useParams()

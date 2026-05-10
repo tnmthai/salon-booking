@@ -4,6 +4,14 @@ const { authMiddleware } = require('../middleware/auth');
 
 const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
 
+async function getSalonTimezone(salonId) {
+  if (!salonId) return 'Pacific/Auckland';
+  try {
+    const result = await db.query('SELECT timezone FROM salons WHERE id = $1', [salonId]);
+    return result.rows[0]?.timezone || 'Pacific/Auckland';
+  } catch { return 'Pacific/Auckland'; }
+}
+
 // GET appointments (super admin: all shops, normal: own salon)
 router.get('/', authMiddleware, async (req, res) => {
   try {
@@ -12,13 +20,20 @@ router.get('/', authMiddleware, async (req, res) => {
     let params = [];
     let idx = 1;
 
+    // Get salon timezone
+    let tz = 'Pacific/Auckland';
+    if (req.user.salon_id) {
+      const salonResult = await db.query('SELECT timezone FROM salons WHERE id = $1', [req.user.salon_id]);
+      if (salonResult.rows[0]?.timezone) tz = salonResult.rows[0].timezone;
+    }
+
     if (!isSuperAdmin(req.user.email)) {
       where.push(`a.salon_id = $${idx++}`);
       params.push(req.user.salon_id);
     }
     if (date) {
-      where.push(`DATE(a.start_time AT TIME ZONE 'Pacific/Auckland') = $${idx++}`);
-      params.push(date);
+      where.push(`DATE(a.start_time AT TIME ZONE $${idx++}) = $${idx++}`);
+      params.push(tz, date);
     }
     if (status) {
       where.push(`a.status = $${idx++}`);
@@ -57,6 +72,10 @@ router.get('/slots', async (req, res) => {
     if (!slug || !staff_id || !date) {
       return res.status(400).json({ error: 'Missing required params: slug, staff_id, date' });
     }
+
+    const salonResult = await db.query('SELECT id, timezone FROM salons WHERE slug = $1', [slug]);
+    const salonId = salonResult.rows[0]?.id;
+    const tz = salonResult.rows[0]?.timezone || 'Pacific/Auckland';
 
     // Get salon
     const salon = await db.query('SELECT id FROM salons WHERE slug = $1', [slug]);
@@ -116,7 +135,7 @@ router.get('/slots', async (req, res) => {
       const nzDate = new Date(`${y}-${m}-${day}T${h}:${min}:00`);
       // Figure out offset: format the NZ date in UTC and compare
       const utcStr = nzDate.toLocaleString('en-US', { timeZone: 'UTC' });
-      const nzStr = nzDate.toLocaleString('en-US', { timeZone: 'Pacific/Auckland' });
+      const nzStr = nzDate.toLocaleString('en-US', { timeZone: tz });
       const utcDate = new Date(utcStr);
       const nzRef = new Date(nzStr);
       const offsetMs = nzRef.getTime() - utcDate.getTime();
@@ -127,7 +146,7 @@ router.get('/slots', async (req, res) => {
     // Get existing appointments for this staff on this date
     const appts = await db.query(
       `SELECT start_time, end_time FROM appointments 
-       WHERE staff_id = $1 AND DATE(start_time AT TIME ZONE 'Pacific/Auckland') = $2 AND status != 'cancelled'`,
+       WHERE staff_id = $1 AND DATE(start_time AT TIME ZONE tz) = $2 AND status != 'cancelled'`,
       [staff_id, date]
     );
 
@@ -190,6 +209,9 @@ router.get('/public/:slug', async (req, res) => {
 router.post('/public', async (req, res) => {
   const { salon_id, service_id, service_ids, staff_id, customer_name, customer_phone, customer_email, start_time, notes } = req.body;
   try {
+    // Get salon timezone
+    const tz = await getSalonTimezone(salon_id);
+
     // Support multiple services (Priority 6)
     const allServiceIds = service_ids && service_ids.length > 0 ? service_ids : [service_id];
     const svcs = await db.query('SELECT id, name, duration_min, price FROM services WHERE id = ANY($1)', [allServiceIds]);
@@ -248,8 +270,8 @@ router.post('/public', async (req, res) => {
 
     // Send email notifications (non-blocking)
     const bookingDate = new Date(start_time);
-    const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+    const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
     const emailData = { customerName: customer_name, salonName: salon.name || 'Salon', serviceName, staffName, date: dateStr, time: timeStr, duration: duration_min, price, address: salon.address, customerPhone: customer_phone, customerEmail: customer_email, notes, bookingCode };
 
     try {
@@ -326,6 +348,7 @@ router.put('/:id/cancel', async (req, res) => {
   const { booking_code, phone } = req.body;
   if (!booking_code && !phone) return res.status(400).json({ error: 'Provide booking_code or phone' });
   try {
+    let tz = 'Pacific/Auckland';
     // Verify ownership
     let verifyQuery, verifyParams;
     if (booking_code) {
@@ -353,6 +376,7 @@ router.put('/:id/cancel', async (req, res) => {
     if (!verify.rows.length) return res.status(404).json({ error: 'Appointment not found or credentials do not match' });
 
     const appt = verify.rows[0];
+    tz = await getSalonTimezone(appt.salon_id);
 
     // Check 3-hour rule
     const now = new Date();
@@ -376,8 +400,8 @@ router.put('/:id/cancel', async (req, res) => {
       const { sendEmail, cancellationEmail } = require('../utils/email');
       if (appt.customer_email) {
         const bookingDate = new Date(appt.start_time);
-        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
         sendEmail(appt.customer_email, `Booking Cancelled - ${appt.salon_name}`,
           cancellationEmail({ customerName: appt.customer_name, salonName: appt.salon_name, serviceName: appt.service_name, staffName: appt.staff_name, date: dateStr, time: timeStr })
         ).catch(e => console.error('[EMAIL] Cancel email error:', e.message));
@@ -423,6 +447,7 @@ router.put('/:id/reschedule', async (req, res) => {
     if (!verify.rows.length) return res.status(404).json({ error: 'Appointment not found or credentials do not match' });
 
     const appt = verify.rows[0];
+    tz = await getSalonTimezone(appt.salon_id);
 
     // Check 3-hour rule
     const now = new Date();
@@ -458,10 +483,10 @@ router.put('/:id/reschedule', async (req, res) => {
       const { sendEmail, rescheduleEmail } = require('../utils/email');
       if (appt.customer_email) {
         const oldDate = new Date(appt.start_time);
-        const oldDateStr = oldDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const oldTimeStr = oldDate.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
-        const newDateStr = newStart.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const newTimeStr = newStart.toLocaleTimeString('en-NZ', { timeZone: 'Pacific/Auckland', hour: '2-digit', minute: '2-digit' });
+        const oldDateStr = oldDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const oldTimeStr = oldDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+        const newDateStr = newStart.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const newTimeStr = newStart.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
         sendEmail(appt.customer_email, `Booking Rescheduled - ${appt.salon_name}`,
           rescheduleEmail({ customerName: appt.customer_name, salonName: appt.salon_name, serviceName: appt.service_name, staffName: appt.staff_name, oldDate: oldDateStr, oldTime: oldTimeStr, newDate: newDateStr, newTime: newTimeStr })
         ).catch(e => console.error('[EMAIL] Reschedule email error:', e.message));

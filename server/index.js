@@ -2,13 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const pool = require('./db');
-const { seedAdmin } = require('./initdb');
+const { seedAdmin, addTimezoneColumn } = require('./initdb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Seed admin user on startup
+// Seed admin user and add timezone column on startup
 seedAdmin(pool);
+addTimezoneColumn(pool);
 
 app.use(cors());
 app.use(express.json());
@@ -116,7 +117,7 @@ app.put('/api/salon/settings', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded.salon_id) return res.status(403).json({ error: 'No salon' });
-    const { name, phone, email, address, description } = req.body;
+    const { name, phone, email, address, description, timezone } = req.body;
     const fields = [];
     const vals = [];
     let i = 1;
@@ -125,6 +126,7 @@ app.put('/api/salon/settings', async (req, res) => {
     if (email !== undefined) { fields.push(`email=$${i++}`); vals.push(email); }
     if (address !== undefined) { fields.push(`address=$${i++}`); vals.push(address); }
     if (description !== undefined) { fields.push(`description=$${i++}`); vals.push(description); }
+    if (timezone !== undefined) { fields.push(`timezone=$${i++}`); vals.push(timezone); }
     if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
     vals.push(decoded.salon_id);
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
