@@ -160,13 +160,15 @@ export default function Booking() {
     <div className="min-h-screen bg-gray-50">
       {/* Salon Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 py-4">
           <a href="/" className="text-gray-400 hover:text-gray-600 text-sm">← Home</a>
-          <h1 className="text-xl font-bold text-pink-600">💅 {salon?.name || 'Loading...'}</h1>
-          {salon?.address && <p className="text-sm text-gray-500">📍 {salon.address}</p>}
-          {salonRating && salonRating.total_reviews > 0 && (
-            <span className="text-sm text-yellow-500 ml-auto">⭐ {salonRating.average_rating} ({salonRating.total_reviews})</span>
-          )}
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-lg md:text-xl font-bold text-pink-600">💅 {salon?.name || 'Loading...'}</h1>
+            {salonRating && salonRating.total_reviews > 0 && (
+              <span className="text-sm text-yellow-500 ml-auto">⭐ {salonRating.average_rating} ({salonRating.total_reviews})</span>
+            )}
+          </div>
+          {salon?.address && <p className="text-sm text-gray-500 mt-1">📍 {salon.address}</p>}
         </div>
       </div>
 
@@ -174,12 +176,12 @@ export default function Booking() {
         <h2 className="text-2xl font-bold mb-6 text-center">Book Appointment</h2>
 
         {/* Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-1 md:gap-2 mb-8">
           {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`flex items-center gap-2 ${step >= s ? 'text-pink-600' : 'text-gray-300'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= s ? 'bg-pink-600 text-white' : 'bg-gray-200'}`}>{s}</div>
-              <span className="text-sm hidden md:inline">{s === 1 ? 'Services' : s === 2 ? 'Staff' : s === 3 ? 'Time' : 'Confirm'}</span>
-              {s < 4 && <div className={`w-8 h-0.5 ${step > s ? 'bg-pink-600' : 'bg-gray-200'}`} />}
+            <div key={s} className={`flex items-center gap-1 md:gap-2 ${step >= s ? 'text-pink-600' : 'text-gray-300'}`}>
+              <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold ${step >= s ? 'bg-pink-600 text-white' : 'bg-gray-200'}`}>{s}</div>
+              <span className="text-xs md:text-sm hidden md:inline">{s === 1 ? 'Services' : s === 2 ? 'Staff' : s === 3 ? 'Time' : 'Confirm'}</span>
+              {s < 4 && <div className={`w-4 md:w-8 h-0.5 ${step > s ? 'bg-pink-600' : 'bg-gray-200'}`} />}
             </div>
           ))}
         </div>
@@ -219,7 +221,7 @@ export default function Booking() {
             )}
             <div className="mt-4 flex justify-end">
               <button onClick={() => setStep(2)} disabled={selectedServices.length === 0}
-                className="bg-pink-600 text-white px-6 py-2 rounded-lg disabled:opacity-50">Next</button>
+                className="w-full md:w-auto bg-pink-600 text-white px-6 py-3 rounded-lg disabled:opacity-50 font-medium">Next</button>
             </div>
           </div>
         )}
@@ -242,10 +244,10 @@ export default function Booking() {
             <input type="date" value={selectedDate} min={new Date().toISOString().split('T')[0]}
               onChange={e => setSelectedDate(e.target.value)}
               className="border rounded-lg px-3 py-2 mb-6" />
-            <div className="flex gap-2">
-              <button onClick={() => setStep(1)} className="border px-4 py-2 rounded-lg">Back</button>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setStep(1)} className="border px-4 py-2.5 rounded-lg">Back</button>
               <button onClick={() => setStep(3)} disabled={!selectedStaff || !selectedDate}
-                className="bg-pink-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">Next</button>
+                className="flex-1 md:flex-none bg-pink-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 font-medium">Next</button>
             </div>
           </div>
         )}
@@ -268,9 +270,9 @@ export default function Booking() {
               </div>
             )}
             <div className="flex gap-2 mt-6">
-              <button onClick={() => setStep(2)} className="border px-4 py-2 rounded-lg">Back</button>
+              <button onClick={() => setStep(2)} className="border px-4 py-2.5 rounded-lg">Back</button>
               <button onClick={() => setStep(4)} disabled={!selectedSlot}
-                className="bg-pink-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">Next</button>
+                className="flex-1 md:flex-none bg-pink-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 font-medium">Next</button>
             </div>
           </div>
         )}
@@ -279,12 +281,12 @@ export default function Booking() {
         {step === 4 && (
           <div>
             <h3 className="text-lg font-semibold mb-4">Your Information</h3>
-            <div className="bg-white rounded-xl shadow p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value.replace(/[^a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯưẠ-ỹ\s\-']/g, '')})} className="border rounded-lg px-3 py-2" required minLength={2} />
-                <input placeholder="Phone" type="tel" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="border rounded-lg px-3 py-2" required minLength={7} />
-                <input placeholder="Email (optional)" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="border rounded-lg px-3 py-2" />
-                <input placeholder="Notes (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2" />
+            <div className="bg-white rounded-xl shadow p-4 md:p-6 mb-6">
+              <div className="grid grid-cols-1 gap-3">
+                <input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value.replace(/[^a-zA-ZÀ-ỹà-ỹĂăÂâĐđÊêÔôƠơƯưẠ-ỹ\s\-']/g, '')})} className="border rounded-lg px-3 py-2.5" required minLength={2} />
+                <input placeholder="Phone" type="tel" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="border rounded-lg px-3 py-2.5" required minLength={7} />
+                <input placeholder="Email (optional)" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="border rounded-lg px-3 py-2.5" />
+                <input placeholder="Notes (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2.5" />
               </div>
             </div>
             <div className="bg-pink-50 rounded-xl p-6 mb-6">
@@ -299,9 +301,9 @@ export default function Booking() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setStep(3)} className="border px-4 py-2 rounded-lg">Back</button>
+              <button onClick={() => setStep(3)} className="border px-4 py-2.5 rounded-lg">Back</button>
               <button onClick={handleBook} disabled={!customer.name || !customer.phone || loading}
-                className="bg-pink-600 text-white px-6 py-2 rounded-lg disabled:opacity-50 flex-1">
+                className="flex-1 bg-pink-600 text-white px-6 py-2.5 rounded-lg disabled:opacity-50 font-medium">
                 {loading ? 'Booking...' : '✅ Confirm Booking'}
               </button>
             </div>
@@ -312,7 +314,7 @@ export default function Booking() {
         {gallery.length > 0 && (
           <div className="mt-12">
             <h3 className="text-lg font-bold mb-4">🖼 Our Work</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
               {gallery.slice(0, 9).map(img => (
                 <img key={img.id} src={img.image_url} alt={img.caption || ''} className="w-full h-32 object-cover rounded-lg" />
               ))}
