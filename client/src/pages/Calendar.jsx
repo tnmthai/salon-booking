@@ -454,7 +454,7 @@ export default function Calendar() {
                   {staff.map(s => {
                     const c = colorMap[s.id]
                     return (
-                      <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, minWidth: isMobile ? '0' : '150px' }}>
+                      <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, width: 0, minWidth: isMobile ? '0' : '150px' }}>
                         <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
                         <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
                       </div>
@@ -474,7 +474,7 @@ export default function Calendar() {
                   </div>
 
                   {/* Staff columns container */}
-                  <div className="flex-1 relative" style={{ overflow: 'hidden' }}>
+                  <div className="flex-1 relative" style={{ overflow: 'hidden', position: 'relative' }}>
 
                   {/* Staff columns */}
                   {staff.map(s => {
@@ -494,7 +494,7 @@ export default function Calendar() {
                       <div
                         key={s.id}
                         className={`relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
-                        style={{ height: `${gridH}px`, minWidth: isMobile ? '0' : '150px' }}
+                        style={{ height: `${gridH}px`, width: 0, minWidth: isMobile ? '0' : '150px', flex: 1 }}
                         onDragOver={(e) => handleDragOver(e, s.id, d)}
                         onDragLeave={() => setDragOver(null)}
                         onDrop={(e) => handleDrop(e, s.id, d)}
