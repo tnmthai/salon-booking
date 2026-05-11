@@ -499,6 +499,8 @@ async function run(sql) {
   await run(`CREATE TABLE IF NOT EXISTS page_visits (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, page VARCHAR(100) DEFAULT 'booking', ip_address VARCHAR(100), user_agent TEXT, referrer TEXT, visited_at TIMESTAMP DEFAULT NOW())`);
   await run(`CREATE INDEX IF NOT EXISTS idx_page_visits_salon ON page_visits(salon_id)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_page_visits_date ON page_visits(visited_at)`);
+  await run(`ALTER TABLE page_visits ADD COLUMN IF NOT EXISTS city VARCHAR(100)`);
+  await run(`ALTER TABLE page_visits ADD COLUMN IF NOT EXISTS country VARCHAR(100)`);
 
   // Reminder tracking (Priority 3)
   await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT false`);

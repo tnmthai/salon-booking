@@ -13,10 +13,21 @@ router.post('/', async (req, res) => {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
     const ua = req.headers['user-agent'] || '';
 
+    // Geolocate IP (non-blocking)
+    let city = '', country = '';
+    try {
+      const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`, { signal: AbortSignal.timeout(2000) });
+      if (geoRes.ok) {
+        const geo = await geoRes.json();
+        city = geo.city || '';
+        country = geo.country || '';
+      }
+    } catch {}
+
     await pool.query(
-      `INSERT INTO page_visits (salon_id, page, ip_address, user_agent, referrer)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [salon_id, page || 'booking', ip, ua, referrer || '']
+      `INSERT INTO page_visits (salon_id, page, ip_address, user_agent, referrer, city, country)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [salon_id, page || 'booking', ip, ua, referrer || '', city, country]
     );
 
     res.json({ ok: true });
@@ -97,6 +108,17 @@ router.get('/stats', async (req, res) => {
       params
     );
 
+    // Top cities
+    const cities = await pool.query(
+      `SELECT COALESCE(NULLIF(city, ''), 'Unknown') as city, COALESCE(NULLIF(country, ''), '') as country, COUNT(*) as count
+       FROM page_visits
+       ${whereClause ? whereClause + ' AND' : 'WHERE'} city != ''
+       GROUP BY city, country
+       ORDER BY count DESC
+       LIMIT 10`,
+      params
+    );
+
     res.json({
       total: parseInt(total.rows[0].total),
       today: parseInt(today.rows[0].today),
@@ -104,6 +126,7 @@ router.get('/stats', async (req, res) => {
       month: parseInt(month.rows[0].month),
       daily: daily.rows,
       referrers: referrers.rows,
+      cities: cities.rows,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
