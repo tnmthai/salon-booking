@@ -47,7 +47,7 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description,
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan,
         u.name as owner_name, u.email as owner_email, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'

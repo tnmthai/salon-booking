@@ -15,6 +15,7 @@ export default function AdminShops() {
   const [deleting, setDeleting] = useState(null)
   const [editSalon, setEditSalon] = useState(null)
   const [salonForm, setSalonForm] = useState({ name: '', slug: '', phone: '', email: '', address: '', description: '' })
+  const [updatingPlan, setUpdatingPlan] = useState(null)
 
   const load = () => {
     Promise.all([
@@ -142,6 +143,27 @@ export default function AdminShops() {
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-lg">{s.name}</h3>
                   <span className="text-sm text-pink-600 bg-pink-50 px-2 py-0.5 rounded">/{s.slug}</span>
+                  <select
+                    value={s.plan || 'free'}
+                    onChange={async (e) => {
+                      setUpdatingPlan(s.id)
+                      try {
+                        await api.updatePlan(s.id, e.target.value)
+                        load()
+                      } catch (err) { alert(err.message) }
+                      setUpdatingPlan(null)
+                    }}
+                    disabled={updatingPlan === s.id}
+                    className={`text-xs font-semibold px-2 py-1 rounded-full border-0 cursor-pointer focus:ring-2 focus:ring-pink-300 ${
+                      (s.plan || 'free') === 'growth' ? 'bg-purple-100 text-purple-700' :
+                      (s.plan || 'free') === 'starter' ? 'bg-pink-100 text-pink-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    <option value="free">Free</option>
+                    <option value="starter">Starter ($11)</option>
+                    <option value="growth">Growth ($29)</option>
+                  </select>
                 </div>
 
                 {/* Owner info */}
