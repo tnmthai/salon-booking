@@ -113,6 +113,11 @@ export const api = {
   getVisitStats: () => request('/visits/stats'),
   getPublicVisitCount: () => fetch('/api/visits/public').then(r => r.json()),
 
+  // Plans
+  getPlans: () => fetch('/api/plans').then(r => r.json()),
+  getPlan: () => request('/plan'),
+  updatePlan: (salonId, plan) => request(`/plan/${salonId}`, { method: 'PUT', body: JSON.stringify({ plan }) }),
+
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
 };

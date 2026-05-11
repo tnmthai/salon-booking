@@ -28,6 +28,7 @@ import StaffDashboard from './pages/StaffDashboard'
 import Gallery from './pages/Gallery'
 import Reviews from './pages/Reviews'
 import Overrides from './pages/Overrides'
+import PlanSettings from './pages/PlanSettings'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
@@ -67,6 +68,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <Link to="/admin/gallery" className="text-gray-600 hover:text-pink-600">🖼 Gallery</Link>
                 <Link to="/admin/overrides" className="text-gray-600 hover:text-pink-600">🗓 Days Off</Link>
                 <Link to="/admin/reports" className="text-gray-600 hover:text-pink-600">📊 Reports</Link>
+                <Link to="/admin/plan" className="text-gray-600 hover:text-pink-600">📦 Plan</Link>
               </>
             )}
             {isStaff && (
@@ -105,6 +107,7 @@ function AdminLayout({ salon, user, onLogout }) {
         {isOwner && <Route path="/gallery" element={<Gallery />} />}
         {isOwner && <Route path="/overrides" element={<Overrides />} />}
         {isOwner && <Route path="/reports" element={<Reports />} />}
+        {isOwner && <Route path="/plan" element={<PlanSettings />} />}
         {isStaff && <Route path="/staff-dashboard" element={<StaffDashboard />} />}
         {isSuperAdmin && <Route path="/shops" element={<AdminShops />} />}
       </Routes>

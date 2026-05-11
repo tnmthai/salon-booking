@@ -253,6 +253,20 @@ router.post('/public', async (req, res) => {
     }
     const customer_id = customer.rows[0].id;
 
+    // Check appointment limit for free plan
+    const PLAN_APPT_LIMITS = { free: 40, starter: -1, growth: -1 };
+    const salonPlan = await db.query('SELECT plan FROM salons WHERE id = $1', [salon_id]);
+    const plan = salonPlan.rows[0]?.plan || 'free';
+    const apptLimit = PLAN_APPT_LIMITS[plan] ?? 40;
+    if (apptLimit > 0) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const count = await db.query('SELECT COUNT(*) as c FROM appointments WHERE salon_id = $1 AND created_at >= $2', [salon_id, monthStart]);
+      if (parseInt(count.rows[0].c) >= apptLimit) {
+        return res.status(403).json({ error: `Monthly appointment limit (${apptLimit}) reached. Upgrade your plan for unlimited bookings.` });
+      }
+    }
+
     // Generate unique booking code (8 chars, alphanumeric)
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let bookingCode;

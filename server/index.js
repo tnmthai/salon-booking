@@ -31,6 +31,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/overrides', require('./routes/overrides'));
 app.use('/api/visits', require('./routes/visits'));
+app.use('/api', require('./routes/plans'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -478,6 +479,10 @@ async function run(sql) {
 
   // Reminder tracking (Priority 3)
   await run(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN DEFAULT false`);
+
+  // Subscription plans
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'free'`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan_started_at TIMESTAMP`);
 
   console.log('Database initialized');
 

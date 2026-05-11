@@ -38,11 +38,27 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// Plan limits
+const PLAN_LIMITS = { free: { maxStaff: 2, maxApptsPerMonth: 40 }, starter: { maxStaff: 6, maxApptsPerMonth: -1 }, growth: { maxStaff: -1, maxApptsPerMonth: -1 } };
+
 // POST create staff
 router.post('/', authMiddleware, async (req, res) => {
   const { name, email, phone, color, salon_id } = req.body;
   const targetSalonId = isSuperAdmin(req.user.email) ? (salon_id || req.user.salon_id) : req.user.salon_id;
   try {
+    // Check plan limit
+    if (!isSuperAdmin(req.user.email)) {
+      const salon = await db.query('SELECT plan FROM salons WHERE id = $1', [targetSalonId]);
+      const plan = salon.rows[0]?.plan || 'free';
+      const limit = PLAN_LIMITS[plan]?.maxStaff ?? 2;
+      if (limit > 0) {
+        const count = await db.query('SELECT COUNT(*) as c FROM staff WHERE salon_id = $1 AND active = true', [targetSalonId]);
+        if (parseInt(count.rows[0].c) >= limit) {
+          return res.status(403).json({ error: `Staff limit reached (${limit}). Upgrade your plan to add more staff.` });
+        }
+      }
+    }
+
     const { rows } = await db.query(
       'INSERT INTO staff (salon_id, name, email, phone, color) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [targetSalonId, name, email, phone, color || '#EC4899']
