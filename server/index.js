@@ -407,6 +407,72 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
   }
 });
 
+// SEO routes - serve sitemap.xml and robots.txt directly
+app.get('/sitemap.xml', (req, res) => {
+  res.set('Content-Type', 'application/xml');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.timia.nz</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/register</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/login</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/lookup</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/terms</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/privacy</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/cookies</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/legal</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+</urlset>`);
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://www.timia.nz/sitemap.xml`);
+});
+
 // Serve static client build in production
 const clientPath = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientPath));
