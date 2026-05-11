@@ -43,6 +43,29 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Contact form
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) return res.status(400).json({ error: 'All fields required' });
+    const { sendEmail } = require('./utils/email');
+    await sendEmail(
+      'support@timia.nz',
+      `Contact from ${name} (${email})`,
+      `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+        <h2 style="color:#ec4899">New Contact Message</h2>
+        <p><strong>From:</strong> ${name}</p>
+        <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+        <hr style="border:none;border-top:1px solid #eee;margin:16px 0" />
+        <p style="white-space:pre-wrap">${message}</p>
+      </div>`
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // List all salons with owner info (public)
 app.get('/api/salons', async (req, res) => {
   try {

@@ -185,6 +185,51 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Contact */}
+      <section id="contact" className="py-20 px-6 bg-gray-50">
+        <div className="max-w-xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Get in touch</h2>
+            <p className="text-gray-500">Have a question? We'd love to hear from you.</p>
+          </div>
+          <form onSubmit={async (e) => {
+            e.preventDefault()
+            const fd = new FormData(e.target)
+            const btn = e.target.querySelector('button[type="submit"]')
+            btn.disabled = true
+            btn.textContent = 'Sending...'
+            try {
+              const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: fd.get('name'),
+                  email: fd.get('email'),
+                  message: fd.get('message'),
+                }),
+              })
+              if (res.ok) {
+                alert('Message sent! We\'ll get back to you soon.')
+                e.target.reset()
+              } else {
+                alert('Failed to send. Please try again.')
+              }
+            } catch { alert('Failed to send. Please try again.') }
+            btn.disabled = false
+            btn.textContent = 'Send Message'
+          }} className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input name="name" placeholder="Your name" required className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+              <input name="email" type="email" placeholder="Your email" required className="border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+            </div>
+            <textarea name="message" placeholder="Your message..." rows={4} required className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none" />
+            <button type="submit" className="w-full bg-pink-600 text-white py-3 rounded-xl font-semibold hover:bg-pink-700 transition">
+              Send Message
+            </button>
+          </form>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 px-6">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -204,6 +249,7 @@ export default function Landing() {
             <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link to="/cookies" className="hover:text-gray-600">Cookies</Link>
             <Link to="/legal" className="hover:text-gray-600">Legal</Link>
+            <a href="#contact" className="hover:text-gray-600">Contact</a>
             <Link to="/login" className="hover:text-gray-600">Sign in</Link>
             <Link to="/register" className="hover:text-gray-600">Sign up</Link>
           </div>
