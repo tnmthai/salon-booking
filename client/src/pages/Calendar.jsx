@@ -238,13 +238,6 @@ export default function Calendar() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Auto-select first staff on mobile
-  useEffect(() => {
-    if (isMobile && staffList.length > 0 && !selectedStaff) {
-      setSelectedStaff(staffList[0].id)
-    }
-  }, [isMobile, staffList])
-
   // Load staff + services once
   useEffect(() => {
     Promise.all([api.getStaff(), api.getServices()]).then(([st, sv]) => {
@@ -289,9 +282,9 @@ export default function Calendar() {
     return m % 60 === 0 ? `${h}:00` : ''
   })
 
-  // On mobile, show only the selected staff; on desktop show all (or filtered)
+  // Mobile: show one staff at a time (swipe); Desktop: show all or filtered
   const staff = isMobile
-    ? (selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList.length > 0 ? [staffList[mobileStaffIdx % staffList.length]] : [])
+    ? (staffList.length > 0 ? [staffList[mobileStaffIdx % staffList.length]] : [])
     : (selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList)
   const colorMap = {}
   staff.forEach((s, i) => { colorMap[s.id] = STAFF_COLORS[i % STAFF_COLORS.length] })
@@ -431,7 +424,7 @@ export default function Calendar() {
       )}
 
       {/* Mobile staff switcher */}
-      {isMobile && staffList.length > 1 && !selectedStaff && (
+      {isMobile && staffList.length > 1 && (
         <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border px-3 py-2 mb-3">
           <button
             onClick={() => setMobileStaffIdx(i => (i - 1 + staffList.length) % staffList.length)}
