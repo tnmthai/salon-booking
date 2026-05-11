@@ -159,6 +159,27 @@ app.delete('/api/salons/:id', async (req, res) => {
 });
 
 
+// Delete staff + all related data (super admin only)
+app.delete('/api/admin/staff/:id', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    const staffId = req.params.id;
+    const apptDel = await pool.query('DELETE FROM appointments WHERE staff_id = $1', [staffId]);
+    await pool.query('DELETE FROM working_hours WHERE staff_id = $1', [staffId]);
+    await pool.query('DELETE FROM staff_services WHERE staff_id = $1', [staffId]);
+    const { rows } = await pool.query('DELETE FROM staff WHERE id = $1 RETURNING id, name', [staffId]);
+    if (!rows.length) return res.status(404).json({ error: 'Staff not found' });
+    res.json({ message: 'Staff deleted', staff: rows[0], appointments_deleted: apptDel.rowCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update salon owner (super admin only)
 app.put('/api/salons/:id/owner', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
