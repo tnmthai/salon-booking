@@ -215,17 +215,17 @@ export default function Lookup() {
         </div>
 
         <form onSubmit={(e) => handleSearch(e)} className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3">
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Booking code (e.g. ABC12345) or phone number"
-              className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-lg focus:border-pink-500 focus:outline-none transition"
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:border-pink-500 focus:outline-none transition"
             />
             <button type="submit" disabled={loading}
-              className="bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 transition">
-              {loading ? '...' : 'Search'}
+              className="w-full bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 transition">
+              {loading ? '...' : '🔍 Search'}
             </button>
           </div>
         </form>

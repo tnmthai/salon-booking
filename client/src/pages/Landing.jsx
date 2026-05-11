@@ -74,16 +74,16 @@ export default function Landing() {
 
             {/* Booking Lookup */}
             <div className="mt-10 max-w-md mx-auto">
-              <form onSubmit={(e) => { e.preventDefault(); if (lookupCode.trim()) navigate(`/lookup?code=${lookupCode.trim()}`); }} className="flex gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); if (lookupCode.trim()) navigate(`/lookup?code=${lookupCode.trim()}`); }} className="flex flex-col gap-2">
                 <input
                   type="text"
                   value={lookupCode}
                   onChange={(e) => setLookupCode(e.target.value)}
                   placeholder="Enter booking code (e.g. PY63X386)"
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
-                <button type="submit" className="px-6 py-3 bg-pink-600 text-white rounded-xl text-sm font-medium hover:bg-pink-700 transition whitespace-nowrap">
-                  🔍 Find
+                <button type="submit" className="w-full px-6 py-3 bg-pink-600 text-white rounded-xl text-sm font-medium hover:bg-pink-700 transition">
+                  🔍 Find booking
                 </button>
               </form>
               <p className="text-xs text-gray-400 mt-2">Enter your booking code or phone number to view your appointment</p>
