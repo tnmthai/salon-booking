@@ -228,6 +228,22 @@ export default function Calendar() {
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef(null)
   const calendarRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [mobileStaffIdx, setMobileStaffIdx] = useState(0)
+
+  // Track screen size
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Auto-select first staff on mobile
+  useEffect(() => {
+    if (isMobile && staffList.length > 0 && !selectedStaff) {
+      setSelectedStaff(staffList[0].id)
+    }
+  }, [isMobile, staffList])
 
   // Load staff + services once
   useEffect(() => {
@@ -273,7 +289,10 @@ export default function Calendar() {
     return m % 60 === 0 ? `${h}:00` : ''
   })
 
-  const staff = selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList
+  // On mobile, show only the selected staff; on desktop show all (or filtered)
+  const staff = isMobile
+    ? (selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList.length > 0 ? [staffList[mobileStaffIdx % staffList.length]] : [])
+    : (selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList)
   const colorMap = {}
   staff.forEach((s, i) => { colorMap[s.id] = STAFF_COLORS[i % STAFF_COLORS.length] })
 
@@ -381,31 +400,52 @@ export default function Calendar() {
 
   return (
     <div className="w-full px-2 pt-2 pb-6">
-      <div className="flex items-center gap-4 mb-4 flex-wrap">
-        <h1 className="text-2xl font-bold">📅 {t('calendar')}</h1>
-        <div className="h-6 w-px bg-gray-300" />
-        <label className="flex items-center gap-2 text-base cursor-pointer select-none">
+      <div className="flex items-center gap-2 md:gap-4 mb-4 flex-wrap">
+        <h1 className="text-xl md:text-2xl font-bold">📅 {t('calendar')}</h1>
+        <div className="h-6 w-px bg-gray-300 hidden md:block" />
+        <label className="flex items-center gap-1.5 text-sm md:text-base cursor-pointer select-none">
           <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300 w-4 h-4" />
           All dates
         </label>
-        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base" />}
-        <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base">
-          <option value="">{t('allStaff')}</option>
-          {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-2 md:px-3 py-1.5 text-sm md:text-base" />}
+        {!isMobile && (
+          <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base">
+            <option value="">{t('allStaff')}</option>
+            {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        )}
         {!showAllDates && (
-          <div className="flex gap-1.5">
-            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">← {t('prev')}</button>
-            <button onClick={() => setDate(todayNZ())} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50 font-medium">{t('today')}</button>
-            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">{t('next')} →</button>
+          <div className="flex gap-1 ml-auto">
+            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">← {t('prev')}</button>
+            <button onClick={() => setDate(todayNZ())} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50 font-medium">{t('today')}</button>
+            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">{t('next')} →</button>
           </div>
         )}
         {loading && <span className="text-sm text-gray-400">Loading...</span>}
       </div>
 
-      {staff.length > 1 && (
+      {staff.length > 1 && !isMobile && (
         <div className="flex gap-5 mb-3 flex-wrap">
           {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-2 text-sm text-gray-600"><span className={`w-3 h-3 rounded-full ${c.dot}`} />{s.name}</div> })}
+        </div>
+      )}
+
+      {/* Mobile staff switcher */}
+      {isMobile && staffList.length > 1 && !selectedStaff && (
+        <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border px-3 py-2 mb-3">
+          <button
+            onClick={() => setMobileStaffIdx(i => (i - 1 + staffList.length) % staffList.length)}
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"
+          >←</button>
+          <div className="flex items-center gap-2">
+            <span className={`w-3 h-3 rounded-full ${colorMap[staffList[mobileStaffIdx % staffList.length]?.id]?.dot || 'bg-gray-400'}`} />
+            <span className="font-semibold text-gray-800">{staffList[mobileStaffIdx % staffList.length]?.name}</span>
+            <span className="text-xs text-gray-400">({mobileStaffIdx % staffList.length + 1}/{staffList.length})</span>
+          </div>
+          <button
+            onClick={() => setMobileStaffIdx(i => (i + 1) % staffList.length)}
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"
+          >→</button>
         </div>
       )}
 
@@ -414,14 +454,14 @@ export default function Calendar() {
           <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
             <div className="overflow-x-auto">
-              <div style={{ minWidth: `${52 + staff.length * 150}px` }}>
+              <div style={{ minWidth: isMobile ? '100%' : `${52 + staff.length * 150}px` }}>
                 {/* Header row */}
                 <div className="flex border-b bg-gray-50">
                   <div className="w-[52px] shrink-0" style={{ height: `${HEADER_H}px` }} />
                   {staff.map(s => {
                     const c = colorMap[s.id]
                     return (
-                      <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, minWidth: '150px' }}>
+                      <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, minWidth: isMobile ? '0' : '150px' }}>
                         <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
                         <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
                       </div>
@@ -441,7 +481,7 @@ export default function Calendar() {
                   </div>
 
                   {/* Staff columns container */}
-                  <div className="flex-1 relative">
+                  <div className="flex-1 relative" style={{ overflow: 'hidden' }}>
 
                   {/* Staff columns */}
                   {staff.map(s => {
@@ -460,8 +500,8 @@ export default function Calendar() {
                     return (
                       <div
                         key={s.id}
-                        className={`flex-1 relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
-                        style={{ height: `${gridH}px`, minWidth: '150px' }}
+                        className={`relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
+                        style={{ height: `${gridH}px`, minWidth: isMobile ? '0' : '150px' }}
                         onDragOver={(e) => handleDragOver(e, s.id, d)}
                         onDragLeave={() => setDragOver(null)}
                         onDrop={(e) => handleDrop(e, s.id, d)}
