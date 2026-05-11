@@ -180,8 +180,8 @@ app.delete('/api/admin/staff/:id', async (req, res) => {
   }
 });
 
-// Delete all appointments for a salon, or all salons if no id (super admin only)
-app.delete('/api/admin/appointments/:salonId?', async (req, res) => {
+// Delete all appointments, or by salon (super admin only)
+app.delete('/api/admin/appointments', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'No token' });
   const jwt = require('jsonwebtoken');
@@ -189,7 +189,7 @@ app.delete('/api/admin/appointments/:salonId?', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
-    const salonId = req.params.salonId;
+    const salonId = req.query.salon_id;
     let result;
     if (salonId) {
       result = await pool.query('DELETE FROM appointments WHERE salon_id = $1', [salonId]);
