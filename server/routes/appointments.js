@@ -135,22 +135,17 @@ router.get('/slots', async (req, res) => {
     // NZ timezone: UTC+12 (NZST) in winter, UTC+13 (NZDT) in summer
     // Use Intl to get the correct offset for the given date
     function nzToUtc(d, hours, minutes) {
-      // Create a date string in NZ timezone, then parse as UTC
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const h = String(hours).padStart(2, '0');
-      const min = String(minutes).padStart(2, '0');
-      // Get NZ offset for this date
-      const nzDate = new Date(`${y}-${m}-${day}T${h}:${min}:00`);
-      // Figure out offset: format the NZ date in UTC and compare
-      const utcStr = nzDate.toLocaleString('en-US', { timeZone: 'UTC' });
-      const nzStr = nzDate.toLocaleString('en-US', { timeZone: tz });
-      const utcDate = new Date(utcStr);
-      const nzRef = new Date(nzStr);
-      const offsetMs = nzRef.getTime() - utcDate.getTime();
-      // Subtract offset to get UTC
-      return new Date(nzDate.getTime() - offsetMs);
+      // Server runs in UTC, so new Date("YYYY-MM-DDTHH:MM:SS") is parsed as UTC.
+      // We need to interpret the date components as NZ local time and convert to UTC.
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+      const g = (t) => parts.find(p => p.type === t).value;
+      const dateStr = `${g('year')}-${g('month')}-${g('day')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+      // Parse as NZ local time by getting the offset from UTC
+      const nzLocal = new Date(dateStr + '.000Z');
+      const utcEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const nzEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: tz }));
+      const offsetMs = utcEquiv.getTime() - nzEquiv.getTime();
+      return new Date(nzLocal.getTime() + offsetMs);
     }
 
     // Get existing appointments for this staff on this date
