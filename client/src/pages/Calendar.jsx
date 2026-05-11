@@ -474,7 +474,7 @@ export default function Calendar() {
                   </div>
 
                   {/* Staff columns container */}
-                  <div className="flex-1 relative" style={{ overflow: 'hidden', position: 'relative' }}>
+                  <div className="flex-1 flex relative" style={{ overflow: 'hidden' }}>
 
                   {/* Staff columns */}
                   {staff.map(s => {
