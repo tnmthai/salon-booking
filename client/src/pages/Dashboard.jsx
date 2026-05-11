@@ -97,6 +97,20 @@ export default function Dashboard() {
         </div>
       )}
 
+      {visitStats?.cities?.length > 0 && (
+        <div className="bg-white rounded-xl shadow p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-500 mb-3">📍 Top Cities</h3>
+          <div className="space-y-2">
+            {visitStats.cities.map((c, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <span className="text-sm">{c.city}{c.country ? `, ${c.country}` : ''}</span>
+                <span className="text-sm font-medium text-gray-600">{c.count} visits</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
         <button onClick={() => setTab('bookings')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'bookings' ? 'bg-white shadow text-pink-600' : 'text-gray-500'}`}>
