@@ -35,10 +35,19 @@ export default function Landing() {
             <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
+            <Link to="/features" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">
+              Features
+            </Link>
+            <Link to="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">
+              Pricing
+            </Link>
+            <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">
+              About
+            </Link>
+            <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">
               Find booking
             </Link>
-            <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-4 py-2">
+            <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">
               Sign in
             </Link>
             <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-full hover:bg-gray-800 transition">
@@ -245,11 +254,14 @@ export default function Landing() {
             )}
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
+            <Link to="/features" className="hover:text-gray-600">Features</Link>
+            <Link to="/pricing" className="hover:text-gray-600">Pricing</Link>
+            <Link to="/about" className="hover:text-gray-600">About</Link>
+            <Link to="/contact" className="hover:text-gray-600">Contact</Link>
             <Link to="/terms" className="hover:text-gray-600">Terms</Link>
             <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
             <Link to="/cookies" className="hover:text-gray-600">Cookies</Link>
             <Link to="/legal" className="hover:text-gray-600">Legal</Link>
-            <a href="#contact" className="hover:text-gray-600">Contact</a>
             <Link to="/login" className="hover:text-gray-600">Sign in</Link>
             <Link to="/register" className="hover:text-gray-600">Sign up</Link>
           </div>

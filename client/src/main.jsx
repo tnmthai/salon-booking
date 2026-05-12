@@ -29,6 +29,10 @@ import Gallery from './pages/Gallery'
 import Reviews from './pages/Reviews'
 import Overrides from './pages/Overrides'
 import PlanSettings from './pages/PlanSettings'
+import Features from './pages/Features'
+import Pricing from './pages/Pricing'
+import About from './pages/About'
+import ContactPage from './pages/ContactPage'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
@@ -158,6 +162,10 @@ function AppInner() {
         <Route path="/login" element={isLoggedIn() ? <Navigate to="/admin" /> : <Login onLogin={handleLogin} />} />
         <Route path="/register" element={isLoggedIn() ? <Navigate to="/admin" /> : <Register onLogin={handleLogin} />} />
         <Route path="/lookup" element={<Lookup />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/cookies" element={<Cookies />} />
