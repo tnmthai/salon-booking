@@ -1,58 +1,56 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const plans = [
   {
     name: 'Free',
     price: '$0',
-    period: 'forever',
-    desc: 'Perfect for getting started. No credit card required.',
+    period: '/mo',
+    desc: 'Get started at no cost.',
     features: [
-      '1 business location',
-      'Up to 3 staff members',
       'Online booking page',
-      'Email reminders',
+      'Marketplace listing',
       'Basic reports',
-      'Customer management',
+      'Email notifications',
+      '2 staff members',
+      '40 appointments/month',
     ],
     cta: 'Start for free',
     ctaLink: '/register',
     popular: false,
   },
   {
-    name: 'Growth',
-    price: '$29',
-    period: '/month',
-    desc: 'For growing businesses that need more power and flexibility.',
+    name: 'Starter',
+    price: '$11',
+    period: '/mo',
+    desc: 'For growing teams.',
     features: [
       'Everything in Free',
-      'Unlimited staff members',
-      'Custom branding',
-      'Photo gallery',
-      'Customer reviews',
-      'Advanced reports & analytics',
-      'Priority support',
+      'Up to 6 staff',
+      'Unlimited appointments',
+      'Staff roster & schedule',
+      'Loyalty points (50 cards)',
+      'Reviews & Gallery',
     ],
-    cta: 'Start free trial',
+    cta: 'Get Starter',
     ctaLink: '/register',
     popular: true,
   },
   {
-    name: 'Pro',
-    price: '$79',
-    period: '/month',
-    desc: 'For established businesses with multiple locations.',
+    name: 'Growth',
+    price: '$29',
+    period: '/mo',
+    desc: 'For established businesses.',
     features: [
-      'Everything in Growth',
-      'Multiple locations',
-      'API access',
-      'Custom integrations',
-      'Dedicated account manager',
-      'White-label booking page',
-      'Phone support',
+      'Everything in Starter',
+      'Unlimited staff',
+      'Advanced reports',
+      'Unlimited loyalty system',
+      'Unlimited email automation',
+      'Priority marketplace ranking',
+      'Promotions & deals engine',
     ],
-    cta: 'Contact us',
-    ctaLink: '/contact',
+    cta: 'Get Growth',
+    ctaLink: '/register',
     popular: false,
   },
 ]
@@ -85,8 +83,6 @@ const faqs = [
 ]
 
 export default function Pricing() {
-  const [annual, setAnnual] = useState(false)
-
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -124,19 +120,7 @@ export default function Pricing() {
             Start for free, upgrade when you need more. No surprises, no hidden fees.
           </p>
 
-          {/* Toggle */}
-          <div className="flex items-center justify-center gap-3 mb-12">
-            <span className={`text-sm ${!annual ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>Monthly</span>
-            <button
-              onClick={() => setAnnual(!annual)}
-              className={`relative w-12 h-6 rounded-full transition ${annual ? 'bg-pink-600' : 'bg-gray-300'}`}
-            >
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition ${annual ? 'left-6' : 'left-0.5'}`} />
-            </button>
-            <span className={`text-sm ${annual ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-              Annual <span className="text-green-600 text-xs font-medium">Save 20%</span>
-            </span>
-          </div>
+
         </div>
       </section>
 
@@ -158,16 +142,9 @@ export default function Pricing() {
                 )}
                 <h3 className="font-bold text-gray-900 text-xl mb-2">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-4xl font-bold text-gray-900">
-                    {plan.price === '$0' ? '$0' : annual ? `$${Math.round(parseInt(plan.price.slice(1)) * 0.8)}` : plan.price}
-                  </span>
-                  <span className="text-gray-400 text-sm">
-                    {plan.price === '$0' ? plan.period : annual ? '/month' : plan.period}
-                  </span>
+                  <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                  <span className="text-gray-400 text-sm">{plan.period}</span>
                 </div>
-                {annual && plan.price !== '$0' && (
-                  <p className="text-xs text-green-600 mb-2">Billed annually</p>
-                )}
                 <p className="text-gray-500 text-sm mb-6">{plan.desc}</p>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, j) => (
