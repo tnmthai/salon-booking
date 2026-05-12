@@ -1,8 +1,45 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
+
+function Navbar() {
+  const [open, setOpen] = useState(false)
+  return (
+    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
+          <span className="w-7 h-7 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</span>
+          <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
+        </Link>
+        <div className="hidden md:flex items-center gap-1">
+          <Link to="/features" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Features</Link>
+          <Link to="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Pricing</Link>
+          <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">About</Link>
+          <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Find booking</Link>
+          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Sign in</Link>
+          <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">Get Started</Link>
+        </div>
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 -mr-2 text-gray-600 hover:text-gray-900" aria-label="Menu">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {open ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+          </svg>
+        </button>
+      </div>
+      {open && (
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+          <div className="px-4 py-2 space-y-0.5">
+            <Link to="/features" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Features</Link>
+            <Link to="/pricing" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Pricing</Link>
+            <Link to="/about" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">About</Link>
+            <Link to="/lookup" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Find booking</Link>
+            <Link to="/login" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Sign in</Link>
+            <Link to="/register" onClick={() => setOpen(false)} className="block mt-2 text-center bg-gray-900 text-white py-2.5 rounded-full text-sm font-medium">Get Started</Link>
+          </div>
+        </div>
+      )}
+    </nav>
+  )
+}
 
 export default function Landing() {
   const [salons, setSalons] = useState([])
@@ -204,7 +241,32 @@ export default function Landing() {
         </div>
       </section>
 
-      <Footer totalVisits={totalVisits} />
+      {/* Footer */}
+      <footer className="border-t border-gray-100 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
+                <span className="text-sm text-gray-400">© 2026 Timia</span>
+              </div>
+              {totalVisits !== null && (
+                <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {totalVisits.toLocaleString()} visits</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">
+              <Link to="/features" className="hover:text-gray-600">Features</Link>
+              <Link to="/pricing" className="hover:text-gray-600">Pricing</Link>
+              <Link to="/about" className="hover:text-gray-600">About</Link>
+              <Link to="/contact" className="hover:text-gray-600">Contact</Link>
+              <Link to="/terms" className="hover:text-gray-600">Terms</Link>
+              <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
+              <Link to="/cookies" className="hover:text-gray-600">Cookies</Link>
+              <Link to="/legal" className="hover:text-gray-600">Legal</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
