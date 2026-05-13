@@ -7,7 +7,7 @@ function Navbar() {
     <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold">
-          <span className="w-7 h-7 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">T</span>
+          <img src="/logo.png" alt="Timia" className="w-8 h-8 rounded-full" />
           <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
         </Link>
         <div className="hidden md:flex items-center gap-1">
