@@ -233,6 +233,18 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl shadow p-6 max-w-lg">
           <h2 className="text-lg font-semibold mb-4">⚙️ Business Settings</h2>
           <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Show on homepage</label>
+                <p className="text-xs text-gray-400">Display your booking link on the Timia homepage</p>
+              </div>
+              <button
+                onClick={() => setSalonSettings({ ...salonSettings, show_on_landing: !salonSettings.show_on_landing })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${salonSettings.show_on_landing ? 'bg-pink-600' : 'bg-gray-300'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${salonSettings.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
               <select
@@ -268,7 +280,7 @@ export default function Dashboard() {
                       'Content-Type': 'application/json',
                       'Authorization': `Bearer ${localStorage.getItem('salon_token')}`
                     },
-                    body: JSON.stringify({ timezone: salonSettings.timezone })
+                    body: JSON.stringify({ timezone: salonSettings.timezone, show_on_landing: salonSettings.show_on_landing })
                   })
                   setSalonTimezone(salonSettings.timezone)
                   alert('Settings saved! Refresh to apply.')

@@ -70,10 +70,11 @@ app.post('/api/contact', async (req, res) => {
 app.get('/api/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan,
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
         u.name as owner_name, u.email as owner_email, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
+      WHERE s.show_on_landing = true
       ORDER BY s.name
     `);
     res.json(rows);
@@ -146,7 +147,7 @@ app.put('/api/salon/settings', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded.salon_id) return res.status(403).json({ error: 'No salon' });
-    const { name, phone, email, address, description, timezone } = req.body;
+    const { name, phone, email, address, description, timezone, show_on_landing } = req.body;
     const fields = [];
     const vals = [];
     let i = 1;
@@ -156,6 +157,7 @@ app.put('/api/salon/settings', async (req, res) => {
     if (address !== undefined) { fields.push(`address=$${i++}`); vals.push(address); }
     if (description !== undefined) { fields.push(`description=$${i++}`); vals.push(description); }
     if (timezone !== undefined) { fields.push(`timezone=$${i++}`); vals.push(timezone); }
+    if (show_on_landing !== undefined) { fields.push(`show_on_landing=$${i++}`); vals.push(show_on_landing); }
     if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
     vals.push(decoded.salon_id);
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
@@ -598,6 +600,7 @@ async function run(sql) {
   // Subscription plans
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'free'`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan_started_at TIMESTAMP`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_on_landing BOOLEAN DEFAULT true`);
 
   console.log('Database initialized');
 

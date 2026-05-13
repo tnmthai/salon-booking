@@ -103,7 +103,7 @@ router.get('/me', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await db.query(
-      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug, s.timezone
+      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug, s.timezone, s.show_on_landing
        FROM users u LEFT JOIN salons s ON u.salon_id = s.id WHERE u.id = $1`,
       [decoded.id]
     );
@@ -111,7 +111,7 @@ router.get('/me', async (req, res) => {
     const u = result.rows[0];
     res.json({
       user: { id: u.id, email: u.email, name: u.name, role: u.role, salon_id: u.salon_id },
-      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug, timezone: u.timezone || 'Pacific/Auckland' },
+      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug, timezone: u.timezone || 'Pacific/Auckland', show_on_landing: u.show_on_landing !== false },
     });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });
