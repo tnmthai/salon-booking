@@ -23,6 +23,8 @@ app.use(helmet());
 
 const allowedOrigins = [
   'https://salon-booking.up.railway.app',
+  'https://timia.nz',
+  'https://www.timia.nz',
   'http://localhost:5173',
   'http://localhost:3001',
 ];
