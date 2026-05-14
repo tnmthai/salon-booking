@@ -66,7 +66,7 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// List all salons with owner info (public)
+// List all salons with owner info (public — only visible ones)
 app.get('/api/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
@@ -75,6 +75,28 @@ app.get('/api/salons', async (req, res) => {
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
       WHERE s.show_on_landing = true
+      ORDER BY s.name
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// List ALL salons (super admin only — includes hidden ones)
+app.get('/api/admin/salons', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    const { rows } = await pool.query(`
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
+        u.name as owner_name, u.email as owner_email, u.id as owner_id
+      FROM salons s
+      LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
       ORDER BY s.name
     `);
     res.json(rows);

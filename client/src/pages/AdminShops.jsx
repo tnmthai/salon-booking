@@ -19,7 +19,7 @@ export default function AdminShops() {
 
   const load = () => {
     Promise.all([
-      fetch('/api/salons').then(r => r.json()),
+      api.getAdminSalons(),
       api.getAllUsers()
     ]).then(([s, u]) => {
       setSalons(s)
@@ -143,6 +143,9 @@ export default function AdminShops() {
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-lg">{s.name}</h3>
                   <span className="text-sm text-pink-600 bg-pink-50 px-2 py-0.5 rounded">/{s.slug}</span>
+                  {s.show_on_landing === false && (
+                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Hidden from homepage</span>
+                  )}
                   <select
                     value={s.plan || 'free'}
                     onChange={async (e) => {

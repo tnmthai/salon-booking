@@ -12,7 +12,7 @@ export default function Reports() {
   })
 
   useEffect(() => {
-    api.getSalons().then(setSalons).catch(console.error)
+    api.getAdminSalons().then(setSalons).catch(console.error)
   }, [])
 
   useEffect(() => {

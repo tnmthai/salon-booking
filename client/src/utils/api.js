@@ -25,6 +25,7 @@ export const api = {
 
   // Salons (public)
   getSalons: () => request('/salons'),
+  getAdminSalons: () => request('/admin/salons'),
   getSalon: (slug) => request(`/salons/${slug}`),
 
   // Services
