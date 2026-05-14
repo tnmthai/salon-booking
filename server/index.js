@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const pool = require('./db');
 const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn } = require('./initdb');
+const { authMiddleware } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,8 +18,46 @@ addServiceNameColumn(pool);
 addUserActiveColumn(pool);
 addWebsiteColumn(pool);
 
-app.use(cors());
-app.use(express.json());
+// --- Security ---
+app.use(helmet());
+
+const allowedOrigins = [
+  'https://salon-booking.up.railway.app',
+  'http://localhost:5173',
+  'http://localhost:3001',
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { error: 'Too many attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth', authLimiter);
+app.use('/api/appointments/public', publicLimiter);
+app.use('/api/contact', publicLimiter);
+app.use('/api/reviews', publicLimiter);
+
+app.use(express.json({ limit: '10kb' }));
 
 // API routes
 app.use('/api/auth', require('./routes/auth'));
@@ -44,20 +85,28 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Contact form
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
     if (!name || !email || !message) return res.status(400).json({ error: 'All fields required' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email' });
+    if (name.length > 200 || email.length > 300 || message.length > 5000) return res.status(400).json({ error: 'Input too long' });
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeMessage = escapeHtml(message);
     const { sendEmail } = require('./utils/email');
     await sendEmail(
       'support@timia.nz',
-      `Contact from ${name} (${email})`,
+      `Contact from ${safeName} (${safeEmail})`,
       `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
         <h2 style="color:#ec4899">New Contact Message</h2>
-        <p><strong>From:</strong> ${name}</p>
-        <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+        <p><strong>From:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
         <hr style="border:none;border-top:1px solid #eee;margin:16px 0" />
-        <p style="white-space:pre-wrap">${message}</p>
+        <p style="white-space:pre-wrap">${safeMessage}</p>
       </div>`
     );
     res.json({ ok: true });
@@ -360,11 +409,11 @@ setInterval(sendReminders, 60 * 60 * 1000);
 setTimeout(sendReminders, 30000);
 
 // --- Loyalty points endpoint ---
-app.get('/api/loyalty/:phone', async (req, res) => {
+app.get('/api/loyalty/:phone', authMiddleware, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, loyalty_points FROM customers WHERE phone = $1 ORDER BY loyalty_points DESC LIMIT 1',
-      [req.params.phone]
+      'SELECT id, name, loyalty_points FROM customers WHERE phone = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1',
+      [req.params.phone, req.user.salon_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
     res.json(rows[0]);

@@ -80,7 +80,8 @@ router.post('/bulk-create-staff', authMiddleware, async (req, res) => {
     const created = [];
     for (const s of staff.rows) {
       const email = s.email;
-      const password = s.name.toLowerCase().replace(/\s+/g, '') + '123456';
+      const crypto = require('crypto');
+      const password = crypto.randomBytes(12).toString('base64url');
       const password_hash = await bcrypt.hash(password, 10);
       
       try {

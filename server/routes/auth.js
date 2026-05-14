@@ -53,11 +53,44 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Account lockout tracking
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkLockout(email) {
+  const entry = loginAttempts.get(email);
+  if (!entry) return false;
+  if (Date.now() > entry.unlockAt) {
+    loginAttempts.delete(email);
+    return false;
+  }
+  return entry.count >= MAX_ATTEMPTS;
+}
+
+function recordFailure(email) {
+  const entry = loginAttempts.get(email);
+  if (!entry) {
+    loginAttempts.set(email, { count: 1, unlockAt: Date.now() + LOCKOUT_MS });
+  } else {
+    entry.count++;
+    if (entry.count >= MAX_ATTEMPTS) entry.unlockAt = Date.now() + LOCKOUT_MS;
+  }
+}
+
+function clearAttempts(email) {
+  loginAttempts.delete(email);
+}
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  if (checkLockout(email)) {
+    return res.status(429).json({ error: 'Too many failed attempts. Try again in 15 minutes.' });
   }
 
   try {
@@ -69,6 +102,7 @@ router.post('/login', async (req, res) => {
     );
 
     if (!result.rows.length) {
+      recordFailure(email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -76,8 +110,11 @@ router.post('/login', async (req, res) => {
     if (user.is_active === false) return res.status(403).json({ error: 'Account is deactivated' });
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
+      recordFailure(email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    clearAttempts(email);
 
     const token = jwt.sign(
       { id: user.id, salon_id: user.salon_id, email, role: user.role },
@@ -118,19 +155,6 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// Test email endpoint (temporary)
-const { sendEmail, bookingConfirmationEmail } = require('../utils/email');
-router.get('/test-email', async (req, res) => {
-  try {
-    const result = await sendEmail(
-      'tnmthai@gmail.com',
-      'Test Email from Lincoln Nails',
-      '<h1>Test Email</h1><p>If you receive this, email is working!</p>'
-    );
-    res.json({ sent: !!result, messageId: result?.id || result?.messageId, error: result?.error });
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-});
+
 
 module.exports = router;
