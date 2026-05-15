@@ -9,7 +9,7 @@ export default function Overrides() {
   const [appointments, setAppointments] = useState({})
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '17:00', reason: '' })
+  const [form, setForm] = useState({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '21:00', reason: '' })
 
   useEffect(() => {
     loadData()
@@ -49,7 +49,7 @@ export default function Overrides() {
         reason: form.reason || null,
       })
       setShowAdd(false)
-      setForm({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '17:00', reason: '' })
+      setForm({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '21:00', reason: '' })
       loadData()
     } catch (err) {
       alert(err.message)

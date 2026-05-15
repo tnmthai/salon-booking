@@ -63,7 +63,7 @@ export default function StaffSchedule() {
         return {
           day_of_week: dayIndex,
           start_time: existing?.start_time?.substring(0, 5) || '09:00',
-          end_time: existing?.end_time?.substring(0, 5) || '17:00',
+          end_time: existing?.end_time?.substring(0, 5) || '21:00',
           is_active: !!existing
         }
       })
