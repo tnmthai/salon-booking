@@ -54,6 +54,14 @@ export default function Staff() {
     } catch (err) { alert(err.message) }
   }
 
+  const handleDelete = async (s) => {
+    if (!confirm(`Delete ${s.name}? This will permanently remove them.`)) return
+    try {
+      await api.deleteStaff(s.id)
+      load()
+    } catch (err) { alert(err.message) }
+  }
+
   const activeStaff = staff.filter(s => s.is_active !== false)
   const inactiveStaff = staff.filter(s => s.is_active === false)
 
@@ -103,6 +111,8 @@ export default function Staff() {
               <span className="text-xs text-purple-600 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); handleEdit(s) }}>{t('edit')}</span>
               <span className="text-xs text-gray-400">|</span>
               <span className="text-xs text-purple-600 hover:underline">📋 Bookings</span>
+              <span className="text-xs text-gray-400">|</span>
+              <span className="text-xs text-red-500 hover:underline" onClick={e => { e.preventDefault(); e.stopPropagation(); handleDelete(s) }}>🗑 Delete</span>
             </div>
           </Link>
         ))}
