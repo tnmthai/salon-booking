@@ -9,6 +9,7 @@ export default function Services() {
   const [services, setServices] = useState([])
   const [form, setForm] = useState({ name: '', description: '', duration_min: 30, price: '', category: '' })
   const [editing, setEditing] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null)
 
   const load = () => api.getServices().then(setServices).catch(console.error)
   useEffect(() => { load() }, [])
@@ -52,6 +53,9 @@ export default function Services() {
   }
 
   const categories = [...new Set(services.map(s => s.category).filter(Boolean))]
+  const filteredServices = selectedCategory
+    ? services.filter(s => s.category === selectedCategory)
+    : services
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -82,15 +86,38 @@ export default function Services() {
       </form>
 
       {categories.length > 0 && (
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {categories.map(c => (
-            <span key={c} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">{c}</span>
-          ))}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              !selectedCategory
+                ? 'bg-pink-600 text-white shadow'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All ({services.length})
+          </button>
+          {categories.map(c => {
+            const count = services.filter(s => s.category === c).length
+            return (
+              <button
+                key={c}
+                onClick={() => setSelectedCategory(selectedCategory === c ? null : c)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                  selectedCategory === c
+                    ? 'bg-pink-600 text-white shadow'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {c} ({count})
+              </button>
+            )
+          })}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {services.map(s => (
+        {filteredServices.map(s => (
           <div key={s.id} className="bg-white rounded-xl shadow p-4">
             <div className="flex justify-between items-start">
               <div>
