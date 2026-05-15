@@ -32,18 +32,11 @@ router.get('/', authMiddleware, async (req, res) => {
       params.push(req.user.salon_id);
     }
     if (date) {
-      // Convert NZ date to UTC range in JS (AT TIME ZONE can't use params)
-      const dayStart = new Date(date + 'T00:00:00');
-      const dayEnd = new Date(date + 'T23:59:59');
-      // Get UTC offsets for this timezone
-      const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
-      const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
-      const startOff = new Date(startStr).getTime() - dayStart.getTime();
-      const endOff = new Date(endStr).getTime() - dayEnd.getTime();
-      const utcStart = new Date(dayStart.getTime() - startOff);
-      const utcEnd = new Date(dayEnd.getTime() - endOff);
-      where.push(`a.start_time >= $${idx++} AND a.start_time <= $${idx++}`);
-      params.push(utcStart.toISOString(), utcEnd.toISOString());
+      // Use PostgreSQL AT TIME ZONE for correct date filtering
+      // This converts the appointment's UTC timestamp to the salon's timezone
+      // before comparing with the date
+      where.push(`(a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $${idx++})::date = $${idx++}::date`);
+      params.push(tz, date);
     }
     if (status) {
       where.push(`a.status = $${idx++}`);
@@ -209,9 +202,10 @@ router.get('/public/:slug', async (req, res) => {
     const { date, staff_id } = req.query;
     if (!date) return res.json([]);
 
-    let query = `SELECT a.start_time, a.end_time, a.staff_id FROM appointments a WHERE a.salon_id = $1 AND DATE(a.start_time) = $2 AND a.status != 'cancelled'`;
-    let params = [salon.rows[0].id, date];
-    if (staff_id) { query += ' AND a.staff_id = $3'; params.push(staff_id); }
+    const tz = await getSalonTimezone(salon.rows[0].id);
+    let query = `SELECT a.start_time, a.end_time, a.staff_id FROM appointments a WHERE a.salon_id = $1 AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $2)::date = $3::date AND a.status != 'cancelled'`;
+    let params = [salon.rows[0].id, tz, date];
+    if (staff_id) { query += ' AND a.staff_id = $4'; params.push(staff_id); }
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (err) {
