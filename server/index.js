@@ -19,7 +19,20 @@ addUserActiveColumn(pool);
 addWebsiteColumn(pool);
 
 // --- Security ---
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://s10.histats.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:", "https://sstatic1.histats.com"],
+      fontSrc: ["'self'", "https:", "data:"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    }
+  }
+}));
 
 const allowedOrigins = [
   'https://salon-booking.up.railway.app',
