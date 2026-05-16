@@ -128,6 +128,37 @@ function cancellationEmail({ customerName, salonName, serviceName, staffName, da
   `;
 }
 
+function cancellationOwnerEmail({ salonName, customerName, customerPhone, serviceName, staffName, date, time }) {
+  return `
+    <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">❌</div>
+          <h1 style="color:#111;font-size:24px;margin:0;">Booking Cancelled</h1>
+        </div>
+        <p style="color:#555;">A booking at <strong>${salonName}</strong> has been cancelled by the customer.</p>
+        <div style="background:#fef2f2;border-radius:8px;padding:20px;margin:24px 0;">
+          <h3 style="margin:0 0 12px;color:#111;font-size:14px;">Customer</h3>
+          <table style="width:100%;font-size:14px;color:#333;">
+            <tr><td style="padding:4px 0;color:#888;">Name</td><td style="padding:4px 0;font-weight:600;">${customerName}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;">${customerPhone || '—'}</td></tr>
+          </table>
+        </div>
+        <div style="background:#fdf2f8;border-radius:8px;padding:20px;margin:24px 0;">
+          <h3 style="margin:0 0 12px;color:#111;font-size:14px;">Cancelled Appointment</h3>
+          <table style="width:100%;font-size:14px;color:#333;">
+            <tr><td style="padding:4px 0;color:#888;">Service</td><td style="padding:4px 0;font-weight:600;">${serviceName}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Staff</td><td style="padding:4px 0;font-weight:600;">${staffName}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Date</td><td style="padding:4px 0;font-weight:600;">${date}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Time</td><td style="padding:4px 0;font-weight:600;">${time}</td></tr>
+          </table>
+        </div>
+      </div>
+    </body></html>
+  `;
+}
+
 function rescheduleEmail({ customerName, salonName, serviceName, staffName, oldDate, oldTime, newDate, newTime }) {
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
@@ -214,4 +245,4 @@ function reviewRequestEmail({ customerName, salonName, serviceName, date, bookin
   `;
 }
 
-module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, rescheduleEmail, reminderEmail, reviewRequestEmail };
+module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail };

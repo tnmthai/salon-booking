@@ -375,7 +375,7 @@ router.put('/:id/cancel', async (req, res) => {
     let verifyQuery, verifyParams;
     if (booking_code) {
       verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
-        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address, sal.email as salon_email
         FROM appointments a
         JOIN customers c ON a.customer_id = c.id
         JOIN services s ON a.service_id = s.id
@@ -385,7 +385,7 @@ router.put('/:id/cancel', async (req, res) => {
       verifyParams = [req.params.id, booking_code.toUpperCase()];
     } else {
       verifyQuery = `SELECT a.*, c.phone as customer_phone, c.email as customer_email, c.name as customer_name,
-        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address
+        s.name as service_name, st.name as staff_name, sal.name as salon_name, sal.address as salon_address, sal.email as salon_email
         FROM appointments a
         JOIN customers c ON a.customer_id = c.id
         JOIN services s ON a.service_id = s.id
@@ -420,13 +420,19 @@ router.put('/:id/cancel', async (req, res) => {
     // Send cancellation email (non-blocking)
     try {
       const { sendEmail, cancellationEmail } = require('../utils/email');
+      const bookingDate = new Date(appt.start_time);
+      const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
       if (appt.customer_email) {
-        const bookingDate = new Date(appt.start_time);
-        const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
         sendEmail(appt.customer_email, `Booking Cancelled - ${appt.salon_name}`,
           cancellationEmail({ customerName: appt.customer_name, salonName: appt.salon_name, serviceName: appt.service_name, staffName: appt.staff_name, date: dateStr, time: timeStr })
         ).catch(e => console.error('[EMAIL] Cancel email error:', e.message));
+      }
+      // Notify shop owner
+      if (appt.salon_email) {
+        sendEmail(appt.salon_email, `Booking Cancelled - ${appt.customer_name} on ${dateStr}`,
+          cancellationOwnerEmail({ salonName: appt.salon_name, customerName: appt.customer_name, customerPhone: appt.customer_phone, serviceName: appt.service_name, staffName: appt.staff_name, date: dateStr, time: timeStr })
+        ).catch(e => console.error('[EMAIL] Cancel owner email error:', e.message));
       }
     } catch (e) { console.error('[EMAIL] Cancel module error:', e.message); }
 
