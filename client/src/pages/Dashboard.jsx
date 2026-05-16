@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api, getSalonTimezone } from '../utils/api'
+import { api, getSalonTimezone, setSalonTimezone } from '../utils/api'
 import { translations } from '../utils/translations'
 
 
@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [filterDate, setFilterDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: getSalonTimezone() }))
   const [filterStatus, setFilterStatus] = useState('')
   const [showAllDates, setShowAllDates] = useState(false)
+  const [salonSettings, setSalonSettings] = useState(null)
+  const [savingSettings, setSavingSettings] = useState(false)
 
 
   const loadAppts = () => {
@@ -119,7 +121,10 @@ export default function Dashboard() {
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'customers' ? 'bg-white shadow text-pink-600' : 'text-gray-500'}`}>
           👥 {t('customersTab')} ({customers.length})
         </button>
-
+        <button onClick={() => { setTab('settings'); if (!salonSettings) api.me().then(d => setSalonSettings(d.salon)).catch(console.error) }}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'settings' ? 'bg-white shadow text-pink-600' : 'text-gray-500'}`}>
+          ⚙️ {t('settingsTab')}
+        </button>
       </div>
 
       {tab === 'bookings' && (
@@ -223,6 +228,73 @@ export default function Dashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {tab === 'settings' && salonSettings && (
+        <div className="bg-white rounded-xl shadow p-6 max-w-lg">
+          <h2 className="text-lg font-semibold mb-4">⚙️ {t('settingsTab')}</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Show on homepage</label>
+                <p className="text-xs text-gray-400">Display your booking link on the Timia homepage & explore page</p>
+              </div>
+              <button
+                onClick={() => setSalonSettings({ ...salonSettings, show_on_landing: !salonSettings.show_on_landing })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${salonSettings.show_on_landing ? 'bg-pink-600' : 'bg-gray-300'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${salonSettings.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            {!salonSettings.show_on_landing && <p className="text-xs text-orange-500 mt-1">⚠️ Your shop is hidden. Customers can still book via direct link.</p>}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+              <select
+                value={salonSettings.timezone || 'Pacific/Auckland'}
+                onChange={e => setSalonSettings({ ...salonSettings, timezone: e.target.value })}
+                className="border rounded-lg px-3 py-2 w-full text-sm"
+              >
+                <option value="Pacific/Auckland">Pacific/Auckland (NZ)</option>
+                <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                <option value="Australia/Melbourne">Australia/Melbourne (AEST)</option>
+                <option value="Australia/Perth">Australia/Perth (AWST)</option>
+                <option value="America/Toronto">America/Toronto (EST)</option>
+                <option value="America/Vancouver">America/Vancouver (PST)</option>
+                <option value="America/New_York">America/New_York (EST)</option>
+                <option value="America/Chicago">America/Chicago (CST)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                <option value="Europe/London">Europe/London (GMT)</option>
+                <option value="Europe/Paris">Europe/Paris (CET)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                <option value="Asia/Shanghai">Asia/Shanghai (CST)</option>
+                <option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (ICT)</option>
+                <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">All bookings and schedules use this timezone</p>
+            </div>
+            <button
+              onClick={async () => {
+                setSavingSettings(true)
+                try {
+                  await fetch('/api/salon/settings', {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('salon_token')}`
+                    },
+                    body: JSON.stringify({ timezone: salonSettings.timezone, show_on_landing: salonSettings.show_on_landing })
+                  })
+                  setSalonTimezone(salonSettings.timezone)
+                  alert('Settings saved!')
+                } catch (e) { alert(e.message) }
+                setSavingSettings(false)
+              }}
+              disabled={savingSettings}
+              className="bg-pink-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-pink-700 disabled:opacity-50"
+            >
+              {savingSettings ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
         </div>
       )}
     </div>
