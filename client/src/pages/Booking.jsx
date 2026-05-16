@@ -18,6 +18,8 @@ export default function Booking() {
   const [selectedServices, setSelectedServices] = useState([]) // Priority 6: multiple services
   const [selectedStaff, setSelectedStaff] = useState(null)
   const [selectedDate, setSelectedDate] = useState('')
+  const [nextAvailable, setNextAvailable] = useState(null)
+  const [checkingNext, setCheckingNext] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '', notes: '' })
   const [loading, setLoading] = useState(false)
@@ -47,7 +49,28 @@ export default function Booking() {
       }, 0)
       // Use service_ids param for multi-service
       const params = `slug=${slug}&staff_id=${selectedStaff}&service_ids=${selectedServices.join(',')}&date=${selectedDate}`
-      fetch(`/api/appointments/slots?${params}`).then(r => r.json()).then(setSlots).catch(console.error)
+      setNextAvailable(null)
+      fetch(`/api/appointments/slots?${params}`).then(r => r.json()).then(async (data) => {
+        setSlots(data)
+        // If no slots, find next available date
+        if (data.length === 0) {
+          setCheckingNext(true)
+          for (let i = 1; i <= 14; i++) {
+            const d = new Date(selectedDate + 'T00:00:00')
+            d.setDate(d.getDate() + i)
+            const dateStr = d.toISOString().split('T')[0]
+            try {
+              const check = await fetch(`/api/appointments/slots?slug=${slug}&staff_id=${selectedStaff}&service_ids=${selectedServices.join(',')}&date=${dateStr}`)
+              const checkData = await check.json()
+              if (checkData.length > 0) {
+                setNextAvailable(dateStr)
+                break
+              }
+            } catch {}
+          }
+          setCheckingNext(false)
+        }
+      }).catch(console.error)
     }
   }, [selectedStaff, selectedServices, selectedDate, slug, services])
 
@@ -242,7 +265,7 @@ export default function Booking() {
             </div>
             <h3 className="text-lg font-semibold mb-4">Choose Date</h3>
             <input type="date" value={selectedDate} min={new Date().toISOString().split('T')[0]}
-              onChange={e => setSelectedDate(e.target.value)}
+              onChange={e => { setSelectedDate(e.target.value); setNextAvailable(null); }}
               className="border rounded-lg px-3 py-2 mb-6" />
             <div className="flex gap-2 mt-4">
               <button onClick={() => setStep(1)} className="border px-4 py-2.5 rounded-lg">Back</button>
@@ -258,8 +281,28 @@ export default function Booking() {
             <h3 className="text-lg font-semibold mb-2">Choose Time</h3>
             <p className="text-sm text-gray-500 mb-4">Duration: {totalDuration} min ({selectedServiceNames.map(s => s.name).join(' + ')})</p>
             {slots.length === 0 ? (
-              <p className="text-gray-400">No available slots. Try another date.</p>
+              <div className="text-center py-8">
+                <div className="text-4xl mb-3">😔</div>
+                <p className="text-gray-500 font-medium">No available slots on this date</p>
+                <p className="text-sm text-gray-400 mt-1">Staff may be off or fully booked</p>
+                {checkingNext && <p className="text-sm text-pink-500 mt-3">🔍 Finding next available date...</p>}
+                {nextAvailable && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">Next available:</p>
+                    <p className="text-lg font-bold text-pink-600 mt-1">
+                      {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </p>
+                    <button
+                      onClick={() => setSelectedDate(nextAvailable)}
+                      className="mt-3 bg-pink-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-pink-700"
+                    >
+                      Go to {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })} →
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
+              <div>
               <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                 {slots.map((slot, i) => (
                   <button key={i} onClick={() => setSelectedSlot(slot)}
@@ -267,6 +310,7 @@ export default function Booking() {
                     <div className="font-medium">{new Date(slot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}</div>
                   </button>
                 ))}
+              </div>
               </div>
             )}
             <div className="flex gap-2 mt-6">
