@@ -467,56 +467,7 @@ setInterval(sendReminders, 60 * 60 * 1000);
 // Also run once on startup (after 30s delay)
 setTimeout(sendReminders, 30000);
 
-// --- Loyalty points endpoint (auth) ---
-app.get('/api/loyalty/:identifier', authMiddleware, async (req, res) => {
-  try {
-    const id = req.params.identifier;
-    const isEmail = id.includes('@');
-    const { rows } = await pool.query(
-      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1`,
-      [id, req.user.salon_id]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
-    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
-    res.json({ customer: rows[0], settings: salon.rows[0]?.loyalty_settings || {} });
-  } catch (err) {
-    console.error('[ERROR]', err.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// --- Public loyalty lookup (customer self-check by phone or email) ---
-app.get('/api/loyalty/public/:slug/:identifier', async (req, res) => {
-  try {
-    const salon = await pool.query('SELECT id, name, loyalty_settings FROM salons WHERE slug = $1', [req.params.slug]);
-    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
-    const sid = salon.rows[0].id;
-    const id = req.params.identifier;
-    const isEmail = id.includes('@');
-    const customer = await pool.query(
-      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2`,
-      [id, sid]
-    );
-    const rewards = await pool.query(
-      'SELECT id, name, description, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true ORDER BY points_cost',
-      [sid]
-    );
-    const settings = salon.rows[0].loyalty_settings || {};
-    res.json({
-      salon: salon.rows[0].name,
-      customer: customer.rows[0] || null,
-      rewards: rewards.rows,
-      settings,
-      stamp_goal: settings.stamp_goal || 10,
-      stamp_reward: settings.stamp_reward || 'Free service',
-    });
-  } catch (err) {
-    console.error('[ERROR]', err.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// --- Loyalty rewards CRUD (owner) ---
+// --- Loyalty rewards CRUD (owner) — MUST be before /:identifier ---
 app.get('/api/loyalty/rewards', authMiddleware, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -577,6 +528,55 @@ app.delete('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
     );
     if (!rowCount) return res.status(404).json({ error: 'Reward not found' });
     res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- Loyalty points endpoint (auth) ---
+app.get('/api/loyalty/:identifier', authMiddleware, async (req, res) => {
+  try {
+    const id = req.params.identifier;
+    const isEmail = id.includes('@');
+    const { rows } = await pool.query(
+      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1`,
+      [id, req.user.salon_id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
+    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    res.json({ customer: rows[0], settings: salon.rows[0]?.loyalty_settings || {} });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- Public loyalty lookup (customer self-check by phone or email) ---
+app.get('/api/loyalty/public/:slug/:identifier', async (req, res) => {
+  try {
+    const salon = await pool.query('SELECT id, name, loyalty_settings FROM salons WHERE slug = $1', [req.params.slug]);
+    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
+    const sid = salon.rows[0].id;
+    const id = req.params.identifier;
+    const isEmail = id.includes('@');
+    const customer = await pool.query(
+      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2`,
+      [id, sid]
+    );
+    const rewards = await pool.query(
+      'SELECT id, name, description, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true ORDER BY points_cost',
+      [sid]
+    );
+    const settings = salon.rows[0].loyalty_settings || {};
+    res.json({
+      salon: salon.rows[0].name,
+      customer: customer.rows[0] || null,
+      rewards: rewards.rows,
+      settings,
+      stamp_goal: settings.stamp_goal || 10,
+      stamp_reward: settings.stamp_reward || 'Free service',
+    });
   } catch (err) {
     console.error('[ERROR]', err.message);
     res.status(500).json({ error: 'Internal server error' });
