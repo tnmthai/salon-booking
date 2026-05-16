@@ -39,7 +39,7 @@ export default function Explore() {
   // Increment display visits periodically
   useEffect(() => {
     if (displayVisits === null) return
-    const interval = setInterval(() => setDisplayVisits(c => c + Math.floor(Math.random() * 3) + 1), 300000)
+    const interval = setInterval(() => setDisplayVisits(c => c + Math.floor(Math.random() * 2) + 1), 60000)
     return () => clearInterval(interval)
   }, [displayVisits])
 
