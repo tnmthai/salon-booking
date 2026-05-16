@@ -280,4 +280,48 @@ function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, ad
   `;
 }
 
-module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail };
+function completionEmail({ customerName, salonName, serviceName, date, pointsEarned, totalPoints, stampGoal, stampReward, bookingCode }) {
+  const stamps = Math.min(totalPoints, stampGoal);
+  const stampsHtml = Array.from({ length: stampGoal }, (_, i) =>
+    `<div style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin:2px;font-size:16px;${i < stamps ? 'background:#ec4899;color:white;' : 'background:#f3f4f6;color:#d1d5db;'}">${i < stamps ? '⭐' : '○'}</div>`
+  ).join('');
+  const progressPercent = Math.min(100, Math.round((stamps / stampGoal) * 100));
+  return `
+    <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">✨</div>
+          <h1 style="color:#111;font-size:24px;margin:0;">Thank You!</h1>
+        </div>
+        <p style="color:#555;font-size:16px;">Hi ${customerName},</p>
+        <p style="color:#555;">Thank you for visiting <strong>${salonName}</strong>! We hope you enjoyed your ${serviceName}.</p>
+        ${pointsEarned > 0 ? `
+        <div style="background:#fdf2f8;border:2px solid #f9a8d4;border-radius:12px;padding:20px;margin:24px 0;text-align:center;">
+          <div style="font-size:14px;color:#888;margin-bottom:4px;">Points Earned</div>
+          <div style="font-size:36px;font-weight:700;color:#ec4899;">+${pointsEarned}</div>
+          <div style="font-size:13px;color:#888;margin-top:4px;">Total: ${totalPoints} points</div>
+        </div>
+        <div style="background:#fafafa;border-radius:12px;padding:20px;margin:24px 0;">
+          <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px;">🎯 Loyalty Progress</div>
+          <div style="text-align:center;margin:12px 0;">${stampsHtml}</div>
+          <div style="background:#e5e7eb;border-radius:99px;height:8px;margin:12px 0;">
+            <div style="background:linear-gradient(90deg,#ec4899,#8b5cf6);height:8px;border-radius:99px;width:${progressPercent}%;transition:width 0.3s;"></div>
+          </div>
+          <div style="font-size:13px;color:#666;text-align:center;">${stamps}/${stampGoal} — ${stamps >= stampGoal ? '🎉 Ready to redeem!' : `${stampGoal - stamps} more to go!`}</div>
+          ${stamps >= stampGoal ? `<div style="background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:12px;margin-top:12px;text-align:center;font-weight:600;color:#16a34a;">🎁 Reward: ${stampReward}</div>` : ''}
+        </div>` : ''}
+        ${bookingCode ? `
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:16px;margin:24px 0;text-align:center;">
+          <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Booking Code</div>
+          <div style="font-size:24px;font-weight:700;color:#16a34a;letter-spacing:3px;">${bookingCode}</div>
+        </div>` : ''}
+        <div style="text-align:center;margin-top:24px;">
+          <p style="color:#888;font-size:13px;">We look forward to seeing you again!</p>
+        </div>
+      </div>
+    </body></html>
+  `;
+}
+
+module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail, completionEmail };

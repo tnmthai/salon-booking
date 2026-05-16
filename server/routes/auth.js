@@ -160,7 +160,7 @@ router.get('/me', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const result = await db.query(
-      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug, s.timezone, s.show_on_landing, s.show_in_explore, s.phone as salon_phone, s.email as salon_email, s.address as salon_address, s.description as salon_description
+      `SELECT u.id, u.email, u.name, u.role, u.salon_id, s.name as salon_name, s.slug as salon_slug, s.timezone, s.show_on_landing, s.show_in_explore, s.loyalty_settings, s.phone as salon_phone, s.email as salon_email, s.address as salon_address, s.description as salon_description
        FROM users u LEFT JOIN salons s ON u.salon_id = s.id WHERE u.id = $1`,
       [decoded.id]
     );
@@ -168,7 +168,7 @@ router.get('/me', async (req, res) => {
     const u = result.rows[0];
     res.json({
       user: { id: u.id, email: u.email, name: u.name, role: u.role, salon_id: u.salon_id },
-      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug, timezone: u.timezone || 'Pacific/Auckland', show_on_landing: u.show_on_landing !== false, show_in_explore: u.show_in_explore !== false, phone: u.salon_phone, email: u.salon_email, address: u.salon_address, description: u.salon_description },
+      salon: { id: u.salon_id, name: u.salon_name, slug: u.salon_slug, timezone: u.timezone || 'Pacific/Auckland', show_on_landing: u.show_on_landing !== false, show_in_explore: u.show_in_explore !== false, loyalty_settings: u.loyalty_settings, phone: u.salon_phone, email: u.salon_email, address: u.salon_address, description: u.salon_description },
     });
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });

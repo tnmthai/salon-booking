@@ -30,6 +30,7 @@ import Reviews from './pages/Reviews'
 import Overrides from './pages/Overrides'
 import PlanSettings from './pages/PlanSettings'
 import Settings from './pages/Settings'
+import Loyalty from './pages/Loyalty'
 import Features from './pages/Features'
 import Pricing from './pages/Pricing'
 import About from './pages/About'
@@ -75,6 +76,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <Link to="/admin/overrides" className="text-gray-600 hover:text-pink-600">🗓 Days Off</Link>
                 <Link to="/admin/reports" className="text-gray-600 hover:text-pink-600">📊 Reports</Link>
                 <Link to="/admin/plan" className="text-gray-600 hover:text-pink-600">📦 Plan</Link>
+                <Link to="/admin/loyalty" className="text-gray-600 hover:text-pink-600">⭐ Loyalty</Link>
                 <Link to="/admin/settings" className="text-gray-600 hover:text-pink-600">⚙️ Settings</Link>
               </>
             )}
@@ -116,6 +118,7 @@ function AdminLayout({ salon, user, onLogout }) {
         {isOwner && <Route path="/reports" element={<Reports />} />}
         {isOwner && <Route path="/plan" element={<PlanSettings />} />}
           {isOwner && <Route path="/settings" element={<Settings />} />}
+          {isOwner && <Route path="/loyalty" element={<Loyalty />} />}
         {isStaff && <Route path="/staff-dashboard" element={<StaffDashboard />} />}
         {isSuperAdmin && <Route path="/shops" element={<AdminShops />} />}
       </Routes>

@@ -250,7 +250,7 @@ app.put('/api/salon/settings', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const isSuperAdmin = decoded.email === 'admin@tnmthai.com';
-    const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing, show_in_explore } = req.body;
+    const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing, show_in_explore, loyalty_settings } = req.body;
     const salonId = isSuperAdmin && targetSalonId ? targetSalonId : decoded.salon_id;
     if (!salonId) return res.status(403).json({ error: 'No salon' });
     const fields = [];
@@ -264,6 +264,7 @@ app.put('/api/salon/settings', async (req, res) => {
     if (timezone !== undefined) { fields.push(`timezone=$${i++}`); vals.push(timezone); }
     if (show_on_landing !== undefined) { fields.push(`show_on_landing=$${i++}`); vals.push(show_on_landing); }
     if (show_in_explore !== undefined) { fields.push(`show_in_explore=$${i++}`); vals.push(show_in_explore); }
+    if (loyalty_settings !== undefined) { fields.push(`loyalty_settings=$${i++}`); vals.push(JSON.stringify(loyalty_settings)); }
     if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
     vals.push(salonId);
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
@@ -443,15 +444,125 @@ setInterval(sendReminders, 60 * 60 * 1000);
 // Also run once on startup (after 30s delay)
 setTimeout(sendReminders, 30000);
 
-// --- Loyalty points endpoint ---
+// --- Loyalty points endpoint (auth) ---
 app.get('/api/loyalty/:phone', authMiddleware, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, loyalty_points FROM customers WHERE phone = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1',
+      'SELECT id, name, phone, loyalty_points, total_visits FROM customers WHERE phone = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1',
       [req.params.phone, req.user.salon_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
+    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    res.json({ customer: rows[0], settings: salon.rows[0]?.loyalty_settings || {} });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Public loyalty lookup (customer self-check) ---
+app.get('/api/loyalty/public/:slug/:phone', async (req, res) => {
+  try {
+    const salon = await pool.query('SELECT id, name, loyalty_settings FROM salons WHERE slug = $1', [req.params.slug]);
+    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
+    const sid = salon.rows[0].id;
+    const customer = await pool.query(
+      'SELECT id, name, phone, loyalty_points, total_visits FROM customers WHERE phone = $1 AND salon_id = $2',
+      [req.params.phone, sid]
+    );
+    const rewards = await pool.query(
+      'SELECT id, name, description, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true ORDER BY points_cost',
+      [sid]
+    );
+    const settings = salon.rows[0].loyalty_settings || {};
+    res.json({
+      salon: salon.rows[0].name,
+      customer: customer.rows[0] || null,
+      rewards: rewards.rows,
+      settings,
+      stamp_goal: settings.stamp_goal || 10,
+      stamp_reward: settings.stamp_reward || 'Free service',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Loyalty rewards CRUD (owner) ---
+app.get('/api/loyalty/rewards', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM loyalty_rewards WHERE salon_id = $1 ORDER BY points_cost',
+      [req.user.salon_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/loyalty/rewards', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, points_cost } = req.body;
+    if (!name || !points_cost) return res.status(400).json({ error: 'Name and points_cost required' });
+    const { rows } = await pool.query(
+      'INSERT INTO loyalty_rewards (salon_id, name, description, points_cost) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.user.salon_id, name, description || '', parseInt(points_cost)]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, points_cost, active } = req.body;
+    const fields = [];
+    const vals = [];
+    let i = 1;
+    if (name !== undefined) { fields.push(`name=$${i++}`); vals.push(name); }
+    if (description !== undefined) { fields.push(`description=$${i++}`); vals.push(description); }
+    if (points_cost !== undefined) { fields.push(`points_cost=$${i++}`); vals.push(parseInt(points_cost)); }
+    if (active !== undefined) { fields.push(`active=$${i++}`); vals.push(active); }
+    if (!fields.length) return res.status(400).json({ error: 'No fields' });
+    vals.push(req.params.id, req.user.salon_id);
+    const { rows } = await pool.query(
+      `UPDATE loyalty_rewards SET ${fields.join(',')} WHERE id=$${i++} AND salon_id=$${i} RETURNING *`,
+      vals
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Reward not found' });
     res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
+  try {
+    const { rowCount } = await pool.query(
+      'DELETE FROM loyalty_rewards WHERE id = $1 AND salon_id = $2',
+      [req.params.id, req.user.salon_id]
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Reward not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Redeem loyalty reward ---
+app.post('/api/loyalty/redeem', authMiddleware, async (req, res) => {
+  try {
+    const { customer_id, reward_id } = req.body;
+    const reward = await pool.query('SELECT * FROM loyalty_rewards WHERE id = $1 AND salon_id = $2 AND active = true', [reward_id, req.user.salon_id]);
+    if (!reward.rows.length) return res.status(404).json({ error: 'Reward not found' });
+    const customer = await pool.query('SELECT * FROM customers WHERE id = $1 AND salon_id = $2', [customer_id, req.user.salon_id]);
+    if (!customer.rows.length) return res.status(404).json({ error: 'Customer not found' });
+    if (customer.rows[0].loyalty_points < reward.rows[0].points_cost) {
+      return res.status(400).json({ error: 'Not enough points' });
+    }
+    await pool.query('UPDATE customers SET loyalty_points = loyalty_points - $1 WHERE id = $2', [reward.rows[0].points_cost, customer_id]);
+    res.json({ message: 'Redeemed!', remaining_points: customer.rows[0].loyalty_points - reward.rows[0].points_cost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -479,16 +590,20 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
 
     await pool.query("UPDATE appointments SET status = 'completed' WHERE id = $1", [req.params.id]);
 
-    // Award loyalty points (1 point per $10 spent)
+    // Award loyalty points (configurable per salon)
+    let pointsEarned = 0;
     if (a.customer_id && a.price) {
-      const points = Math.floor(parseFloat(a.price) / 10);
-      if (points > 0) {
-        await pool.query('UPDATE customers SET loyalty_points = loyalty_points + $1 WHERE id = $2', [points, a.customer_id]);
-        console.log(`[LOYALTY] Awarded ${points} points to customer #${a.customer_id}`);
+      const salonInfo = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [a.salon_id]);
+      const settings = salonInfo.rows[0]?.loyalty_settings || { points_per_dollar: 0.1 };
+      const rate = parseFloat(settings.points_per_dollar) || 0.1;
+      pointsEarned = Math.floor(parseFloat(a.price) * rate);
+      if (pointsEarned > 0) {
+        await pool.query('UPDATE customers SET loyalty_points = loyalty_points + $1, total_visits = total_visits + 1 WHERE id = $2', [pointsEarned, a.customer_id]);
+        console.log(`[LOYALTY] Awarded ${pointsEarned} points to customer #${a.customer_id} (rate: ${rate}/$1)`);
       }
     }
 
-    // Send review request email (non-blocking)
+    // Send completion email with loyalty points (non-blocking)
     try {
       const cust = await pool.query('SELECT * FROM customers WHERE id = $1', [a.customer_id]);
       const salon = await pool.query('SELECT * FROM salons WHERE id = $1', [a.salon_id]);
@@ -496,18 +611,27 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
       if (cust.rows[0]?.email) {
         const bookingDate = new Date(a.start_time);
         const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const { sendEmail, reviewRequestEmail } = require('./utils/email');
-        sendEmail(cust.rows[0].email, `How was your visit? - ${salon.rows[0]?.name || 'Salon'}`,
-          reviewRequestEmail({
-            customerName: cust.rows[0].name,
-            salonName: salon.rows[0]?.name || 'Salon',
+        const { sendEmail, completionEmail } = require('./utils/email');
+        const custData = cust.rows[0];
+        const salonData = salon.rows[0];
+        const newPoints = (custData.loyalty_points || 0) + pointsEarned;
+        const settings = salonData?.loyalty_settings || {};
+        const stampGoal = settings.stamp_goal || 10;
+        sendEmail(custData.email, `Thanks for visiting! ⭐ - ${salonData?.name || 'Salon'}`,
+          completionEmail({
+            customerName: custData.name,
+            salonName: salonData?.name || 'Salon',
             serviceName: svc.rows[0]?.name || 'Service',
             date: dateStr,
+            pointsEarned,
+            totalPoints: newPoints,
+            stampGoal,
+            stampReward: settings.stamp_reward || 'Free service',
             bookingCode: a.booking_code,
           })
-        ).catch(e => console.error('[EMAIL] Review request error:', e.message));
+        ).catch(e => console.error('[EMAIL] Completion email error:', e.message));
       }
-    } catch (e) { console.error('[EMAIL] Review request module error:', e.message); }
+    } catch (e) { console.error('[EMAIL] Completion email module error:', e.message); }
 
     res.json({ message: 'Marked as completed' });
   } catch (err) {
@@ -692,6 +816,10 @@ async function run(sql) {
 
   // Loyalty points (Priority 8)
   await run(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS loyalty_points INTEGER DEFAULT 0`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS loyalty_settings JSONB DEFAULT '{"points_per_dollar":0.1,"stamp_goal":10,"stamp_reward":"Free service"}'::jsonb`);
+  await run(`CREATE TABLE IF NOT EXISTS loyalty_rewards (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, name VARCHAR(255) NOT NULL, description TEXT, points_cost INTEGER NOT NULL, active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_loyalty_rewards_salon ON loyalty_rewards(salon_id)`);
+  await run(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS total_visits INTEGER DEFAULT 0`);
 
   // Page visits tracking
   await run(`CREATE TABLE IF NOT EXISTS page_visits (id SERIAL PRIMARY KEY, salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, page VARCHAR(100) DEFAULT 'booking', ip_address VARCHAR(100), user_agent TEXT, referrer TEXT, visited_at TIMESTAMP DEFAULT NOW())`);

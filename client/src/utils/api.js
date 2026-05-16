@@ -124,6 +124,15 @@ export const api = {
 
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
+
+  // Loyalty
+  getLoyaltyByPhone: (phone) => request(`/loyalty/${phone}`),
+  getLoyaltyPublic: (slug, phone) => request(`/loyalty/public/${slug}/${phone}`),
+  getLoyaltyRewards: () => request('/loyalty/rewards'),
+  createLoyaltyReward: (data) => request('/loyalty/rewards', { method: 'POST', body: JSON.stringify(data) }),
+  updateLoyaltyReward: (id, data) => request(`/loyalty/rewards/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteLoyaltyReward: (id) => request(`/loyalty/rewards/${id}`, { method: 'DELETE' }),
+  redeemLoyaltyReward: (data) => request('/loyalty/redeem', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 export function setToken(token) {
