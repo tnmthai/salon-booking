@@ -23,9 +23,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://s10.histats.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:", "https://sstatic1.histats.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
       fontSrc: ["'self'", "https:", "data:"],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
