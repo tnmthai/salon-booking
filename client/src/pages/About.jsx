@@ -26,6 +26,7 @@ function Navbar() {
           <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
         </Link>
         <div className="hidden md:flex items-center gap-1">
+          <Link to="/explore" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Explore</Link>
           <Link to="/features" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Features</Link>
           <Link to="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Pricing</Link>
           <Link to="/about" className="text-sm text-pink-600 font-medium px-3 py-2">About</Link>
@@ -44,6 +45,7 @@ function Navbar() {
       {open && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-2 space-y-0.5">
+            <Link to="/explore" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Explore</Link>
             <Link to="/features" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Features</Link>
             <Link to="/pricing" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Pricing</Link>
             <Link to="/about" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-pink-600 bg-pink-50 font-medium rounded-lg">About</Link>
