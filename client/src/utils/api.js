@@ -27,6 +27,7 @@ export const api = {
   getSalons: () => request('/salons'),
   getAdminSalons: () => request('/admin/salons'),
   getSalon: (slug) => request(`/salons/${slug}`),
+  updateSalonSettings: (data) => request('/salon/settings', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Services
   getServices: () => request('/services'),
