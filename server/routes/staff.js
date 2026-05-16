@@ -3,7 +3,7 @@ const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { validateName, validateText, validatePhone, validateEmail } = require('../utils/validation');
 
-const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+const { isSuperAdmin } = require('../middleware/auth');
 
 // GET staff for a salon (by slug — public)
 router.get('/public/:slug', async (req, res) => {

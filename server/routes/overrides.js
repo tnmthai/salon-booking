@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 
-const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+const { isSuperAdmin } = require('../middleware/auth');
 
 // GET overrides for a staff member (auth)
 router.get('/staff/:staffId', authMiddleware, async (req, res) => {

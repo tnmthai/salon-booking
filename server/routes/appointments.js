@@ -3,7 +3,7 @@ const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { validateName, validatePhone, validateEmail, validateText } = require('../utils/validation');
 
-const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+const { isSuperAdmin } = require('../middleware/auth');
 
 async function getSalonTimezone(salonId) {
   if (!salonId) return 'Pacific/Auckland';

@@ -59,7 +59,7 @@ router.get('/stats', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token' });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isSuperAdmin = decoded.email === 'admin@tnmthai.com';
+    const isSuperAdmin = isSuperAdmin(decoded.email);
     const salonId = decoded.salon_id;
 
     if (!isSuperAdmin && !salonId) {

@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 
-const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+const { isSuperAdmin } = require('../middleware/auth');
 
 // GET customers (super admin: all shops, normal: own salon)
 router.get('/', authMiddleware, async (req, res) => {

@@ -2,7 +2,7 @@ const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 
-const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
+const { isSuperAdmin } = require('../middleware/auth');
 
 // GET all users for the salon (admin only)
 router.get('/', authMiddleware, async (req, res) => {
@@ -33,7 +33,7 @@ router.get('/all', async (req, res) => {
   const { JWT_SECRET } = require('../middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') {
+    if (!isSuperAdmin(decoded.email)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { rows } = await db.query(

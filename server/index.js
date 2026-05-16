@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const pool = require('./db');
 const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn } = require('./initdb');
-const { authMiddleware } = require('./middleware/auth');
+const { authMiddleware, isSuperAdmin } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -186,7 +186,7 @@ app.get('/api/admin/salons', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     const { rows } = await pool.query(`
       SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
         u.name as owner_name, u.email as owner_email, u.id as owner_id
@@ -210,7 +210,7 @@ app.post('/api/salons/:id/owner', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     
     const { name, email, password } = req.body;
     const salonId = req.params.id;
@@ -244,7 +244,7 @@ app.put('/api/salons/:id', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     const { name, slug, phone, email, address, description } = req.body;
     const { rows } = await pool.query(
       'UPDATE salons SET name=$1, slug=$2, phone=$3, email=$4, address=$5, description=$6 WHERE id=$7 RETURNING *',
@@ -266,7 +266,7 @@ app.put('/api/salon/settings', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isSuperAdmin = decoded.email === 'admin@tnmthai.com';
+    const isSuperAdmin = isSuperAdmin(decoded.email);
     const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing, show_in_explore, loyalty_settings } = req.body;
     const salonId = isSuperAdmin && targetSalonId ? targetSalonId : decoded.salon_id;
     if (!salonId) return res.status(403).json({ error: 'No salon' });
@@ -300,7 +300,7 @@ app.delete('/api/salons/:id', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     const { rows } = await pool.query('DELETE FROM salons WHERE id = $1 RETURNING id, name', [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
     res.json({ message: 'Salon deleted', salon: rows[0] });
@@ -319,7 +319,7 @@ app.delete('/api/admin/staff/:id', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     const staffId = req.params.id;
     const apptDel = await pool.query('DELETE FROM appointments WHERE staff_id = $1', [staffId]);
     await pool.query('DELETE FROM working_hours WHERE staff_id = $1', [staffId]);
@@ -341,7 +341,7 @@ app.delete('/api/admin/appointments', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     const salonId = req.query.salon_id;
     let result;
     if (salonId) {
@@ -364,7 +364,7 @@ app.put('/api/salons/:id/owner', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.email !== 'admin@tnmthai.com') return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
     
     const { user_id } = req.body;
     const salonId = req.params.id;
@@ -615,7 +615,7 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
 
     const a = appt.rows[0];
     // Allow owner, super admin, or staff linked to this appointment
-    if (decoded.role !== 'owner' && decoded.email !== 'admin@tnmthai.com') {
+    if (decoded.role !== 'owner' && !isSuperAdmin(decoded.email)) {
       const staffCheck = await pool.query('SELECT id FROM staff WHERE user_id = $1 AND id = $2', [decoded.id, a.staff_id]);
       if (!staffCheck.rows.length && a.salon_id !== decoded.salon_id) {
         return res.status(403).json({ error: 'Access denied' });

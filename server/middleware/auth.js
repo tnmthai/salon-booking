@@ -29,4 +29,15 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { authMiddleware, optionalAuth, JWT_SECRET };
+const SUPER_ADMIN_EMAIL = 'admin@tnmthai.com';
+
+function isSuperAdmin(email) {
+  return email === SUPER_ADMIN_EMAIL;
+}
+
+function requireSuperAdmin(req, res, next) {
+  if (!isSuperAdmin(req.user?.email)) return res.status(403).json({ error: 'Forbidden' });
+  next();
+}
+
+module.exports = { authMiddleware, optionalAuth, JWT_SECRET, isSuperAdmin, requireSuperAdmin, SUPER_ADMIN_EMAIL };
