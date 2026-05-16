@@ -184,7 +184,7 @@ function AppInner() {
   );
 }
 
-function App() {
+function App() { window.__v=3
   return (
     <I18nProvider>
       <AppInner />
