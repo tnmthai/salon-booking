@@ -13,7 +13,7 @@ export default function Footer({ totalVisits }) {
             </div>
             {totalVisits !== null && (
               <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">
-                👁 {totalVisits.toLocaleString()} visits
+                👁 {Number(totalVisits || 0).toLocaleString()} visits
               </span>
             )}
           </div>

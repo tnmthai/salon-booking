@@ -251,7 +251,7 @@ export default function Landing() {
                 <span className="text-sm text-gray-400">© 2026 Timia</span>
               </div>
               {totalVisits !== null && (
-                <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {totalVisits.toLocaleString()} visits</span>
+                <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {Number(totalVisits || 0).toLocaleString()} visits</span>
               )}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">

@@ -27,7 +27,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
     }
