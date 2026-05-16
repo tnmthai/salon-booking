@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import './index.css'
@@ -42,6 +42,32 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function NavDropdown({ label, icon, children }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(!open)} className="text-gray-600 hover:text-pink-600 flex items-center gap-0.5">
+        {icon && <span>{icon}</span>}{label}<svg className={`w-3 h-3 transition ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border py-1 min-w-[160px] z-50">
+          {React.Children.map(children, child => React.cloneElement(child, { onClick: () => setOpen(false) }))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NavDropdownItem({ to, children, onClick }) {
+  return <Link to={to} onClick={onClick} className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-600">{children}</Link>;
+}
+
 function AdminLayout({ salon, user, onLogout }) {
   const isSuperAdmin = user?.email === 'admin@tnmthai.com';
   const isOwner = user?.role === 'owner' || isSuperAdmin;
@@ -66,18 +92,24 @@ function AdminLayout({ salon, user, onLogout }) {
             )}
             {!isSuperAdmin && isOwner && (
               <>
-                <Link to="/admin/services" className="text-gray-600 hover:text-pink-600">Services</Link>
-                <Link to="/admin/staff" className="text-gray-600 hover:text-pink-600">Team</Link>
-                <Link to="/admin/schedule" className="text-gray-600 hover:text-pink-600">📅 Schedule</Link>
-                <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">Calendar</Link>
-                <Link to="/admin/users" className="text-gray-600 hover:text-pink-600">Users</Link>
-                <Link to="/admin/reviews" className="text-gray-600 hover:text-pink-600">⭐ Reviews</Link>
-                <Link to="/admin/gallery" className="text-gray-600 hover:text-pink-600">🖼 Gallery</Link>
-                <Link to="/admin/overrides" className="text-gray-600 hover:text-pink-600">🗓 Days Off</Link>
-                <Link to="/admin/reports" className="text-gray-600 hover:text-pink-600">📊 Reports</Link>
-                <Link to="/admin/plan" className="text-gray-600 hover:text-pink-600">📦 Plan</Link>
-                <Link to="/admin/loyalty" className="text-gray-600 hover:text-pink-600">⭐ Loyalty</Link>
-                <Link to="/admin/settings" className="text-gray-600 hover:text-pink-600">⚙️ Settings</Link>
+                <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">📅 Calendar</Link>
+                <NavDropdown label="Team">
+                  <NavDropdownItem to="/admin/staff">👥 Staff</NavDropdownItem>
+                  <NavDropdownItem to="/admin/schedule">📅 Schedule</NavDropdownItem>
+                  <NavDropdownItem to="/admin/overrides">🗓 Days Off</NavDropdownItem>
+                </NavDropdown>
+                <NavDropdown label="More">
+                  <NavDropdownItem to="/admin/services">💅 Services</NavDropdownItem>
+                  <NavDropdownItem to="/admin/gallery">🖼 Gallery</NavDropdownItem>
+                  <NavDropdownItem to="/admin/reviews">⭐ Reviews</NavDropdownItem>
+                  <NavDropdownItem to="/admin/reports">📊 Reports</NavDropdownItem>
+                  <NavDropdownItem to="/admin/users">👥 Users</NavDropdownItem>
+                </NavDropdown>
+                <NavDropdown label="Account">
+                  <NavDropdownItem to="/admin/loyalty">⭐ Loyalty</NavDropdownItem>
+                  <NavDropdownItem to="/admin/plan">📦 Plan</NavDropdownItem>
+                  <NavDropdownItem to="/admin/settings">⚙️ Settings</NavDropdownItem>
+                </NavDropdown>
               </>
             )}
             {isStaff && (

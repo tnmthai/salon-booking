@@ -126,8 +126,8 @@ export const api = {
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
 
   // Loyalty
-  getLoyaltyByPhone: (phone) => request(`/loyalty/${phone}`),
-  getLoyaltyPublic: (slug, phone) => request(`/loyalty/public/${slug}/${phone}`),
+  getLoyaltyByPhone: (identifier) => request(`/loyalty/${identifier}`),
+  getLoyaltyPublic: (slug, identifier) => request(`/loyalty/public/${slug}/${identifier}`),
   getLoyaltyRewards: () => request('/loyalty/rewards'),
   createLoyaltyReward: (data) => request('/loyalty/rewards', { method: 'POST', body: JSON.stringify(data) }),
   updateLoyaltyReward: (id, data) => request(`/loyalty/rewards/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

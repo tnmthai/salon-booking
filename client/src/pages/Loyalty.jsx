@@ -8,7 +8,7 @@ export default function Loyalty() {
   const [msg, setMsg] = useState('')
   const [showAddReward, setShowAddReward] = useState(false)
   const [newReward, setNewReward] = useState({ name: '', description: '', points_cost: '' })
-  const [searchPhone, setSearchPhone] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [customerData, setCustomerData] = useState(null)
   const [searching, setSearching] = useState(false)
 
@@ -58,11 +58,11 @@ export default function Loyalty() {
   }
 
   const searchCustomer = async () => {
-    if (!searchPhone.trim()) return
+    if (!searchQuery.trim()) return
     setSearching(true)
     setCustomerData(null)
     try {
-      const data = await api.getLoyaltyByPhone(searchPhone.trim())
+      const data = await api.getLoyaltyByPhone(searchQuery.trim())
       setCustomerData(data)
     } catch (err) { alert(err.message) }
     setSearching(false)
@@ -173,8 +173,8 @@ export default function Loyalty() {
       <div className="bg-white rounded-xl shadow p-6">
         <h2 className="text-lg font-semibold mb-4">🔍 Customer Lookup</h2>
         <div className="flex gap-2 mb-4">
-          <input placeholder="Customer phone number" value={searchPhone}
-            onChange={e => setSearchPhone(e.target.value)}
+          <input placeholder="Phone number or email" value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
             className="flex-1 border rounded-lg px-3 py-2 text-sm"
             onKeyDown={e => e.key === 'Enter' && searchCustomer()} />
           <button onClick={searchCustomer} disabled={searching}

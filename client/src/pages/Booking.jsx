@@ -288,6 +288,7 @@ export default function Booking() {
                 <input placeholder="Email (optional)" value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="border rounded-lg px-3 py-2.5" />
                 <input placeholder="Notes (optional)" value={customer.notes} onChange={e => setCustomer({...customer, notes: e.target.value})} className="border rounded-lg px-3 py-2.5" />
               </div>
+              <p className="text-xs text-pink-500 mt-2">⭐ Enter your correct phone & email to collect loyalty points!</p>
             </div>
             <div className="bg-pink-50 rounded-xl p-6 mb-6">
               <h4 className="font-semibold mb-3">📋 Summary</h4>

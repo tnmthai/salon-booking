@@ -445,11 +445,13 @@ setInterval(sendReminders, 60 * 60 * 1000);
 setTimeout(sendReminders, 30000);
 
 // --- Loyalty points endpoint (auth) ---
-app.get('/api/loyalty/:phone', authMiddleware, async (req, res) => {
+app.get('/api/loyalty/:identifier', authMiddleware, async (req, res) => {
   try {
+    const id = req.params.identifier;
+    const isEmail = id.includes('@');
     const { rows } = await pool.query(
-      'SELECT id, name, phone, loyalty_points, total_visits FROM customers WHERE phone = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1',
-      [req.params.phone, req.user.salon_id]
+      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2 ORDER BY loyalty_points DESC LIMIT 1`,
+      [id, req.user.salon_id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Customer not found' });
     const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
@@ -459,15 +461,17 @@ app.get('/api/loyalty/:phone', authMiddleware, async (req, res) => {
   }
 });
 
-// --- Public loyalty lookup (customer self-check) ---
-app.get('/api/loyalty/public/:slug/:phone', async (req, res) => {
+// --- Public loyalty lookup (customer self-check by phone or email) ---
+app.get('/api/loyalty/public/:slug/:identifier', async (req, res) => {
   try {
     const salon = await pool.query('SELECT id, name, loyalty_settings FROM salons WHERE slug = $1', [req.params.slug]);
     if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
     const sid = salon.rows[0].id;
+    const id = req.params.identifier;
+    const isEmail = id.includes('@');
     const customer = await pool.query(
-      'SELECT id, name, phone, loyalty_points, total_visits FROM customers WHERE phone = $1 AND salon_id = $2',
-      [req.params.phone, sid]
+      `SELECT id, name, phone, email, loyalty_points, total_visits FROM customers WHERE ${isEmail ? 'email' : 'phone'} = $1 AND salon_id = $2`,
+      [id, sid]
     );
     const rewards = await pool.query(
       'SELECT id, name, description, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true ORDER BY points_cost',
