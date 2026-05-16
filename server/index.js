@@ -266,9 +266,9 @@ app.put('/api/salon/settings', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isSuperAdmin = isSuperAdmin(decoded.email);
+    const isSuper = isSuperAdmin(decoded.email);
     const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing, show_in_explore, loyalty_settings } = req.body;
-    const salonId = isSuperAdmin && targetSalonId ? targetSalonId : decoded.salon_id;
+    const salonId = isSuper && targetSalonId ? targetSalonId : decoded.salon_id;
     if (!salonId) return res.status(403).json({ error: 'No salon' });
     const fields = [];
     const vals = [];

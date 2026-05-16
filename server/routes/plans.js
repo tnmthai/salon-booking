@@ -40,10 +40,10 @@ router.get('/plan', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'No token' });
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isSuperAdmin = isSuperAdmin(decoded.email);
+    const isSuper = isSuperAdmin(decoded.email);
     const salonId = decoded.salon_id;
 
-    if (!isSuperAdmin && !salonId) {
+    if (!isSuper && !salonId) {
       return res.status(403).json({ error: 'No salon' });
     }
 
@@ -90,7 +90,7 @@ router.put('/plan/:salonId', async (req, res) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'No token' });
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
+    if (!isSuper(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
 
     const { plan } = req.body;
     if (!PLANS[plan]) return res.status(400).json({ error: 'Invalid plan' });

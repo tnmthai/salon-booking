@@ -59,15 +59,15 @@ router.get('/stats', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token' });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isSuperAdmin = isSuperAdmin(decoded.email);
+    const isSuper = isSuperAdmin(decoded.email);
     const salonId = decoded.salon_id;
 
-    if (!isSuperAdmin && !salonId) {
+    if (!isSuper && !salonId) {
       return res.status(403).json({ error: 'No salon' });
     }
 
-    const whereClause = isSuperAdmin ? '' : 'WHERE salon_id = $1';
-    const params = isSuperAdmin ? [] : [salonId];
+    const whereClause = isSuper ? '' : 'WHERE salon_id = $1';
+    const params = isSuper ? [] : [salonId];
 
     // Total visits
     const total = await pool.query(
