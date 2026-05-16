@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 
 const values = [
@@ -158,36 +159,7 @@ export default function About() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-100 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-            <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
-            <span>© 2026 Timia</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3 text-sm text-gray-400">
-            <div className="space-y-2">
-              <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">Product</p>
-              <Link to="/features" className="block hover:text-gray-600">Features</Link>
-              <Link to="/pricing" className="block hover:text-gray-600">Pricing</Link>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">Company</p>
-              <Link to="/about" className="block hover:text-gray-600">About</Link>
-              <Link to="/contact" className="block hover:text-gray-600">Contact</Link>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">Account</p>
-              <Link to="/login" className="block hover:text-gray-600">Sign in</Link>
-              <Link to="/register" className="block hover:text-gray-600">Sign up</Link>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">Legal</p>
-              <Link to="/terms" className="block hover:text-gray-600">Terms</Link>
-              <Link to="/privacy" className="block hover:text-gray-600">Privacy</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 
 function Navbar() {
@@ -139,17 +140,7 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-      <footer className="border-t border-gray-100 py-8 px-4">
-        <div className="max-w-6xl mx-auto flex items-center gap-2 text-sm text-gray-400">
-          <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
-          <span>© 2026 Timia</span>
-          <span className="mx-2">·</span>
-          <Link to="/features" className="hover:text-gray-600">Features</Link>
-          <Link to="/pricing" className="hover:text-gray-600">Pricing</Link>
-          <Link to="/about" className="hover:text-gray-600">About</Link>
-          <Link to="/contact" className="hover:text-gray-600">Contact</Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
