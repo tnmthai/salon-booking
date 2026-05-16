@@ -245,4 +245,39 @@ function reviewRequestEmail({ customerName, salonName, serviceName, date, bookin
   `;
 }
 
-module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail };
+function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, address, website }) {
+  return `
+    <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">🏪</div>
+          <h1 style="color:#111;font-size:24px;margin:0;">New Shop Registered!</h1>
+        </div>
+        <p style="color:#555;">A new shop has just signed up on Timia.</p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:20px;margin:24px 0;">
+          <h3 style="margin:0 0 12px;color:#111;font-size:14px;">Shop Details</h3>
+          <table style="width:100%;font-size:14px;color:#333;">
+            <tr><td style="padding:4px 0;color:#888;">Name</td><td style="padding:4px 0;font-weight:600;">${salonName}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Slug</td><td style="padding:4px 0;"><a href="https://www.timia.nz/${slug}/book">${slug}</a></td></tr>
+            ${address ? `<tr><td style="padding:4px 0;color:#888;">Address</td><td style="padding:4px 0;">${address}</td></tr>` : ''}
+            ${phone ? `<tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;">${phone}</td></tr>` : ''}
+            ${website ? `<tr><td style="padding:4px 0;color:#888;">Website</td><td style="padding:4px 0;"><a href="${website}">${website}</a></td></tr>` : ''}
+          </table>
+        </div>
+        <div style="background:#fdf2f8;border-radius:8px;padding:20px;margin:24px 0;">
+          <h3 style="margin:0 0 12px;color:#111;font-size:14px;">Owner</h3>
+          <table style="width:100%;font-size:14px;color:#333;">
+            <tr><td style="padding:4px 0;color:#888;">Name</td><td style="padding:4px 0;font-weight:600;">${ownerName}</td></tr>
+            <tr><td style="padding:4px 0;color:#888;">Email</td><td style="padding:4px 0;"><a href="mailto:${email}">${email}</a></td></tr>
+          </table>
+        </div>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://www.timia.nz/admin/shops" style="display:inline-block;background:#111;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View in Admin →</a>
+        </div>
+      </div>
+    </body></html>
+  `;
+}
+
+module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail };

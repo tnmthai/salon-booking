@@ -43,6 +43,26 @@ router.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // Notify support about new shop registration
+    try {
+      const { sendEmail, newShopNotificationEmail } = require('../utils/email');
+      await sendEmail(
+        'support@timia.nz',
+        `🏪 New Shop: ${salon_name}`,
+        newShopNotificationEmail({
+          salonName: salon_name,
+          slug,
+          ownerName: owner_name || salon_name,
+          email,
+          phone,
+          address,
+          website: website || null,
+        })
+      );
+    } catch (e) {
+      console.error('[EMAIL] Failed to send new shop notification:', e.message);
+    }
+
     res.status(201).json({
       token,
       user: user.rows[0],
