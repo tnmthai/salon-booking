@@ -46,11 +46,14 @@ export default function Explore() {
     let list = salons
     const q = search.toLowerCase().trim()
     if (q) {
-      list = list.filter(s =>
-        s.name?.toLowerCase().includes(q) ||
-        s.address?.toLowerCase().includes(q) ||
-        s.description?.toLowerCase().includes(q)
-      )
+      list = list.filter(s => {
+        if (s.name?.toLowerCase().includes(q) ||
+            s.address?.toLowerCase().includes(q) ||
+            s.description?.toLowerCase().includes(q)) return true
+        // Also search by service name
+        const svcList = services[s.id] || []
+        return svcList.some(sv => sv.name?.toLowerCase().includes(q))
+      })
     }
     if (selectedCategory) {
       list = list.filter(s => {
@@ -99,7 +102,7 @@ export default function Explore() {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name, location, or description..."
+                placeholder="Search by name, location, or service..."
                 className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent shadow-sm"
               />
               {search && (
