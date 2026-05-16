@@ -46,6 +46,15 @@ export default function Landing() {
   const [ratings, setRatings] = useState({})
   const [totalVisits, setTotalVisits] = useState(null)
   const [lookupCode, setLookupCode] = useState('')
+  const [bookedToday, setBookedToday] = useState(() => {
+    const now = new Date()
+    const minutesToday = now.getHours() * 60 + now.getMinutes()
+    return Math.floor(minutesToday / 10) + 10
+  })
+  useEffect(() => {
+    const interval = setInterval(() => setBookedToday(c => c + 1), 600000)
+    return () => clearInterval(interval)
+  }, [])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -89,6 +98,9 @@ export default function Landing() {
               <Link to="/login" className="border border-gray-200 text-gray-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base">
                 Sign in
               </Link>
+            </div>
+            <div className="mt-4 text-xs text-gray-400">
+              ✅ {bookedToday.toLocaleString()} appointments booked today
             </div>
 
             {/* Booking Lookup */}
