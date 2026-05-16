@@ -147,6 +147,22 @@ app.get('/api/salons', async (req, res) => {
   }
 });
 
+// List ALL salons for explore page (public — all active salons)
+app.get('/api/explore/salons', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
+        u.name as owner_name, u.email as owner_email, u.id as owner_id
+      FROM salons s
+      LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
+      ORDER BY s.name
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // List ALL salons (super admin only — includes hidden ones)
 app.get('/api/admin/salons', async (req, res) => {
   const token = req.headers.authorization?.replace('Bearer ', '');

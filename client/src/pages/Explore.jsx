@@ -10,7 +10,7 @@ export default function Explore() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getSalons().then(async (data) => {
+    api.getExploreSalons().then(async (data) => {
       setSalons(data)
       setLoading(false)
       // Fetch ratings + services in parallel
