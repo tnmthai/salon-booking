@@ -8,6 +8,7 @@ export default function Explore() {
   const [services, setServices] = useState({})
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [displayVisits, setDisplayVisits] = useState(null)
 
   useEffect(() => {
     api.getExploreSalons().then(async (data) => {
@@ -29,7 +30,18 @@ export default function Explore() {
       setRatings(r)
       setServices(svc)
     }).catch(() => setLoading(false))
+
+    api.getPublicVisitCount().then(data => {
+      setDisplayVisits(Number(data.total || 0))
+    }).catch(() => {})
   }, [])
+
+  // Increment display visits periodically
+  useEffect(() => {
+    if (displayVisits === null) return
+    const interval = setInterval(() => setDisplayVisits(c => c + Math.floor(Math.random() * 3) + 1), 300000)
+    return () => clearInterval(interval)
+  }, [displayVisits])
 
   // Extract unique categories from all services
   const allCategories = useMemo(() => {
@@ -243,9 +255,14 @@ export default function Explore() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 px-4 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
-            <span className="text-sm text-gray-400">© 2026 Timia</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
+              <span className="text-sm text-gray-400">© 2026 Timia</span>
+            </div>
+            {displayVisits !== null && (
+              <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {displayVisits.toLocaleString()} visits</span>
+            )}
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">
             <Link to="/features" className="hover:text-gray-600">Features</Link>

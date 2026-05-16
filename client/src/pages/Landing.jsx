@@ -47,6 +47,7 @@ export default function Landing() {
   const [salons, setSalons] = useState([])
   const [ratings, setRatings] = useState({})
   const [totalVisits, setTotalVisits] = useState(null)
+  const [displayVisits, setDisplayVisits] = useState(null)
   const [lookupCode, setLookupCode] = useState('')
   const [bookedToday, setBookedToday] = useState(() => {
     const now = new Date()
@@ -57,6 +58,13 @@ export default function Landing() {
     const interval = setInterval(() => setBookedToday(c => c + 1), 600000)
     return () => clearInterval(interval)
   }, [])
+
+  // Increment display visits periodically
+  useEffect(() => {
+    if (displayVisits === null) return
+    const interval = setInterval(() => setDisplayVisits(c => c + Math.floor(Math.random() * 3) + 1), 300000)
+    return () => clearInterval(interval)
+  }, [displayVisits])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -71,7 +79,10 @@ export default function Landing() {
       }
       setRatings(r)
     }).catch(console.error)
-    api.getPublicVisitCount().then(data => setTotalVisits(data.total)).catch(() => {})
+    api.getPublicVisitCount().then(data => {
+      setTotalVisits(data.total)
+      setDisplayVisits(Number(data.total || 0))
+    }).catch(() => {})
   }, [])
 
   return (
@@ -264,8 +275,8 @@ export default function Landing() {
                 <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
                 <span className="text-sm text-gray-400">© 2026 Timia</span>
               </div>
-              {totalVisits !== null && (
-                <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {Number(totalVisits || 0).toLocaleString()} visits</span>
+              {displayVisits !== null && (
+                <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">👁 {displayVisits.toLocaleString()} visits</span>
               )}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">
