@@ -22,7 +22,8 @@ router.get('/staff/:staffId', authMiddleware, async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -42,7 +43,8 @@ router.get('/salon/:salonId', authMiddleware, async (req, res) => {
     `, [req.params.salonId]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -75,7 +77,8 @@ router.post('/staff/:staffId', authMiddleware, async (req, res) => {
     
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -94,7 +97,8 @@ router.get('/public/:slug', async (req, res) => {
     `, [salon.rows[0].id]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

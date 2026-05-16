@@ -20,7 +20,8 @@ router.get('/staff/:staffId', authMiddleware, async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -36,7 +37,8 @@ router.get('/salon', authMiddleware, async (req, res) => {
     `, [req.user.salon_id]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -67,7 +69,8 @@ router.post('/', authMiddleware, async (req, res) => {
 
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -92,7 +95,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
     res.json({ message: 'Override deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -19,7 +19,8 @@ router.get('/', authMiddleware, async (req, res) => {
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -59,7 +60,8 @@ router.post('/', authMiddleware, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -102,7 +104,8 @@ router.post('/bulk-create-staff', authMiddleware, async (req, res) => {
     
     res.json({ message: `Created ${created.filter(c => !c.error).length} users`, users: created });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -122,7 +125,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -148,7 +152,8 @@ router.put('/:id/reset-password', authMiddleware, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'User not found' });
     res.json({ message: 'Password reset successfully', user: rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -162,7 +167,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     }
     res.json({ message: 'User deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

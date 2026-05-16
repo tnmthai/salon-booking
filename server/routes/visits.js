@@ -13,16 +13,20 @@ router.post('/', async (req, res) => {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
     const ua = req.headers['user-agent'] || '';
 
-    // Geolocate IP (non-blocking)
+    // Geolocate IP (non-blocking) — validate IP first to prevent SSRF
     let city = '', country = '';
-    try {
-      const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`, { signal: AbortSignal.timeout(2000) });
-      if (geoRes.ok) {
-        const geo = await geoRes.json();
-        city = geo.city || '';
-        country = geo.country || '';
-      }
-    } catch {}
+    const isValidIPv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(ip);
+    const isValidIPv6 = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/.test(ip) || ip === '::1' || ip === '::ffff:127.0.0.1';
+    if (isValidIPv4 || isValidIPv6) {
+      try {
+        const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`, { signal: AbortSignal.timeout(2000) });
+        if (geoRes.ok) {
+          const geo = await geoRes.json();
+          city = geo.city || '';
+          country = geo.country || '';
+        }
+      } catch {}
+    }
 
     await pool.query(
       `INSERT INTO page_visits (salon_id, page, ip_address, user_agent, referrer, city, country)
@@ -32,7 +36,8 @@ router.post('/', async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -42,7 +47,8 @@ router.get('/public', async (req, res) => {
     const { rows } = await pool.query('SELECT COUNT(*) as total FROM page_visits');
     res.json({ total: parseInt(rows[0].total) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -129,7 +135,8 @@ router.get('/stats', async (req, res) => {
       cities: cities.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

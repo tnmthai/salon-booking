@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
+const { validateName, validateText, validatePhone, validateEmail } = require('../utils/validation');
 
 const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
 
@@ -16,7 +17,8 @@ router.get('/public/:slug', async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -34,7 +36,8 @@ router.get('/', authMiddleware, async (req, res) => {
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -44,6 +47,15 @@ const PLAN_LIMITS = { free: { maxStaff: 2, maxApptsPerMonth: 40 }, starter: { ma
 // POST create staff
 router.post('/', authMiddleware, async (req, res) => {
   const { name, email, phone, color, salon_id } = req.body;
+
+  // Validation
+  const errors = [
+    validateName(name, true),
+    email ? validateEmail(email) : null,
+    phone ? validatePhone(phone) : null,
+  ].filter(Boolean);
+  if (errors.length) return res.status(400).json({ error: errors[0] });
+
   const targetSalonId = isSuperAdmin(req.user.email) ? (salon_id || req.user.salon_id) : req.user.salon_id;
   try {
     // Check plan limit
@@ -65,7 +77,8 @@ router.post('/', authMiddleware, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -85,7 +98,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Staff not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -99,7 +113,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     }
     res.json({ message: 'Staff deactivated' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

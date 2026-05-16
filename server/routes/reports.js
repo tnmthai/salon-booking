@@ -111,7 +111,8 @@ router.get('/stats', authMiddleware, async (req, res) => {
       hourly: hourlyResult.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

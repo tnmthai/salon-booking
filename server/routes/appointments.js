@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware } = require('../middleware/auth');
+const { validateName, validatePhone, validateEmail, validateText } = require('../utils/validation');
 
 const isSuperAdmin = (email) => email === 'admin@tnmthai.com';
 
@@ -64,7 +65,8 @@ router.get('/', authMiddleware, async (req, res) => {
     `, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -190,7 +192,8 @@ router.get('/slots', async (req, res) => {
 
     res.json(slots);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -209,13 +212,24 @@ router.get('/public/:slug', async (req, res) => {
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // POST create appointment (public — for booking page)
 router.post('/public', async (req, res) => {
   const { salon_id, service_id, service_ids, staff_id, customer_name, customer_phone, customer_email, start_time, notes } = req.body;
+
+  // Validation
+  const errors = [
+    validateName(customer_name, true),
+    validateText(customer_phone, 'Customer phone', 20, true),
+    customer_email ? validateEmail(customer_email) : null,
+    notes ? validateText(notes, 'Notes', 1000) : null,
+  ].filter(Boolean);
+  if (errors.length) return res.status(400).json({ error: errors[0] });
+
   try {
     // Get salon timezone
     const tz = await getSalonTimezone(salon_id);
@@ -320,7 +334,8 @@ router.post('/public', async (req, res) => {
 
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -361,7 +376,8 @@ router.get('/lookup', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'No bookings found' });
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -438,7 +454,8 @@ router.put('/:id/cancel', async (req, res) => {
 
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -523,7 +540,8 @@ router.put('/:id/reschedule', async (req, res) => {
 
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -557,7 +575,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Appointment not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

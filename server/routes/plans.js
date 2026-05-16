@@ -79,7 +79,8 @@ router.get('/plan', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -101,7 +102,8 @@ router.put('/plan/:salonId', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
     res.json({ message: 'Plan updated', salon: rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

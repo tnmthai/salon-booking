@@ -3,13 +3,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
+const { validateEmail, validatePassword, validateName, validateSlug, validatePhone, validateText } = require('../utils/validation');
 
 // POST /api/auth/register — register new salon + owner
 router.post('/register', async (req, res) => {
   const { salon_name, slug, email, password, owner_name, phone, address, website } = req.body;
-  if (!salon_name || !slug || !email || !password) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+
+  // Validation
+  const errors = [
+    validateName(salon_name, 'salon_name'),
+    validateSlug(slug),
+    validateEmail(email),
+    validatePassword(password),
+    validateName(owner_name, false),
+    phone ? validatePhone(phone) : null,
+    address ? validateText(address, 'Address', 500) : null,
+    website ? validateText(website, 'Website', 500) : null,
+  ].filter(Boolean);
+  if (errors.length) return res.status(400).json({ error: errors[0] });
 
   try {
     // Check slug uniqueness
@@ -27,7 +38,7 @@ router.post('/register', async (req, res) => {
     // Create salon
     const salon = await db.query(
       'INSERT INTO salons (name, slug, phone, email, address, website) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [salon_name, slug, phone, email, address, website || null]
+      [salon_name, slug, phone || null, email, address || null, website || null]
     );
 
     // Create owner user
@@ -40,7 +51,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       { id: user.rows[0].id, salon_id: salon.rows[0].id, email, role: 'owner' },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     // Notify support about new shop registration
@@ -69,7 +80,8 @@ router.post('/register', async (req, res) => {
       salon: salon.rows[0],
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -108,6 +120,12 @@ router.post('/login', async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
+  if (typeof email !== 'string' || email.length > 300) {
+    return res.status(400).json({ error: 'Invalid email' });
+  }
+  if (typeof password !== 'string' || password.length > 128) {
+    return res.status(400).json({ error: 'Invalid password' });
+  }
 
   if (checkLockout(email)) {
     return res.status(429).json({ error: 'Too many failed attempts. Try again in 15 minutes.' });
@@ -139,7 +157,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, salon_id: user.salon_id, email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
 
     res.json({
@@ -148,7 +166,8 @@ router.post('/login', async (req, res) => {
       salon: { id: user.salon_id, name: user.salon_name, slug: user.salon_slug, timezone: user.timezone || 'Pacific/Auckland' },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

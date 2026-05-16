@@ -67,10 +67,21 @@ const publicLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 app.use('/api/auth', authLimiter);
 app.use('/api/appointments/public', publicLimiter);
+app.use('/api/appointments/lookup', publicLimiter);
+app.use('/api/visits', publicLimiter);
+app.use('/api/loyalty/public', publicLimiter);
 app.use('/api/contact', publicLimiter);
 app.use('/api/reviews', publicLimiter);
+app.use('/api', apiLimiter);
 
 app.use(express.json({ limit: '10kb' }));
 
@@ -126,7 +137,8 @@ app.post('/api/contact', async (req, res) => {
     );
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -143,7 +155,8 @@ app.get('/api/salons', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -160,7 +173,8 @@ app.get('/api/explore/salons', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -182,7 +196,8 @@ app.get('/api/admin/salons', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -216,7 +231,8 @@ app.post('/api/salons/:id/owner', async (req, res) => {
     
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -237,7 +253,8 @@ app.put('/api/salons/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -270,7 +287,8 @@ app.put('/api/salon/settings', async (req, res) => {
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -287,7 +305,8 @@ app.delete('/api/salons/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
     res.json({ message: 'Salon deleted', salon: rows[0] });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -309,7 +328,8 @@ app.delete('/api/admin/staff/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Staff not found' });
     res.json({ message: 'Staff deleted', staff: rows[0], appointments_deleted: apptDel.rowCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -331,7 +351,8 @@ app.delete('/api/admin/appointments', async (req, res) => {
     }
     res.json({ message: 'Appointments deleted', deleted: result.rowCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -358,7 +379,8 @@ app.put('/api/salons/:id/owner', async (req, res) => {
     
     res.json({ message: 'Owner updated' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -372,7 +394,8 @@ app.get('/api/salons/:slug', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -457,7 +480,8 @@ app.get('/api/loyalty/:identifier', authMiddleware, async (req, res) => {
     const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
     res.json({ customer: rows[0], settings: salon.rows[0]?.loyalty_settings || {} });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -487,7 +511,8 @@ app.get('/api/loyalty/public/:slug/:identifier', async (req, res) => {
       stamp_reward: settings.stamp_reward || 'Free service',
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -500,7 +525,8 @@ app.get('/api/loyalty/rewards', authMiddleware, async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -514,7 +540,8 @@ app.post('/api/loyalty/rewards', authMiddleware, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -537,7 +564,8 @@ app.put('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Reward not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -550,7 +578,8 @@ app.delete('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
     if (!rowCount) return res.status(404).json({ error: 'Reward not found' });
     res.json({ message: 'Deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -568,7 +597,8 @@ app.post('/api/loyalty/redeem', authMiddleware, async (req, res) => {
     await pool.query('UPDATE customers SET loyalty_points = loyalty_points - $1 WHERE id = $2', [reward.rows[0].points_cost, customer_id]);
     res.json({ message: 'Redeemed!', remaining_points: customer.rows[0].loyalty_points - reward.rows[0].points_cost });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -639,7 +669,8 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
 
     res.json({ message: 'Marked as completed' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
