@@ -151,11 +151,11 @@ app.get('/api/salons', async (req, res) => {
 app.get('/api/explore/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
+      SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing, s.show_in_explore,
         u.name as owner_name, u.email as owner_email, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
-      WHERE s.show_on_landing = true
+      WHERE s.show_in_explore = true
       ORDER BY s.name
     `);
     res.json(rows);
@@ -250,7 +250,7 @@ app.put('/api/salon/settings', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const isSuperAdmin = decoded.email === 'admin@tnmthai.com';
-    const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing } = req.body;
+    const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing, show_in_explore } = req.body;
     const salonId = isSuperAdmin && targetSalonId ? targetSalonId : decoded.salon_id;
     if (!salonId) return res.status(403).json({ error: 'No salon' });
     const fields = [];
@@ -263,6 +263,7 @@ app.put('/api/salon/settings', async (req, res) => {
     if (description !== undefined) { fields.push(`description=$${i++}`); vals.push(description); }
     if (timezone !== undefined) { fields.push(`timezone=$${i++}`); vals.push(timezone); }
     if (show_on_landing !== undefined) { fields.push(`show_on_landing=$${i++}`); vals.push(show_on_landing); }
+    if (show_in_explore !== undefined) { fields.push(`show_in_explore=$${i++}`); vals.push(show_in_explore); }
     if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
     vals.push(salonId);
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
@@ -706,6 +707,7 @@ async function run(sql) {
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan VARCHAR(20) DEFAULT 'free'`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan_started_at TIMESTAMP`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_on_landing BOOLEAN DEFAULT true`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_in_explore BOOLEAN DEFAULT true`);
 
   console.log('Database initialized');
 

@@ -236,8 +236,8 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Show on homepage</label>
-                <p className="text-xs text-gray-400">Display your booking link on the Timia homepage & explore page</p>
+                <label className="block text-sm font-medium text-gray-700">Show on Homepage</label>
+                <p className="text-xs text-gray-400">Display your shop on the homepage</p>
               </div>
               <button
                 onClick={() => setSalonSettings({ ...salonSettings, show_on_landing: !salonSettings.show_on_landing })}
@@ -246,7 +246,19 @@ export default function Dashboard() {
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${salonSettings.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
-            {!salonSettings.show_on_landing && <p className="text-xs text-orange-500 mt-1">⚠️ Your shop is hidden. Customers can still book via direct link.</p>}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Show in Explore</label>
+                <p className="text-xs text-gray-400">Appear in search results</p>
+              </div>
+              <button
+                onClick={() => setSalonSettings({ ...salonSettings, show_in_explore: !salonSettings.show_in_explore })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${salonSettings.show_in_explore ? 'bg-pink-600' : 'bg-gray-300'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${salonSettings.show_in_explore ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            {!salonSettings.show_in_explore && <p className="text-xs text-orange-500 mt-1">⚠️ Hidden from search. Customers can still book via direct link.</p>}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
               <select
@@ -282,7 +294,7 @@ export default function Dashboard() {
                       'Content-Type': 'application/json',
                       'Authorization': `Bearer ${localStorage.getItem('salon_token')}`
                     },
-                    body: JSON.stringify({ timezone: salonSettings.timezone, show_on_landing: salonSettings.show_on_landing })
+                    body: JSON.stringify({ timezone: salonSettings.timezone, show_on_landing: salonSettings.show_on_landing, show_in_explore: salonSettings.show_in_explore })
                   })
                   setSalonTimezone(salonSettings.timezone)
                   alert('Settings saved!')

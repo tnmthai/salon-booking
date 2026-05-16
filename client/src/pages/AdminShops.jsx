@@ -148,10 +148,20 @@ export default function AdminShops() {
                       await api.updateSalonSettings({ salon_id: s.id, show_on_landing: !s.show_on_landing })
                       load()
                     }}
-                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition ${s.show_on_landing !== false ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}`}
-                    title="Toggle visibility in Explore"
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium transition ${s.show_on_landing !== false ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}`}
+                    title="Toggle homepage visibility"
                   >
-                    {s.show_on_landing !== false ? '🔍 Visible' : '🙈 Hidden'}
+                    {s.show_on_landing !== false ? '🏠 Home' : '🏠 Hidden'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await api.updateSalonSettings({ salon_id: s.id, show_in_explore: !s.show_in_explore })
+                      load()
+                    }}
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium transition ${s.show_in_explore !== false ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
+                    title="Toggle explore visibility"
+                  >
+                    {s.show_in_explore !== false ? '🔍 Explore' : '🔍 Hidden'}
                   </button>
                   <select
                     value={s.plan || 'free'}

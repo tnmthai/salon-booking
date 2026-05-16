@@ -22,7 +22,7 @@ const TIMEZONES = [
 export default function Settings() {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', address: '', description: '',
-    show_on_landing: true, timezone: 'Pacific/Auckland',
+    show_on_landing: true, show_in_explore: true, timezone: 'Pacific/Auckland',
   })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
@@ -37,6 +37,7 @@ export default function Settings() {
           address: data.salon.address || '',
           description: data.salon.description || '',
           show_on_landing: data.salon.show_on_landing !== false,
+          show_in_explore: data.salon.show_in_explore !== false,
           timezone: data.salon.timezone || 'Pacific/Auckland',
         })
       }
@@ -55,6 +56,7 @@ export default function Settings() {
       if (form.address) updates.address = form.address
       if (form.description !== undefined) updates.description = form.description
       updates.show_on_landing = form.show_on_landing
+      updates.show_in_explore = form.show_in_explore
       if (form.timezone) updates.timezone = form.timezone
 
       await api.updateSalonSettings(updates)
@@ -137,23 +139,40 @@ export default function Settings() {
         {/* Visibility */}
         <div>
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Visibility</h2>
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Show in Explore</label>
-                <p className="text-xs text-gray-400 mt-0.5">Allow your shop to appear in the public search and explore page</p>
+          <div className="space-y-3">
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Show on Homepage</label>
+                  <p className="text-xs text-gray-400 mt-0.5">Display your shop in the "Browse businesses" section on the homepage</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm({...form, show_on_landing: !form.show_on_landing})}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${form.show_on_landing ? 'bg-pink-600' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${form.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setForm({...form, show_on_landing: !form.show_on_landing})}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${form.show_on_landing ? 'bg-pink-600' : 'bg-gray-300'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${form.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
             </div>
-            {!form.show_on_landing && (
-              <p className="text-xs text-orange-500 mt-2">⚠️ Your shop is hidden from search. Customers can still book via direct link.</p>
-            )}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Show in Explore</label>
+                  <p className="text-xs text-gray-400 mt-0.5">Allow your shop to appear in the public search and explore page</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm({...form, show_in_explore: !form.show_in_explore})}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${form.show_in_explore ? 'bg-pink-600' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${form.show_in_explore ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+              {!form.show_in_explore && (
+                <p className="text-xs text-orange-500 mt-2">⚠️ Your shop won't appear in search. Customers can still book via direct link.</p>
+              )}
+            </div>
           </div>
         </div>
 
