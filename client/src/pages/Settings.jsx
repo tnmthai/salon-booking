@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 
 export default function Settings() {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', description: '' })
+  const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', description: '', show_on_landing: true })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
 
@@ -15,6 +15,7 @@ export default function Settings() {
           email: data.salon.email || '',
           address: data.salon.address || '',
           description: data.salon.description || '',
+          show_on_landing: data.salon.show_on_landing !== false,
         })
       }
     }).catch(console.error)
@@ -32,6 +33,7 @@ export default function Settings() {
       if (form.email) updates.email = form.email
       if (form.address) updates.address = form.address
       if (form.description !== undefined) updates.description = form.description
+      updates.show_on_landing = form.show_on_landing
 
       await api.updateSalonSettings(updates)
       setMsg('✅ Settings saved!')
@@ -79,6 +81,23 @@ export default function Settings() {
           <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
             className="w-full border rounded-lg px-3 py-2" rows={3} />
         </div>
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Show in Explore</label>
+              <p className="text-xs text-gray-400 mt-0.5">Allow your shop to appear in the public search and explore page</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setForm({...form, show_on_landing: !form.show_on_landing})}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${form.show_on_landing ? 'bg-pink-600' : 'bg-gray-300'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${form.show_on_landing ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+          {!form.show_on_landing && <p className="text-xs text-orange-500 mt-2">⚠️ Your shop is hidden from search. Customers can still book via direct link.</p>}
+        </div>
+
         <button type="submit" disabled={saving}
           className="w-full bg-pink-600 text-white py-2.5 rounded-lg font-medium hover:bg-pink-700 disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Settings'}

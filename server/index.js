@@ -155,6 +155,7 @@ app.get('/api/explore/salons', async (req, res) => {
         u.name as owner_name, u.email as owner_email, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
+      WHERE s.show_on_landing = true
       ORDER BY s.name
     `);
     res.json(rows);
@@ -248,8 +249,10 @@ app.put('/api/salon/settings', async (req, res) => {
   const { JWT_SECRET } = require('./middleware/auth');
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded.salon_id) return res.status(403).json({ error: 'No salon' });
-    const { name, phone, email, address, description, timezone, show_on_landing } = req.body;
+    const isSuperAdmin = decoded.email === 'admin@tnmthai.com';
+    const { salon_id: targetSalonId, name, phone, email, address, description, timezone, show_on_landing } = req.body;
+    const salonId = isSuperAdmin && targetSalonId ? targetSalonId : decoded.salon_id;
+    if (!salonId) return res.status(403).json({ error: 'No salon' });
     const fields = [];
     const vals = [];
     let i = 1;
@@ -261,7 +264,7 @@ app.put('/api/salon/settings', async (req, res) => {
     if (timezone !== undefined) { fields.push(`timezone=$${i++}`); vals.push(timezone); }
     if (show_on_landing !== undefined) { fields.push(`show_on_landing=$${i++}`); vals.push(show_on_landing); }
     if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
-    vals.push(decoded.salon_id);
+    vals.push(salonId);
     const { rows } = await pool.query(`UPDATE salons SET ${fields.join(',')} WHERE id=$${i} RETURNING *`, vals);
     res.json(rows[0]);
   } catch (err) {
