@@ -120,7 +120,22 @@ export const api = {
   // Plans
   getPlans: () => fetch('/api/plans').then(r => r.json()),
   getPlan: () => request('/plan'),
-  updatePlan: (salonId, plan) => request(`/plan/${salonId}`, { method: 'PUT', body: JSON.stringify({ plan }) }),
+  updatePlan: (salonId, plan, billingCycle) => request(`/plan/${salonId}`, { method: 'PUT', body: JSON.stringify({ plan, billingCycle }) }),
+
+  // Trial
+  startTrial: (targetPlan) => request('/trial/start', { method: 'POST', body: JSON.stringify({ targetPlan }) }),
+
+  // Billing
+  switchBillingCycle: (cycle) => request('/billing/cycle', { method: 'POST', body: JSON.stringify({ cycle }) }),
+
+  // Early Bird
+  getEarlyBirdStatus: () => fetch('/api/early-bird/status').then(r => r.json()),
+  claimEarlyBird: () => request('/early-bird/claim', { method: 'POST' }),
+
+  // Referral
+  getReferralCode: () => request('/referral/code', { method: 'POST' }),
+  applyReferralCode: (code) => request('/referral/apply', { method: 'POST', body: JSON.stringify({ code }) }),
+  getReferralStats: () => request('/referral/stats'),
 
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),

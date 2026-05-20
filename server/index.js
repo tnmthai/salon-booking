@@ -98,7 +98,8 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/overrides', require('./routes/overrides'));
 app.use('/api/visits', require('./routes/visits'));
-app.use('/api', require('./routes/plans'));
+const { router: plansRouter } = require('./routes/plans');
+app.use('/api', plansRouter);
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -871,6 +872,24 @@ async function run(sql) {
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan_started_at TIMESTAMP`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_on_landing BOOLEAN DEFAULT true`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_in_explore BOOLEAN DEFAULT true`);
+
+  // Trial, billing, referral, boost columns
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_plan VARCHAR(20)`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(10) DEFAULT 'monthly'`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS plan_price DECIMAL(10,2) DEFAULT 0`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS is_early_bird BOOLEAN DEFAULT false`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS boost_until TIMESTAMP`);
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS is_new_badge BOOLEAN DEFAULT true`);
+
+  // Referral system
+  await run(`CREATE TABLE IF NOT EXISTS referrals (id SERIAL PRIMARY KEY, referrer_salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, referred_salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE, referral_code VARCHAR(20) UNIQUE NOT NULL, status VARCHAR(20) DEFAULT 'pending', reward_type VARCHAR(50), created_at TIMESTAMP DEFAULT NOW(), completed_at TIMESTAMP)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_salon_id)`);
+
+  // Early bird config
+  await run(`CREATE TABLE IF NOT EXISTS early_bird_config (id INTEGER PRIMARY KEY DEFAULT 1, total_slots INTEGER DEFAULT 50, slots_taken INTEGER DEFAULT 0, starter_price DECIMAL(10,2) DEFAULT 7.00, updated_at TIMESTAMP DEFAULT NOW())`);
+  await pool.query('INSERT INTO early_bird_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING');
 
   console.log('Database initialized');
 

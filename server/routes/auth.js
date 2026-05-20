@@ -7,7 +7,7 @@ const { validateEmail, validatePassword, validateName, validateSlug, validatePho
 
 // POST /api/auth/register — register new salon + owner
 router.post('/register', async (req, res) => {
-  const { salon_name, slug, email, password, owner_name, phone, address, website } = req.body;
+  const { salon_name, slug, email, password, owner_name, phone, address, website, referral_code } = req.body;
 
   // Validation
   const errors = [
@@ -74,10 +74,49 @@ router.post('/register', async (req, res) => {
       console.error('[EMAIL] Failed to send new shop notification:', e.message);
     }
 
+    // Apply registration bonuses (14-day boost + 90-day Starter trial)
+    try {
+      const { applyRegistrationBonuses } = require('./plans');
+      await applyRegistrationBonuses(salon.rows[0].id);
+    } catch (e) {
+      console.error('[BONUS] Failed to apply registration bonuses:', e.message);
+    }
+
+    // Apply referral code if provided
+    if (referral_code) {
+      try {
+        const ref = await db.query(
+          'SELECT * FROM referrals WHERE referral_code = $1 AND referred_salon_id IS NULL',
+          [referral_code.toUpperCase()]
+        );
+        if (ref.rows.length) {
+          await db.query(
+            'UPDATE referrals SET referred_salon_id = $1, status = \'completed\', completed_at = NOW() WHERE id = $2',
+            [salon.rows[0].id, ref.rows[0].id]
+          );
+          // Give referrer reward
+          const referrerCount = await db.query(
+            "SELECT COUNT(*) as count FROM referrals WHERE referrer_salon_id = $1 AND status = 'completed'",
+            [ref.rows[0].referrer_salon_id]
+          );
+          const count = parseInt(referrerCount.rows[0].count);
+          if (count >= 3) {
+            const trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            await db.query('UPDATE salons SET trial_plan = $1, trial_ends_at = $2 WHERE id = $3', ['growth', trialEnd.toISOString(), ref.rows[0].referrer_salon_id]);
+          } else if (count >= 1) {
+            const trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            await db.query('UPDATE salons SET trial_plan = $1, trial_ends_at = $2 WHERE id = $3', ['starter', trialEnd.toISOString(), ref.rows[0].referrer_salon_id]);
+          }
+        }
+      } catch (e) {
+        console.error('[REFERRAL] Failed to apply referral:', e.message);
+      }
+    }
+
     res.status(201).json({
       token,
       user: user.rows[0],
-      salon: salon.rows[0],
+      salon: { ...salon.rows[0], trial_plan: 'starter', boost_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), is_new_badge: true },
     });
   } catch (err) {
     console.error('[ERROR]', err.message);
