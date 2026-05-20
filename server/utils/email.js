@@ -2,6 +2,11 @@ const fetch = require('node-fetch');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@timia.nz';
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 async function sendEmail(to, subject, html) {
   if (!RESEND_API_KEY) {
     console.log(`[EMAIL] No RESEND_API_KEY set, skipping email to ${to}`);
@@ -33,6 +38,7 @@ async function sendEmail(to, subject, html) {
 }
 
 function bookingConfirmationEmail({ customerName, salonName, serviceName, staffName, date, time, duration, price, address, bookingCode }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName); address = escapeHtml(address); bookingCode = escapeHtml(bookingCode);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -67,6 +73,7 @@ function bookingConfirmationEmail({ customerName, salonName, serviceName, staffN
 }
 
 function shopOwnerNotificationEmail({ salonName, customerName, customerPhone, customerEmail, serviceName, staffName, date, time, duration, price, notes, appUrl }) {
+  salonName = escapeHtml(salonName); customerName = escapeHtml(customerName); customerPhone = escapeHtml(customerPhone); customerEmail = escapeHtml(customerEmail); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName); notes = escapeHtml(notes);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -104,6 +111,7 @@ function shopOwnerNotificationEmail({ salonName, customerName, customerPhone, cu
 }
 
 function cancellationEmail({ customerName, salonName, serviceName, staffName, date, time }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -129,6 +137,7 @@ function cancellationEmail({ customerName, salonName, serviceName, staffName, da
 }
 
 function cancellationOwnerEmail({ salonName, customerName, customerPhone, serviceName, staffName, date, time }) {
+  salonName = escapeHtml(salonName); customerName = escapeHtml(customerName); customerPhone = escapeHtml(customerPhone); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -160,6 +169,7 @@ function cancellationOwnerEmail({ salonName, customerName, customerPhone, servic
 }
 
 function rescheduleEmail({ customerName, salonName, serviceName, staffName, oldDate, oldTime, newDate, newTime }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -192,6 +202,7 @@ function rescheduleEmail({ customerName, salonName, serviceName, staffName, oldD
 }
 
 function reminderEmail({ customerName, salonName, serviceName, staffName, date, time, duration, price, address, bookingCode }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); staffName = escapeHtml(staffName); address = escapeHtml(address); bookingCode = escapeHtml(bookingCode);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -225,6 +236,7 @@ function reminderEmail({ customerName, salonName, serviceName, staffName, date, 
 }
 
 function reviewRequestEmail({ customerName, salonName, serviceName, date, bookingCode }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); bookingCode = escapeHtml(bookingCode);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -246,6 +258,7 @@ function reviewRequestEmail({ customerName, salonName, serviceName, date, bookin
 }
 
 function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, address, website }) {
+  salonName = escapeHtml(salonName); slug = escapeHtml(slug); ownerName = escapeHtml(ownerName); email = escapeHtml(email); phone = escapeHtml(phone); address = escapeHtml(address);
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -281,6 +294,7 @@ function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, ad
 }
 
 function completionEmail({ customerName, salonName, serviceName, date, pointsEarned, totalPoints, stampGoal, stampReward, bookingCode }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); serviceName = escapeHtml(serviceName); stampReward = escapeHtml(stampReward); bookingCode = escapeHtml(bookingCode);
   const stamps = Math.min(totalPoints, stampGoal);
   const stampsHtml = Array.from({ length: stampGoal }, (_, i) =>
     `<div style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin:2px;font-size:16px;${i < stamps ? 'background:#ec4899;color:white;' : 'background:#f3f4f6;color:#d1d5db;'}">${i < stamps ? '⭐' : '○'}</div>`
@@ -325,6 +339,7 @@ function completionEmail({ customerName, salonName, serviceName, date, pointsEar
 }
 
 function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisits, stampGoal, stampReward, availableRewards, bookingUrl }) {
+  customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); stampReward = escapeHtml(stampReward);
   const stamps = Math.min(totalVisits || 0, stampGoal);
   const stampsHtml = Array.from({ length: stampGoal }, (_, i) =>
     `<div style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin:2px;font-size:16px;${i < stamps ? 'background:#ec4899;color:white;' : 'background:#f3f4f6;color:#d1d5db;'}">${i < stamps ? '⭐' : '○'}</div>`
@@ -332,7 +347,7 @@ function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisit
   const progressPercent = Math.min(100, Math.round((stamps / stampGoal) * 100));
   const rewardsHtml = (availableRewards || []).map(r =>
     `<div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin:6px 0;">
-      <span style="font-size:14px;color:#333;">${r.name}</span>
+      <span style="font-size:14px;color:#333;">${escapeHtml(r.name)}</span>
       <span style="font-size:13px;font-weight:600;color:#ec4899;">${r.points_cost} pts</span>
     </div>`
   ).join('');
