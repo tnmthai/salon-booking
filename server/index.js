@@ -538,13 +538,15 @@ app.delete('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
 // --- Loyalty: list all customers with points (owner) ---
 app.get('/api/loyalty/customers', authMiddleware, async (req, res) => {
   try {
+    const salonId = req.user.salon_id;
+    if (!salonId) return res.status(400).json({ error: 'No salon associated with this account' });
     const { rows } = await pool.query(
       `SELECT id, name, phone, email, loyalty_points, total_visits, created_at
        FROM customers WHERE salon_id = $1 AND (loyalty_points > 0 OR total_visits > 0)
        ORDER BY loyalty_points DESC, total_visits DESC`,
-      [req.user.salon_id]
+      [salonId]
     );
-    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [salonId]);
     res.json({ customers: rows, settings: salon.rows[0]?.loyalty_settings || {} });
   } catch (err) {
     console.error('[ERROR]', err.message);
@@ -556,19 +558,21 @@ app.get('/api/loyalty/customers', authMiddleware, async (req, res) => {
 app.post('/api/loyalty/send-points-email', authMiddleware, async (req, res) => {
   try {
     const { customer_id } = req.body;
-    if (!customer_id) return res.status(400).json({ error: 'customer_id required' });
+    if (!customer_id || !Number.isInteger(customer_id)) return res.status(400).json({ error: 'Valid customer_id required' });
+    const salonId = req.user.salon_id;
+    if (!salonId) return res.status(400).json({ error: 'No salon associated with this account' });
 
-    const customer = await pool.query('SELECT * FROM customers WHERE id = $1 AND salon_id = $2', [customer_id, req.user.salon_id]);
+    const customer = await pool.query('SELECT * FROM customers WHERE id = $1 AND salon_id = $2', [customer_id, salonId]);
     if (!customer.rows.length) return res.status(404).json({ error: 'Customer not found' });
     if (!customer.rows[0].email) return res.status(400).json({ error: 'Customer has no email' });
 
-    const salon = await pool.query('SELECT name, slug, loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    const salon = await pool.query('SELECT name, slug, loyalty_settings FROM salons WHERE id = $1', [salonId]);
     const salonData = salon.rows[0];
     const settings = salonData.loyalty_settings || {};
 
     const rewards = await pool.query(
       'SELECT name, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true AND points_cost <= $2 ORDER BY points_cost',
-      [req.user.salon_id, customer.rows[0].loyalty_points]
+      [salonId, customer.rows[0].loyalty_points]
     );
 
     const { sendEmail, loyaltyReminderEmail } = require('./utils/email');
