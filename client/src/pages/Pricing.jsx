@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 
 const basePlans = [
-  { name: 'Free', price: 0, annualPrice: 0, desc: 'Get started at no cost.', features: ['Online booking page', 'Marketplace listing', 'Basic reports', 'Email notifications', '2 staff members', '40 appointments/month'], cta: 'Start for free', popular: false, trial: null },
+  { name: 'Starter (Free)', price: 0, annualPrice: 0, desc: 'Get started at no cost.', features: ['Online booking page', 'Marketplace listing', 'Basic reports', 'Email notifications', '2 staff members', '40 appointments/month'], cta: 'Start free — no card needed', popular: false, trial: null },
   { name: 'Starter', price: 11, annualPrice: 8.80, desc: 'For growing teams.', features: ['Everything in Free', 'Up to 6 staff', 'Unlimited appointments', 'Staff roster & schedule', 'Loyalty points (50 cards)', 'Reviews & Gallery'], cta: 'Try free for 3 months', popular: true, trial: '3 months free trial' },
   { name: 'Growth', price: 29, annualPrice: 23.20, desc: 'For established businesses.', features: ['Everything in Starter', 'Unlimited staff', 'Advanced reports', 'Unlimited loyalty system', 'Unlimited email automation', 'Priority marketplace ranking', 'Promotions & deals engine'], cta: 'Try free for 60 days', popular: false, trial: '60 days free trial' },
 ]
