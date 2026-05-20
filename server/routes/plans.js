@@ -8,7 +8,7 @@ const crypto = require('crypto');
 // ─── Plan definitions ────────────────────────────────────────
 const PLANS = {
   free: {
-    name: 'Free',
+    name: 'Starter',
     price: 0,
     annualPrice: 0,
     maxStaff: 2,
@@ -16,7 +16,7 @@ const PLANS = {
     features: ['online_booking', 'marketplace_listing', 'basic_reports', 'email_notifications'],
   },
   starter: {
-    name: 'Starter',
+    name: 'Plus',
     price: 11,
     annualPrice: 8.80, // 20% off
     annualSaving: 26.40, // (11 - 8.80) * 12

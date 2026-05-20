@@ -89,25 +89,25 @@ export default function PlanSettings() {
   const plans = [
     {
       id: 'free',
-      name: 'Starter (Free)',
+      name: 'Starter',
       price: 0,
       desc: 'Get started at no cost',
       features: ['Online booking page', 'Marketplace listing', 'Basic reports', 'Email notifications', '2 staff members', '40 appointments/month'],
     },
     {
       id: 'starter',
-      name: 'Starter',
+      name: 'Plus',
       price: billingCycle === 'annual' ? 8.80 : 11,
       desc: 'For growing teams',
       popular: true,
-      features: ['Everything in Free', 'Up to 6 staff', 'Unlimited appointments', 'Staff roster & schedule', 'Loyalty points (50 cards)', 'Reviews & Gallery'],
+      features: ['Everything in Starter', 'Up to 6 staff', 'Unlimited appointments', 'Staff roster & schedule', 'Loyalty points (50 cards)', 'Reviews & Gallery'],
     },
     {
       id: 'growth',
       name: 'Growth',
       price: billingCycle === 'annual' ? 23.20 : 29,
       desc: 'For established businesses',
-      features: ['Everything in Starter', 'Unlimited staff', 'Advanced reports', 'Unlimited loyalty system', 'Unlimited email automation', 'Priority marketplace ranking', 'Promotions & deals engine'],
+      features: ['Everything in Plus', 'Unlimited staff', 'Advanced reports', 'Unlimited loyalty system', 'Unlimited email automation', 'Priority marketplace ranking', 'Promotions & deals engine'],
     },
   ]
 
@@ -125,7 +125,7 @@ export default function PlanSettings() {
           </div>
           <p className="text-green-100 text-sm">
             You're on <strong className="text-white">{planInfo.trial_plan?.charAt(0).toUpperCase() + planInfo.trial_plan?.slice(1)}</strong> trial — <strong className="text-white">{trialDays} days</strong> remaining.
-            Auto-downgrades to {plan} when trial ends.
+            Auto-downgrades to {plan === 'free' ? 'Starter' : 'Plus'} when trial ends.
           </p>
         </div>
       )}
@@ -287,7 +287,7 @@ export default function PlanSettings() {
                       : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {p.price === 0 ? 'Downgrade to Free' : (p.id === 'starter' && effectivePlan === 'growth') ? 'Downgrade to Starter' : `Upgrade to ${p.name}`
+                  {effectivePlan === 'growth' ? `Downgrade to ${p.name}` : p.price === 0 ? 'Downgrade to Starter' : `Upgrade to ${p.name}`
                 </button>
               ) : null}
             </div>
