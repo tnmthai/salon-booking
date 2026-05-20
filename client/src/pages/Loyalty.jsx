@@ -11,6 +11,9 @@ export default function Loyalty() {
   const [searchQuery, setSearchQuery] = useState('')
   const [customerData, setCustomerData] = useState(null)
   const [searching, setSearching] = useState(false)
+  const [customers, setCustomers] = useState([])
+  const [loadingCustomers, setLoadingCustomers] = useState(true)
+  const [emailSending, setEmailSending] = useState({})
 
   useEffect(() => {
     api.me().then(data => {
@@ -19,6 +22,10 @@ export default function Loyalty() {
       }
     }).catch(console.error)
     api.getLoyaltyRewards().then(setRewards).catch(console.error)
+    api.getLoyaltyCustomers().then(data => {
+      setCustomers(data.customers || [])
+      setLoadingCustomers(false)
+    }).catch(() => setLoadingCustomers(false))
   }, [])
 
   const saveSettings = async () => {
@@ -74,6 +81,17 @@ export default function Loyalty() {
       setCustomerData(prev => ({ ...prev, customer: { ...prev.customer, loyalty_points: result.remaining_points } }))
       alert('✅ Reward redeemed!')
     } catch (err) { alert(err.message) }
+  }
+
+  const sendPointsEmail = async (customerId, customerName) => {
+    setEmailSending({ ...emailSending, [customerId]: true })
+    try {
+      await api.sendLoyaltyPointsEmail(customerId)
+      alert(`✅ Points email sent to ${customerName}!`)
+    } catch (err) {
+      alert('❌ ' + err.message)
+    }
+    setEmailSending({ ...emailSending, [customerId]: false })
   }
 
   return (
@@ -165,6 +183,58 @@ export default function Loyalty() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Customer Points List */}
+      <div className="bg-white rounded-xl shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">📊 Customer Points</h2>
+        {loadingCustomers ? (
+          <p className="text-gray-400 text-sm py-4 text-center">Loading customers...</p>
+        ) : customers.length === 0 ? (
+          <p className="text-gray-400 text-sm py-4 text-center">No customers with points yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left">
+                  <th className="pb-2 font-medium text-gray-500">Customer</th>
+                  <th className="pb-2 font-medium text-gray-500">Contact</th>
+                  <th className="pb-2 font-medium text-gray-500 text-right">Points</th>
+                  <th className="pb-2 font-medium text-gray-500 text-right">Visits</th>
+                  <th className="pb-2 font-medium text-gray-500 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map(c => (
+                  <tr key={c.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="py-3 font-medium">{c.name}</td>
+                    <td className="py-3 text-gray-500">
+                      {c.email && <div className="text-xs">{c.email}</div>}
+                      {c.phone && <div className="text-xs">{c.phone}</div>}
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className="bg-pink-100 text-pink-700 px-2 py-1 rounded-full text-xs font-semibold">{c.loyalty_points} pts</span>
+                    </td>
+                    <td className="py-3 text-right text-gray-500 text-xs">{c.total_visits || 0}</td>
+                    <td className="py-3 text-right">
+                      {c.email ? (
+                        <button
+                          onClick={() => sendPointsEmail(c.id, c.name)}
+                          disabled={emailSending[c.id]}
+                          className="text-xs bg-pink-50 text-pink-600 px-3 py-1.5 rounded-lg hover:bg-pink-100 font-medium disabled:opacity-50"
+                        >
+                          {emailSending[c.id] ? 'Sending...' : '📧 Email'}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-300">No email</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

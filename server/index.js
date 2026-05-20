@@ -535,6 +535,65 @@ app.delete('/api/loyalty/rewards/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// --- Loyalty: list all customers with points (owner) ---
+app.get('/api/loyalty/customers', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, name, phone, email, loyalty_points, total_visits, created_at
+       FROM customers WHERE salon_id = $1 AND (loyalty_points > 0 OR total_visits > 0)
+       ORDER BY loyalty_points DESC, total_visits DESC`,
+      [req.user.salon_id]
+    );
+    const salon = await pool.query('SELECT loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    res.json({ customers: rows, settings: salon.rows[0]?.loyalty_settings || {} });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- Loyalty: send points reminder email to customer ---
+app.post('/api/loyalty/send-points-email', authMiddleware, async (req, res) => {
+  try {
+    const { customer_id } = req.body;
+    if (!customer_id) return res.status(400).json({ error: 'customer_id required' });
+
+    const customer = await pool.query('SELECT * FROM customers WHERE id = $1 AND salon_id = $2', [customer_id, req.user.salon_id]);
+    if (!customer.rows.length) return res.status(404).json({ error: 'Customer not found' });
+    if (!customer.rows[0].email) return res.status(400).json({ error: 'Customer has no email' });
+
+    const salon = await pool.query('SELECT name, slug, loyalty_settings FROM salons WHERE id = $1', [req.user.salon_id]);
+    const salonData = salon.rows[0];
+    const settings = salonData.loyalty_settings || {};
+
+    const rewards = await pool.query(
+      'SELECT name, points_cost FROM loyalty_rewards WHERE salon_id = $1 AND active = true AND points_cost <= $2 ORDER BY points_cost',
+      [req.user.salon_id, customer.rows[0].loyalty_points]
+    );
+
+    const { sendEmail, loyaltyReminderEmail } = require('./utils/email');
+    const html = loyaltyReminderEmail({
+      customerName: customer.rows[0].name,
+      salonName: salonData.name,
+      totalPoints: customer.rows[0].loyalty_points,
+      totalVisits: customer.rows[0].total_visits,
+      stampGoal: settings.stamp_goal || 10,
+      stampReward: settings.stamp_reward || 'Free service',
+      availableRewards: rewards.rows,
+      bookingUrl: `https://www.timia.nz/${salonData.slug}/book`,
+    });
+
+    const result = await sendEmail(customer.rows[0].email, `Your loyalty points at ${salonData.name}`, html);
+    if (result && result.error) {
+      return res.status(500).json({ error: 'Failed to send email' });
+    }
+    res.json({ message: 'Email sent' });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- Loyalty points endpoint (auth) ---
 app.get('/api/loyalty/:identifier', authMiddleware, async (req, res) => {
   try {

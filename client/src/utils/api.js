@@ -148,6 +148,8 @@ export const api = {
   updateLoyaltyReward: (id, data) => request(`/loyalty/rewards/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteLoyaltyReward: (id) => request(`/loyalty/rewards/${id}`, { method: 'DELETE' }),
   redeemLoyaltyReward: (data) => request('/loyalty/redeem', { method: 'POST', body: JSON.stringify(data) }),
+  getLoyaltyCustomers: () => request('/loyalty/customers'),
+  sendLoyaltyPointsEmail: (customer_id) => request('/loyalty/send-points-email', { method: 'POST', body: JSON.stringify({ customer_id }) }),
 };
 
 export function setToken(token) {
