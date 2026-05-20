@@ -10,7 +10,6 @@ const values = [
 ]
 
 const stats = [
-  { number: '50+', label: 'Businesses' },
   { number: '5000+', label: 'Bookings processed' },
   { number: '99.9%', label: 'Uptime' },
   { number: '4.8★', label: 'Customer rating' },
