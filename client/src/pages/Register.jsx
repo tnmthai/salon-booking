@@ -53,6 +53,7 @@ export default function Register({ onLogin }) {
     
     setLoading(true)
     try {
+      const refCode = new URLSearchParams(window.location.search).get('ref') || ''
       const data = await api.register({
         ...form,
         salon_name: form.salon_name.trim(),
@@ -61,6 +62,7 @@ export default function Register({ onLogin }) {
         phone: form.phone?.trim() || '',
         address: form.address?.trim() || '',
         website: form.website?.trim() || '',
+        referral_code: refCode,
       })
       onLogin(data.token, data.salon, data.user)
       navigate('/admin')
