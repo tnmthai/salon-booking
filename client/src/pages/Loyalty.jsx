@@ -136,6 +136,39 @@ export default function Loyalty() {
         </button>
       </div>
 
+      {/* Email Template Editor */}
+      <div className="bg-white rounded-xl shadow p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">📧 Loyalty Email Message</h2>
+        <p className="text-sm text-gray-500 mb-3">Customize the message sent to customers when you email their points. Use placeholders below:</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {[`{customerName}`, `{salonName}`, `{totalPoints}`, `{totalVisits}`, `{stampGoal}`, `{stampReward}`, `{bookingUrl}`].map(p => (
+            <span key={p} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-mono cursor-pointer hover:bg-pink-50 hover:text-pink-600"
+              onClick={() => {
+                const current = settings.email_template || '';
+                if (!current.includes(p)) {
+                  setSettings({ ...settings, email_template: current + (current ? ' ' : '') + p });
+                }
+              }}
+              title="Click to insert">{p}</span>
+          ))}
+        </div>
+        <textarea
+          rows={4}
+          value={settings.email_template || ''}
+          onChange={e => setSettings({ ...settings, email_template: e.target.value })}
+          placeholder={`Hi {customerName}, here's your loyalty status at {salonName}! We'd love to see you again soon.`}
+          className="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-pink-200 focus:border-pink-400"
+        />
+        <div className="flex items-center justify-between mt-3">
+          <button onClick={saveSettings} disabled={saving}
+            className="bg-pink-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-pink-700 disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save Email Template'}
+          </button>
+          <button onClick={() => setSettings({ ...settings, email_template: '' })}
+            className="text-sm text-gray-400 hover:text-gray-600">Reset to default</button>
+        </div>
+      </div>
+
       {/* Rewards */}
       <div className="bg-white rounded-xl shadow p-6 mb-6">
         <div className="flex items-center justify-between mb-4">

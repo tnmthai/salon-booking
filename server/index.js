@@ -585,6 +585,7 @@ app.post('/api/loyalty/send-points-email', authMiddleware, async (req, res) => {
       stampReward: settings.stamp_reward || 'Free service',
       availableRewards: rewards.rows,
       bookingUrl: `https://www.timia.nz/${salonData.slug}/book`,
+      emailTemplate: settings.email_template || null,
     });
 
     const result = await sendEmail(customer.rows[0].email, `Your loyalty points at ${salonData.name}`, html);

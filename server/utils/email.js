@@ -338,8 +338,23 @@ function completionEmail({ customerName, salonName, serviceName, date, pointsEar
   `;
 }
 
-function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisits, stampGoal, stampReward, availableRewards, bookingUrl }) {
+function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisits, stampGoal, stampReward, availableRewards, bookingUrl, emailTemplate }) {
   customerName = escapeHtml(customerName); salonName = escapeHtml(salonName); stampReward = escapeHtml(stampReward);
+
+  const defaultMsg = `Hi {customerName}, here's your loyalty status at {salonName}! We'd love to see you again soon.`;
+  const template = emailTemplate || defaultMsg;
+  const customerNameRaw = customerName;
+  const salonNameRaw = salonName;
+  // Replace placeholders (use escaped values for HTML safety)
+  const customMsg = escapeHtml(template)
+    .replace(/\{customerName\}/g, customerName)
+    .replace(/\{salonName\}/g, salonName)
+    .replace(/\{totalPoints\}/g, String(totalPoints))
+    .replace(/\{totalVisits\}/g, String(totalVisits || 0))
+    .replace(/\{stampGoal\}/g, String(stampGoal))
+    .replace(/\{stampReward\}/g, stampReward)
+    .replace(/\{bookingUrl\}/g, escapeHtml(bookingUrl || 'https://www.timia.nz'));
+
   const stamps = Math.min(totalVisits || 0, stampGoal);
   const stampsHtml = Array.from({ length: stampGoal }, (_, i) =>
     `<div style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin:2px;font-size:16px;${i < stamps ? 'background:#ec4899;color:white;' : 'background:#f3f4f6;color:#d1d5db;'}">${i < stamps ? '⭐' : '○'}</div>`
@@ -359,8 +374,7 @@ function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisit
           <div style="font-size:40px;margin-bottom:8px;">⭐</div>
           <h1 style="color:#111;font-size:24px;margin:0;">Your Loyalty Points</h1>
         </div>
-        <p style="color:#555;font-size:16px;">Hi ${customerName},</p>
-        <p style="color:#555;">Here's your loyalty status at <strong>${salonName}</strong>! We'd love to see you again soon.</p>
+        <p style="color:#555;font-size:16px;white-space:pre-line;">${customMsg}</p>
         <div style="background:#fdf2f8;border:2px solid #f9a8d4;border-radius:12px;padding:20px;margin:24px 0;text-align:center;">
           <div style="font-size:14px;color:#888;margin-bottom:4px;">Your Points Balance</div>
           <div style="font-size:42px;font-weight:700;color:#ec4899;">${totalPoints}</div>
