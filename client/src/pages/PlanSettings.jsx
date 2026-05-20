@@ -287,7 +287,7 @@ export default function PlanSettings() {
                       : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {effectivePlan === 'growth' ? `Downgrade to ${p.name}` : p.price === 0 ? 'Downgrade to Starter' : `Upgrade to ${p.name}`
+                  {effectivePlan === 'growth' ? `Downgrade to ${p.name}` : p.price === 0 ? 'Downgrade to Starter' : `Upgrade to ${p.name}`}
                 </button>
               ) : null}
             </div>
