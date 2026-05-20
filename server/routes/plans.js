@@ -177,9 +177,9 @@ router.post('/trial/start', async (req, res) => {
     const salonId = decoded.salon_id;
     if (!salonId) return res.status(403).json({ error: 'No salon' });
 
-    const { targetPlan } = req.body; // 'starter' or 'growth'
+    const { targetPlan } = req.body;
 
-    if (!['starter', 'growth'].includes(targetPlan)) {
+    if (!targetPlan || !['starter', 'growth'].includes(targetPlan)) {
       return res.status(400).json({ error: 'Invalid trial plan. Must be starter or growth.' });
     }
 
@@ -382,7 +382,9 @@ router.post('/referral/apply', async (req, res) => {
     if (!salonId) return res.status(403).json({ error: 'No salon' });
 
     const { code } = req.body;
-    if (!code) return res.status(400).json({ error: 'Referral code required' });
+    if (!code || typeof code !== 'string' || !/^[A-F0-9]{8}$/.test(code)) {
+      return res.status(400).json({ error: 'Invalid referral code format' });
+    }
 
     // Find the referral
     const referral = await db.query(

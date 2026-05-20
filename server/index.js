@@ -25,7 +25,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms", "https://scripts.clarity.ms"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics"],
       fontSrc: ["'self'", "https:", "data:"],
       connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms"],
       frameSrc: ["'none'"],
@@ -107,7 +107,7 @@ app.get('/api/health', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected', version: 'mt-v5' });
   } catch (err) {
-    res.json({ status: 'error', db: err.message });
+    res.json({ status: 'error', db: 'disconnected' });
   }
 });
 
