@@ -417,34 +417,58 @@ export default function Calendar() {
 
   return (
     <div className="w-full px-2 pt-2 pb-6">
-      <div className="flex items-center gap-2 md:gap-4 mb-4 flex-wrap">
-        <h1 className="text-xl md:text-2xl font-bold">📅 {t('calendar')}</h1>
-        <div className="h-6 w-px bg-gray-300 hidden md:block" />
-        <label className="flex items-center gap-1.5 text-sm md:text-base cursor-pointer select-none">
-          <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300 w-4 h-4" />
-          All dates
-        </label>
-        {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-2 md:px-3 py-1.5 text-sm md:text-base" />}
-        {!isMobile && (
-          <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base">
-            <option value="">{t('allStaff')}</option>
-            {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        )}
-        {!showAllDates && (
-          <div className="flex gap-1 ml-auto">
-            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">←</button>
-            <button onClick={() => setDate(todayNZ())} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50 font-medium">{t('today')}</button>
-            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">→</button>
+      {/* Mobile: compact date controls */}
+      {isMobile && !showAllDates && (
+        <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => setShowAllDates(true)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 text-xs" title="All dates">📅</button>
+          <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-sm border px-3 py-2">
+            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">←</button>
+            <button onClick={() => setDate(todayNZ())} className="text-center">
+              <div className="font-bold text-sm text-gray-800">{fmtDateLabel(d)}</div>
+              <div className="text-[10px] text-pink-500 font-medium">Today</div>
+            </button>
+            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">→</button>
           </div>
-        )}
-        {loading && <span className="text-sm text-gray-400">Loading...</span>}
-      </div>
-
-      {staff.length > 1 && !isMobile && (
-        <div className="flex gap-5 mb-3 flex-wrap">
-          {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-2 text-sm text-gray-600"><span className={`w-3 h-3 rounded-full ${c.dot}`} />{s.name}</div> })}
         </div>
+      )}
+      {isMobile && showAllDates && (
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => setShowAllDates(false)} className="text-xs text-pink-600 bg-pink-50 px-3 py-1.5 rounded-full">📅 Single Day</button>
+          <span className="text-xs text-gray-400">All dates</span>
+        </div>
+      )}
+
+      {/* Desktop: full controls */}
+      {!isMobile && (
+        <>
+          <div className="flex items-center gap-2 md:gap-4 mb-4 flex-wrap">
+            <h1 className="text-xl md:text-2xl font-bold">📅 {t('calendar')}</h1>
+            <div className="h-6 w-px bg-gray-300 hidden md:block" />
+            <label className="flex items-center gap-1.5 text-sm md:text-base cursor-pointer select-none">
+              <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)} className="rounded border-gray-300 w-4 h-4" />
+              All dates
+            </label>
+            {!showAllDates && <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border rounded-lg px-2 md:px-3 py-1.5 text-sm md:text-base" />}
+            <select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)} className="border rounded-lg px-3 py-1.5 text-base">
+              <option value="">{t('allStaff')}</option>
+              {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            {!showAllDates && (
+              <div className="flex gap-1 ml-auto">
+                <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">←</button>
+                <button onClick={() => setDate(todayNZ())} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50 font-medium">{t('today')}</button>
+                <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-3 py-1.5 rounded-lg text-base hover:bg-gray-50">→</button>
+              </div>
+            )}
+            {loading && <span className="text-sm text-gray-400">Loading...</span>}
+          </div>
+
+          {staff.length > 1 && (
+            <div className="flex gap-5 mb-3 flex-wrap">
+              {staff.map(s => { const c = colorMap[s.id]; return <div key={s.id} className="flex items-center gap-2 text-sm text-gray-600"><span className={`w-3 h-3 rounded-full ${c.dot}`} />{s.name}</div> })}
+            </div>
+          )}
+        </>
       )}
 
       {/* Mobile swipeable card indicator */}
@@ -473,7 +497,7 @@ export default function Calendar() {
 
       {dates.map(d => (
         <div key={d} className="mb-4">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
+          <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide hidden md:block">{fmtDateLabel(d)}</h2>
 
           {/* Mobile: swipeable full-screen cards */}
           {isMobile && (
