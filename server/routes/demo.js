@@ -152,12 +152,37 @@ function generateCode() {
 
 const EXTRA_NAMES = ['Sophie W.', 'Grace L.', 'Olivia M.', 'Ruby T.', 'Emma S.', 'Lily H.', 'Chloe D.', 'Zoe R.', 'Mia K.', 'Ava N.', 'Isla B.', 'Harper F.'];
 
+function nzNow() {
+  // Get current date/time in NZ timezone
+  const nz = new Date(new Date().toLocaleString('en-US', { timeZone: 'Pacific/Auckland' }));
+  return nz;
+}
+
+function makeNZDate(year, month, day, hour, minute) {
+  // Create a Date in NZ local time, convert to UTC for storage
+  // NZ is UTC+12 (or +13 during DST)
+  const d = new Date(year, month, day, hour, minute, 0);
+  // Offset by NZ timezone: use Intl to get the offset
+  const utcStr = d.toLocaleString('en-US', { timeZone: 'UTC' });
+  const nzStr = d.toLocaleString('en-US', { timeZone: 'Pacific/Auckland' });
+  const utcDate = new Date(utcStr);
+  const nzDate = new Date(nzStr);
+  const offset = utcDate - nzDate; // difference in ms
+  return new Date(d.getTime() + offset);
+}
+
 async function generateAppointments(salonId, svc, stf, cst) {
-  const now = new Date();
+  const nowNZ = nzNow();
+  const today = new Date(nowNZ.getFullYear(), nowNZ.getMonth(), nowNZ.getDate());
+
   for (let dayOffset = -3; dayOffset <= 7; dayOffset++) {
-    const date = new Date(now);
+    const date = new Date(today);
     date.setDate(date.getDate() + dayOffset);
     if (date.getDay() === 0) continue;
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
 
     for (const staff of stf) {
       const staffSvcs = await db.query(
@@ -174,8 +199,7 @@ async function generateAppointments(salonId, svc, stf, cst) {
         const duration = svcItem.duration_min || 30;
         if (currentHour + duration / 60 > 18) break;
 
-        const startTime = new Date(date);
-        startTime.setHours(currentHour, 0, 0, 0);
+        const startTime = makeNZDate(year, month, day, currentHour, 0);
         const endTime = new Date(startTime.getTime() + duration * 60000);
 
         const randomCust = cst[Math.floor(Math.random() * cst.length)];
