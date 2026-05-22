@@ -14,6 +14,27 @@ router.post('/start', async (req, res) => {
     let salon = await db.query('SELECT * FROM salons WHERE slug = $1', [DEMO_SLUG]);
     let user = await db.query('SELECT * FROM users WHERE email = $1', [DEMO_EMAIL]);
 
+    if (salon.rows.length > 0) {
+      // Reset demo data — delete old appointments, keep salon + staff + services
+      const salonId = salon.rows[0].id;
+      await db.query('DELETE FROM appointments WHERE salon_id = $1', [salonId]);
+      await db.query('DELETE FROM reviews WHERE salon_id = $1', [salonId]);
+
+      // Re-fetch services, staff, customers
+      const freshSvc = await db.query('SELECT id, name, duration_min, price FROM services WHERE salon_id = $1 AND active = true', [salonId]);
+      const freshStf = await db.query('SELECT id, name FROM staff WHERE salon_id = $1 AND is_active = true', [salonId]);
+      const freshCst = await db.query('SELECT id, name FROM customers WHERE salon_id = $1', [salonId]);
+
+      if (freshSvc.rows.length > 0 && freshStf.rows.length > 0 && freshCst.rows.length > 0) {
+        await generateAppointments(salonId, freshSvc.rows, freshStf.rows, freshCst.rows);
+        await generateReviews(salonId);
+      }
+
+      // Update trial
+      await db.query('UPDATE salons SET trial_plan = $1, trial_ends_at = $2 WHERE id = $3',
+        ['growth', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), salonId]);
+    }
+
     if (salon.rows.length === 0) {
       // Create demo salon
       const newSalon = await db.query(
@@ -93,43 +114,9 @@ router.post('/start', async (req, res) => {
         RETURNING id, name
       `, [salon.rows[0].id]);
 
-      // Add some demo appointments (today + next few days)
-      const now = new Date();
-      const cst = customers.rows;
-      for (let dayOffset = -2; dayOffset <= 5; dayOffset++) {
-        const date = new Date(now);
-        date.setDate(date.getDate() + dayOffset);
-        if (date.getDay() === 0) continue; // Skip Sunday
-
-        const numAppts = dayOffset < 0 ? 3 : Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < numAppts; i++) {
-          const hour = 9 + Math.floor(Math.random() * 8);
-          const min = Math.random() > 0.5 ? 0 : 30;
-          const startTime = new Date(date);
-          startTime.setHours(hour, min, 0, 0);
-          const dur = 30 + Math.floor(Math.random() * 4) * 15;
-          const endTime = new Date(startTime.getTime() + dur * 60000);
-
-          const randomSvc = svc[Math.floor(Math.random() * svc.length)];
-          const randomStaff = stf[Math.floor(Math.random() * stf.length)];
-          const randomCust = cst[Math.floor(Math.random() * cst.length)];
-          const status = dayOffset < 0 ? 'completed' : 'confirmed';
-
-          await db.query(
-            `INSERT INTO appointments (salon_id, customer_id, staff_id, service_id, service_name, start_time, end_time, price, status, booking_code)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            [salon.rows[0].id, randomCust.id, randomStaff.id, randomSvc.id, randomSvc.name, startTime.toISOString(), endTime.toISOString(), randomSvc.price, status, generateCode()]
-          );
-        }
-      }
-
-      // Add demo reviews
-      await db.query(`
-        INSERT INTO reviews (salon_id, customer_name, rating, comment, created_at) VALUES
-          ($1, 'Sarah K.', 5, 'Absolutely love this salon! Mai did an amazing job on my hair. Will definitely be back.', NOW() - INTERVAL '5 days'),
-          ($1, 'Emily C.', 5, 'Best nail salon in Auckland. The gel nails lasted 3 weeks!', NOW() - INTERVAL '3 days'),
-          ($1, 'Jessica P.', 4, 'Great service and very friendly staff. The facial was so relaxing.', NOW() - INTERVAL '1 day')
-      `, [salon.rows[0].id]);
+      // Generate full schedule
+      await generateAppointments(salon.rows[0].id, svc, stf, cst);
+      await generateReviews(salon.rows[0].id);
 
       console.log('[DEMO] Demo salon created with sample data');
     }
@@ -161,6 +148,60 @@ function generateCode() {
   let code = '';
   for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
+}
+
+const EXTRA_NAMES = ['Sophie W.', 'Grace L.', 'Olivia M.', 'Ruby T.', 'Emma S.', 'Lily H.', 'Chloe D.', 'Zoe R.', 'Mia K.', 'Ava N.', 'Isla B.', 'Harper F.'];
+
+async function generateAppointments(salonId, svc, stf, cst) {
+  const now = new Date();
+  for (let dayOffset = -3; dayOffset <= 7; dayOffset++) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + dayOffset);
+    if (date.getDay() === 0) continue;
+
+    for (const staff of stf) {
+      const staffSvcs = await db.query(
+        'SELECT s.id, s.name, s.duration_min, s.price FROM services s JOIN staff_services ss ON s.id = ss.service_id WHERE ss.staff_id = $1 AND s.active = true ORDER BY RANDOM()',
+        [staff.id]
+      );
+      if (staffSvcs.rows.length === 0) continue;
+
+      let currentHour = 9;
+      let svcIdx = 0;
+
+      while (currentHour < 18) {
+        const svcItem = staffSvcs.rows[svcIdx % staffSvcs.rows.length];
+        const duration = svcItem.duration_min || 30;
+        if (currentHour + duration / 60 > 18) break;
+
+        const startTime = new Date(date);
+        startTime.setHours(currentHour, 0, 0, 0);
+        const endTime = new Date(startTime.getTime() + duration * 60000);
+
+        const randomCust = cst[Math.floor(Math.random() * cst.length)];
+        const status = dayOffset < 0 ? 'completed' : 'confirmed';
+
+        await db.query(
+          `INSERT INTO appointments (salon_id, customer_id, staff_id, service_id, service_name, start_time, end_time, price, status, booking_code)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [salonId, randomCust.id, staff.id, svcItem.id, svcItem.name, startTime.toISOString(), endTime.toISOString(), svcItem.price, status, generateCode()]
+        );
+
+        currentHour += duration / 60;
+        if (Math.random() > 0.6) currentHour += 0.25;
+        svcIdx++;
+      }
+    }
+  }
+}
+
+async function generateReviews(salonId) {
+  await db.query(`
+    INSERT INTO reviews (salon_id, customer_name, rating, comment, created_at) VALUES
+      ($1, 'Sarah K.', 5, 'Absolutely love this salon! Mai did an amazing job on my hair. Will definitely be back.', NOW() - INTERVAL '5 days'),
+      ($1, 'Emily C.', 5, 'Best nail salon in Auckland. The gel nails lasted 3 weeks!', NOW() - INTERVAL '3 days'),
+      ($1, 'Jessica P.', 4, 'Great service and very friendly staff. The facial was so relaxing.', NOW() - INTERVAL '1 day')
+  `, [salonId]);
 }
 
 module.exports = router;
