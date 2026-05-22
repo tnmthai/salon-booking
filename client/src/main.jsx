@@ -92,12 +92,6 @@ function AdminLayout({ salon, user, onLogout }) {
                   📅 Calendar
                 </Link>
               )}
-              {salon?.slug && !isSuperAdmin && isOwner && (
-                <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
-                  className="bg-pink-600 text-white px-3 py-1.5 rounded-full hover:bg-pink-700 text-xs">
-                  Booking ↗
-                </a>
-              )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 text-gray-600 hover:text-gray-900"
@@ -130,6 +124,7 @@ function AdminLayout({ salon, user, onLogout }) {
                   <NavDropdownItem to="/admin/overrides">🗓 Days Off</NavDropdownItem>
                 </NavDropdown>
                 <NavDropdown label="More">
+                  {salon?.slug && <NavDropdownItem to={`/${salon.slug}/book`}>🔗 Booking Page</NavDropdownItem>}
                   <NavDropdownItem to="/admin/services">💅 Services</NavDropdownItem>
                   <NavDropdownItem to="/admin/gallery">🖼 Gallery</NavDropdownItem>
                   <NavDropdownItem to="/admin/reviews">⭐ Reviews</NavDropdownItem>
@@ -168,6 +163,9 @@ function AdminLayout({ salon, user, onLogout }) {
               {!isSuperAdmin && isOwner && (
                 <>
                   <Link to="/admin/calendar" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 Calendar</Link>
+                  {salon?.slug && (
+                    <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-pink-600 hover:bg-pink-50 rounded-lg font-medium">🔗 Booking Page ↗</a>
+                  )}
                   <Link to="/admin/staff" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 Staff</Link>
                   <Link to="/admin/schedule" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 Schedule</Link>
                   <Link to="/admin/services" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">💅 Services</Link>

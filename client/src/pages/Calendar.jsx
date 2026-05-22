@@ -433,9 +433,9 @@ export default function Calendar() {
         )}
         {!showAllDates && (
           <div className="flex gap-1 ml-auto">
-            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">← {t('prev')}</button>
+            <button onClick={() => setDate(shiftDateNZ(date, -1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">←</button>
             <button onClick={() => setDate(todayNZ())} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50 font-medium">{t('today')}</button>
-            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">{t('next')} →</button>
+            <button onClick={() => setDate(shiftDateNZ(date, 1))} className="border px-2.5 md:px-3 py-1.5 rounded-lg text-sm md:text-base hover:bg-gray-50">→</button>
           </div>
         )}
         {loading && <span className="text-sm text-gray-400">Loading...</span>}
