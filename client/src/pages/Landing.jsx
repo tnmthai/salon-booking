@@ -97,8 +97,8 @@ export default function Landing() {
             <p className="text-base md:text-lg text-gray-500 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
               Switch from Timely or Fresha in one day. Accept bookings 24/7, reduce no-shows, and save 5+ hours a week — all from an easy-to-use dashboard.
             </p>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base w-full sm:w-auto text-center">
                 Start for free →
               </Link>
               <button
@@ -109,11 +109,11 @@ export default function Landing() {
                     window.location.href = '/admin'
                   } catch (e) { alert('Failed to start demo: ' + e.message) }
                 }}
-                className="border-2 border-pink-200 text-pink-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-pink-50 font-medium transition text-sm md:text-base"
+                className="border-2 border-pink-200 text-pink-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-pink-50 font-medium transition text-sm md:text-base w-full sm:w-auto text-center"
               >
                 🎮 Try Demo
               </button>
-              <Link to="/login" className="border border-gray-200 text-gray-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base">
+              <Link to="/login" className="border border-gray-200 text-gray-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base w-full sm:w-auto text-center">
                 Sign in
               </Link>
             </div>
