@@ -87,6 +87,11 @@ function AdminLayout({ salon, user, onLogout }) {
               {isSuperAdmin && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full hidden sm:inline">Super Admin</span>}
             </Link>
             <div className="flex items-center gap-2">
+              {!isSuperAdmin && isOwner && (
+                <Link to="/admin/calendar" className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full hover:bg-gray-200 text-xs">
+                  📅 Calendar
+                </Link>
+              )}
               {salon?.slug && !isSuperAdmin && isOwner && (
                 <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
                   className="bg-pink-600 text-white px-3 py-1.5 rounded-full hover:bg-pink-700 text-xs">
