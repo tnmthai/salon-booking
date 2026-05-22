@@ -74,16 +74,41 @@ function AdminLayout({ salon, user, onLogout }) {
   const isOwner = user?.role === 'owner' || isSuperAdmin;
   const isStaff = user?.role === 'staff';
   const { t, lang, switchLang } = useI18n();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/admin" className="text-xl font-bold text-pink-600 flex items-center gap-2">
-            <img src="/logo.png" alt="Timia" className="w-8 h-8 rounded-full" /> {isSuperAdmin ? 'Timia' : (salon?.name || 'Timia')}
-            {isSuperAdmin && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Super Admin</span>}
-          </Link>
-          <div className="flex gap-3 text-sm items-center flex-wrap">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          {/* Top bar */}
+          <div className="flex items-center justify-between">
+            <Link to="/admin" className="text-lg md:text-xl font-bold text-pink-600 flex items-center gap-2">
+              <img src="/logo.png" alt="Timia" className="w-7 h-7 md:w-8 md:h-8 rounded-full" /> {isSuperAdmin ? 'Timia' : (salon?.name || 'Timia')}
+              {isSuperAdmin && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full hidden sm:inline">Super Admin</span>}
+            </Link>
+            <div className="flex items-center gap-2">
+              {salon?.slug && !isSuperAdmin && isOwner && (
+                <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
+                  className="bg-pink-600 text-white px-3 py-1.5 rounded-full hover:bg-pink-700 text-xs">
+                  Booking ↗
+                </a>
+              )}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+                aria-label="Menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen
+                    ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex gap-3 text-sm items-center mt-2 flex-wrap">
             <Link to="/admin" className="text-gray-600 hover:text-pink-600">Dashboard</Link>
             {isSuperAdmin && (
               <>
@@ -119,13 +144,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <Link to="/admin/schedule" className="text-gray-600 hover:text-pink-600">📅 My Schedule</Link>
               </>
             )}
-            {salon?.slug && !isSuperAdmin && isOwner && (
-              <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer"
-                className="bg-pink-600 text-white px-3 py-1 rounded-full hover:bg-pink-700">
-                Booking Page ↗
-              </a>
-            )}
-            <div className="flex items-center gap-2 ml-2 border-l pl-2">
+            <div className="flex items-center gap-2 ml-auto border-l pl-3">
               <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs border rounded px-1 py-0.5">
                 <option value="en">EN</option>
                 <option value="vi">VI</option>
@@ -135,6 +154,53 @@ function AdminLayout({ salon, user, onLogout }) {
             </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+            <div className="px-4 py-3 space-y-1">
+              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📊 Dashboard</Link>
+              {!isSuperAdmin && isOwner && (
+                <>
+                  <Link to="/admin/calendar" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 Calendar</Link>
+                  <Link to="/admin/staff" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 Staff</Link>
+                  <Link to="/admin/schedule" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 Schedule</Link>
+                  <Link to="/admin/services" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">💅 Services</Link>
+                  <Link to="/admin/gallery" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">🖼 Gallery</Link>
+                  <Link to="/admin/reviews" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">⭐ Reviews</Link>
+                  <Link to="/admin/reports" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📊 Reports</Link>
+                  <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 Customers</Link>
+                  <Link to="/admin/overrides" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">🗓 Days Off</Link>
+                  <Link to="/admin/loyalty" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">⭐ Loyalty</Link>
+                  <Link to="/admin/plan" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📦 Plan</Link>
+                  <Link to="/admin/settings" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">⚙️ Settings</Link>
+                </>
+              )}
+              {isSuperAdmin && (
+                <>
+                  <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-orange-600 hover:bg-orange-50 rounded-lg font-medium">👥 Users</Link>
+                  <Link to="/admin/shops" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-orange-600 hover:bg-orange-50 rounded-lg font-medium">🏪 All Shops</Link>
+                </>
+              )}
+              {isStaff && (
+                <>
+                  <Link to="/admin/staff-dashboard" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">🏠 My Dashboard</Link>
+                  <Link to="/admin/schedule" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 My Schedule</Link>
+                </>
+              )}
+              <div className="border-t border-gray-100 mt-2 pt-2 flex items-center justify-between px-3">
+                <div className="flex items-center gap-2">
+                  <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs border rounded px-1 py-0.5">
+                    <option value="en">EN</option>
+                    <option value="vi">VI</option>
+                  </select>
+                  <span className="text-gray-500 text-xs">{user?.name}</span>
+                </div>
+                <button onClick={() => { onLogout(); setMobileMenuOpen(false); }} className="text-red-500 text-sm">Logout</button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
       <Routes>
         <Route path="/" element={<Dashboard />} />
