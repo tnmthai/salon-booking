@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-export default function Footer({ totalVisits }) {
+export default function Footer() {
   return (
     <footer className="border-t border-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -11,11 +11,7 @@ export default function Footer({ totalVisits }) {
               <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
               <span className="text-sm text-gray-400">© 2026 Timia</span>
             </div>
-            {totalVisits !== null && (
-              <span className="text-xs bg-gray-50 text-gray-400 px-3 py-1 rounded-full">
-                👁 {Number(totalVisits || 0).toLocaleString()} visits
-              </span>
-            )}
+
           </div>
         </div>
 
