@@ -18,7 +18,7 @@ router.post('/start', async (req, res) => {
       // Create demo salon
       const newSalon = await db.query(
         `INSERT INTO salons (name, slug, phone, email, address, timezone, plan, trial_plan, trial_ends_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
         ['Timia Demo Salon', DEMO_SLUG, '021-000-0000', DEMO_EMAIL, '123 Queen Street, Auckland', 'Pacific/Auckland', 'free', 'growth', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()]
       );
       salon = newSalon;
