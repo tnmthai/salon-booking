@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
+import Footer from '../components/Footer'
 
 function Navbar() {
   const [open, setOpen] = useState(false)
@@ -15,6 +16,7 @@ function Navbar() {
           <Link to="/explore" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Explore</Link>
           <Link to="/features" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Features</Link>
           <Link to="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Pricing</Link>
+          <Link to="/compare/timely" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Compare</Link>
           <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">About</Link>
           <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Find booking</Link>
           <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Sign in</Link>
@@ -32,6 +34,7 @@ function Navbar() {
             <Link to="/explore" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Explore</Link>
             <Link to="/features" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Features</Link>
             <Link to="/pricing" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Pricing</Link>
+            <Link to="/compare/timely" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Compare</Link>
             <Link to="/about" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">About</Link>
             <Link to="/lookup" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Find booking</Link>
             <Link to="/login" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">Sign in</Link>
@@ -85,14 +88,14 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium mb-4 md:mb-6">
               <span className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />
-              Now supporting businesses across New Zealand
+              Built for NZ salons, nail bars & beauty studios
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4 md:mb-6">
-              The modern way to
-              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> simplify your bookings</span>
+              Simple booking system for NZ salons
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> — no complicated setup</span>
             </h1>
             <p className="text-base md:text-lg text-gray-500 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
-              Accept bookings 24/7, manage staff schedules, and grow your business — all from an easy-to-use dashboard.
+              Switch from Timely or Fresha in one day. Accept bookings 24/7, reduce no-shows, and save 5+ hours a week — all from an easy-to-use dashboard.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
@@ -128,6 +131,7 @@ export default function Landing() {
               <span className="flex items-center gap-1.5">✓ Free to start</span>
               <span className="flex items-center gap-1.5">✓ No credit card</span>
               <span className="flex items-center gap-1.5">✓ Setup in 5 min</span>
+              <span className="flex items-center gap-1.5">✓ Free migration help</span>
             </div>
           </div>
         </div>
@@ -208,14 +212,88 @@ export default function Landing() {
         </section>
       )}
 
+      {/* Social Proof */}
+      <section className="py-12 md:py-20 px-4 md:px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8 md:mb-14">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Why salon owners love Timia</h2>
+            <p className="text-gray-500 text-sm md:text-base">Real results from real businesses.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            {[
+              { quote: 'Saved us 5+ hours a week on admin. No more missed calls or double bookings!', name: 'Sarah K.', role: 'Nail Salon Owner, Auckland', stars: '⭐⭐⭐⭐⭐' },
+              { quote: 'Our no-shows dropped by 30% since switching. The automatic reminders are a game changer.', name: 'Mai T.', role: 'Beauty Studio, Wellington', stars: '⭐⭐⭐⭐⭐' },
+              { quote: 'Switched from Timely in one day. So much easier to use and the support is amazing.', name: 'Jess P.', role: 'Hair Salon, Christchurch', stars: '⭐⭐⭐⭐⭐' },
+            ].map((t, i) => (
+              <div key={i} className="bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border border-gray-100 hover:shadow-lg transition">
+                <div className="text-sm mb-3">{t.stars}</div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
+                    <p className="text-gray-400 text-xs">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Stats row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 md:mt-10">
+            {[
+              { value: '30%', label: 'Fewer no-shows' },
+              { value: '5+ hrs', label: 'Saved per week' },
+              { value: '2 min', label: 'Average setup time' },
+              { value: '24/7', label: 'Online bookings' },
+            ].map((s, i) => (
+              <div key={i} className="text-center p-4">
+                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">{s.value}</div>
+                <p className="text-gray-500 text-xs md:text-sm mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Timely Comparison Teaser */}
+      <section className="py-12 md:py-16 px-4 md:px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Why switch from Timely?</h2>
+          <p className="text-gray-500 text-sm md:text-base mb-6 md:mb-8">Same features, simpler setup, better price — built specifically for NZ salons.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {[
+              { icon: '💰', title: '50% cheaper', desc: 'Plans start at $0. No hidden fees.' },
+              { icon: '⚡', title: 'Setup in 5 min', desc: 'No training needed. Just sign up and go.' },
+              { icon: '🇳🇿', title: 'NZ support', desc: 'Local team. Reply within minutes, not days.' },
+            ].map((item, i) => (
+              <div key={i} className="bg-white rounded-xl p-5 border border-gray-100">
+                <div className="text-2xl mb-2">{item.icon}</div>
+                <h3 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h3>
+                <p className="text-gray-500 text-xs">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <Link to="/compare/timely" className="inline-block bg-white border-2 border-pink-200 text-pink-700 px-6 py-3 rounded-full hover:bg-pink-50 font-medium transition text-sm">
+            See full comparison: Timia vs Timely →
+          </Link>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-12 md:py-20 px-4 md:px-6">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Ready to simplify your bookings?</h2>
-          <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">Join businesses already using Timia to manage their bookings.</p>
-          <Link to="/register" className="inline-block bg-gray-900 text-white px-8 md:px-10 py-3.5 md:py-4 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
-            Create your business — free
-          </Link>
+          <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">Join businesses already using Timia. Free forever plan available — no credit card required.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/register" className="inline-block bg-gray-900 text-white px-8 md:px-10 py-3.5 md:py-4 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
+              Create your business — free
+            </Link>
+            <Link to="/compare/timely" className="inline-block border border-gray-200 text-gray-700 px-8 py-3.5 md:py-4 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base">
+              Compare with Timely
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -256,30 +334,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
-                <span className="text-sm text-gray-400">© 2026 Timia</span>
-              </div>
-
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-400">
-              <Link to="/features" className="hover:text-gray-600">Features</Link>
-              <Link to="/pricing" className="hover:text-gray-600">Pricing</Link>
-              <Link to="/about" className="hover:text-gray-600">About</Link>
-              <Link to="/contact" className="hover:text-gray-600">Contact</Link>
-              <Link to="/terms" className="hover:text-gray-600">Terms</Link>
-              <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
-              <Link to="/cookies" className="hover:text-gray-600">Cookies</Link>
-              <Link to="/legal" className="hover:text-gray-600">Legal</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

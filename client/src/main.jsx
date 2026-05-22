@@ -36,6 +36,7 @@ import Pricing from './pages/Pricing'
 import About from './pages/About'
 import ContactPage from './pages/ContactPage'
 import Explore from './pages/Explore'
+import CompareTimely from './pages/CompareTimely'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
@@ -206,6 +207,7 @@ function AppInner() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/compare/timely" element={<CompareTimely />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/cookies" element={<Cookies />} />
