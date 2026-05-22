@@ -424,7 +424,7 @@ export default function Calendar() {
           <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-sm border px-3 py-2">
             <button onClick={() => setDate(shiftDateNZ(date, -1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">←</button>
             <button onClick={() => setDate(todayNZ())} className="text-center">
-              <div className="font-bold text-sm text-gray-800">{fmtDateLabel(d)}</div>
+              <div className="font-bold text-sm text-gray-800">{fmtDateLabel(date)}</div>
               <div className="text-[10px] text-pink-500 font-medium">Today</div>
             </button>
             <button onClick={() => setDate(shiftDateNZ(date, 1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">→</button>
