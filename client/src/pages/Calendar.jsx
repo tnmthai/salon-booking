@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { api, getSalonTimezone } from '../utils/api'
 import { translations } from '../utils/translations'
 
@@ -230,6 +230,8 @@ export default function Calendar() {
   const calendarRef = useRef(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [mobileStaffIdx, setMobileStaffIdx] = useState(0)
+  const mobileScrollRef = useRef(null)
+  const isScrollingRef = useRef(false)
 
   // Track screen size
   useEffect(() => {
@@ -282,12 +284,34 @@ export default function Calendar() {
     return m % 60 === 0 ? `${h}:00` : ''
   })
 
-  // Mobile: show one staff at a time (swipe); Desktop: show all or filtered
+  // Mobile: show all staff as swipeable cards; Desktop: show all or filtered
   const staff = isMobile
-    ? (staffList.length > 0 ? [staffList[mobileStaffIdx % staffList.length]] : [])
+    ? staffList
     : (selectedStaff ? staffList.filter(s => s.id == selectedStaff) : staffList)
   const colorMap = {}
-  staff.forEach((s, i) => { colorMap[s.id] = STAFF_COLORS[i % STAFF_COLORS.length] })
+  staffList.forEach((s, i) => { colorMap[s.id] = STAFF_COLORS[i % STAFF_COLORS.length] })
+
+  // Sync mobile scroll to mobileStaffIdx
+  const scrollToStaffIdx = useCallback((idx) => {
+    if (!mobileScrollRef.current) return
+    const container = mobileScrollRef.current
+    const cardWidth = container.clientWidth
+    isScrollingRef.current = true
+    container.scrollTo({ left: cardWidth * idx, behavior: 'smooth' })
+    setMobileStaffIdx(idx)
+    setTimeout(() => { isScrollingRef.current = false }, 400)
+  }, [])
+
+  // Handle scroll end to update index
+  const handleMobileScroll = useCallback(() => {
+    if (isScrollingRef.current || !mobileScrollRef.current) return
+    const container = mobileScrollRef.current
+    const cardWidth = container.clientWidth
+    const newIdx = Math.round(container.scrollLeft / cardWidth)
+    if (newIdx !== mobileStaffIdx && newIdx >= 0 && newIdx < staffList.length) {
+      setMobileStaffIdx(newIdx)
+    }
+  }, [mobileStaffIdx, staffList.length])
 
   const dates = showAllDates ? [...new Set(appointments.map(a => nzDateStr(a.start_time)))].sort() : [date]
   const getAppts = (sid, d) => appointments.filter(a => a.staff_id == sid && nzDateStr(a.start_time) === d)
@@ -423,146 +447,270 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* Mobile staff switcher */}
+      {/* Mobile swipeable card indicator */}
       {isMobile && staffList.length > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border px-3 py-2 mb-3">
-          <button
-            onClick={() => setMobileStaffIdx(i => (i - 1 + staffList.length) % staffList.length)}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"
-          >←</button>
-          <div className="flex items-center gap-2">
-            <span className={`w-3 h-3 rounded-full ${colorMap[staffList[mobileStaffIdx % staffList.length]?.id]?.dot || 'bg-gray-400'}`} />
-            <span className="font-semibold text-gray-800">{staffList[mobileStaffIdx % staffList.length]?.name}</span>
-            <span className="text-xs text-gray-400">({mobileStaffIdx % staffList.length + 1}/{staffList.length})</span>
+        <div className="flex flex-col items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 bg-white rounded-full shadow-sm border px-4 py-2">
+            <span className={`w-3 h-3 rounded-full ${colorMap[staffList[mobileStaffIdx]?.id]?.dot || 'bg-gray-400'}`} />
+            <span className="font-semibold text-gray-800 text-sm">{staffList[mobileStaffIdx]?.name}</span>
+            <span className="text-xs text-gray-400">({mobileStaffIdx + 1}/{staffList.length})</span>
           </div>
-          <button
-            onClick={() => setMobileStaffIdx(i => (i + 1) % staffList.length)}
-            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"
-          >→</button>
+          <div className="flex gap-1.5">
+            {staffList.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => scrollToStaffIdx(i)}
+                className={`transition-all duration-300 rounded-full ${
+                  i === mobileStaffIdx
+                    ? 'w-6 h-2 bg-gray-800'
+                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {dates.map(d => (
         <div key={d} className="mb-4">
           <h2 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{fmtDateLabel(d)}</h2>
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
-            <div className="overflow-x-auto">
-              <div style={{ minWidth: isMobile ? '100%' : `${52 + staff.length * 150}px` }}>
-                {/* Header row */}
-                <div className="flex border-b bg-gray-50">
-                  <div className="w-[52px] shrink-0" style={{ height: `${HEADER_H}px` }} />
-                  {staff.map(s => {
-                    const c = colorMap[s.id]
-                    return (
-                      <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px`, width: 0, minWidth: isMobile ? '0' : '150px' }}>
-                        <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
-                        <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
-                      </div>
-                    )
-                  })}
-                </div>
 
-                {/* Grid body */}
-                <div className="flex" ref={scrollRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-                  {/* Time column */}
-                  <div className="w-[52px] shrink-0 relative" style={{ height: `${gridH}px` }}>
-                    {timeLabels.map((label, i) => (
-                      <div key={i} className="absolute w-full flex items-start justify-end pr-1.5" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }}>
-                        {label && <span className="text-xs text-gray-400 -mt-2">{label}</span>}
+          {/* Mobile: swipeable full-screen cards */}
+          {isMobile && (
+            <div
+              ref={mobileScrollRef}
+              onScroll={handleMobileScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+            >
+              {staff.map(s => {
+                const c = colorMap[s.id]
+                const appts = getAppts(s.id, d)
+                const lunch = getLunchBreak(lunchBreaks, s.id, d)
+                const ls = lunchStyle(lunch)
+
+                // Current time position
+                const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
+                const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
+                const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
+                const showTimeLine = date === todayNZ() && topPx >= 0 && topPx <= gridH
+
+                return (
+                  <div
+                    key={s.id}
+                    className="snap-start flex-shrink-0 w-full"
+                    style={{ width: '100vw', maxWidth: '100%' }}
+                  >
+                    <div className="bg-white rounded-2xl shadow-sm border overflow-hidden mx-1">
+                      {/* Staff header card */}
+                      <div className={`px-4 py-3 flex items-center gap-3 border-b ${c.bg}`}>
+                        <div className={`w-10 h-10 rounded-full ${c.dot} flex items-center justify-center text-white font-bold text-lg`}>
+                          {s.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className={`font-bold text-base ${c.text}`}>{s.name}</div>
+                          <div className="text-xs text-gray-500">{appts.length} booking{appts.length !== 1 ? 's' : ''} today</div>
+                        </div>
                       </div>
-                    ))}
+
+                      {/* Time grid */}
+                      <div className="relative" ref={scrollRef} style={{ maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
+                        <div className="flex" style={{ height: `${gridH}px` }}>
+                          {/* Time column */}
+                          <div className="w-[48px] shrink-0 relative">
+                            {timeLabels.map((label, i) => (
+                              <div key={i} className="absolute w-full flex items-start justify-end pr-1" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }}>
+                                {label && <span className="text-[10px] text-gray-400 -mt-2">{label}</span>}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Single staff column */}
+                          <div
+                            className="flex-1 relative border-l"
+                            onDragOver={(e) => handleDragOver(e, s.id, d)}
+                            onDragLeave={() => setDragOver(null)}
+                            onDrop={(e) => handleDrop(e, s.id, d)}
+                          >
+                            {Array.from({ length: totalSlots }, (_, i) => (
+                              <div key={i} className="absolute w-full border-b border-gray-100" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }} />
+                            ))}
+
+                            {/* Lunch break */}
+                            {!dragAppt && (
+                              <div
+                                draggable
+                                onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
+                                onDragEnd={handleLunchDragEnd}
+                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                                style={ls}
+                              >
+                                <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
+                                <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                              </div>
+                            )}
+
+                            {/* Current time line */}
+                            {showTimeLine && (
+                              <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
+                                  <div className="flex-1 h-[2px] bg-red-500" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Appointment blocks */}
+                            {appts.map(a => {
+                              const st = blockStyle(a)
+                              return (
+                                <div
+                                  key={a.id}
+                                  draggable
+                                  onDragStart={(e) => handleDragStart(e, a)}
+                                  onDragEnd={handleDragEnd}
+                                  className={`absolute left-1.5 right-1.5 rounded-lg px-2 py-1.5 overflow-hidden text-xs leading-tight border cursor-pointer active:scale-[0.98] transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
+                                  style={{ ...st, zIndex: 20 }}
+                                  onClick={() => { if (!dragAppt && !dragLunch) setSelectedAppt(a) }}
+                                >
+                                  <div className="font-semibold truncate text-sm">{a.customer_name}</div>
+                                  {parseInt(st.height) > 35 && <div className="truncate opacity-80 text-xs">{a.service_name}</div>}
+                                  {parseInt(st.height) > 55 && <div className="opacity-60 text-xs">{nzTimeStr(a.start_time)}-{nzTimeStr(a.end_time)}</div>}
+                                  {a.status === 'checked_in' && parseInt(st.height) > 35 && <div className="text-xs font-bold text-yellow-600">✋ CHECKED IN</div>}
+                                </div>
+                              )
+                            })}
+
+                            {appts.length === 0 && !showAllDates && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-sm text-gray-300">No bookings</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Desktop: grid view (unchanged) */}
+          {!isMobile && (
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
+              <div className="overflow-x-auto">
+                <div style={{ minWidth: `${52 + staff.length * 150}px` }}>
+                  {/* Header row */}
+                  <div className="flex border-b bg-gray-50">
+                    <div className="w-[52px] shrink-0" style={{ height: `${HEADER_H}px` }} />
+                    {staff.map(s => {
+                      const c = colorMap[s.id]
+                      return (
+                        <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px` }}>
+                          <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
+                          <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
+                        </div>
+                      )
+                    })}
                   </div>
 
-                  {/* Staff columns container */}
-                  <div className="flex-1 flex relative" style={{ overflow: 'hidden' }}>
+                  {/* Grid body */}
+                  <div className="flex" ref={scrollRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+                    {/* Time column */}
+                    <div className="w-[52px] shrink-0 relative" style={{ height: `${gridH}px` }}>
+                      {timeLabels.map((label, i) => (
+                        <div key={i} className="absolute w-full flex items-start justify-end pr-1.5" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }}>
+                          {label && <span className="text-xs text-gray-400 -mt-2">{label}</span>}
+                        </div>
+                      ))}
+                    </div>
 
-                  {/* Staff columns */}
-                  {staff.map(s => {
-                    const c = colorMap[s.id]
-                    const appts = getAppts(s.id, d)
-                    const lunch = getLunchBreak(lunchBreaks, s.id, d)
-                    const ls = lunchStyle(lunch)
-                    const isDragOver = dragOver?.staffId === s.id && dragOver?.date === d
-                    
-                    // Current time position
-                    const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
-                    const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
-                    const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
-                    const showTimeLine = date === todayNZ() && topPx >= 0 && topPx <= gridH
-                    
-                    return (
-                      <div
-                        key={s.id}
-                        className={`relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
-                        style={{ height: `${gridH}px`, width: 0, minWidth: isMobile ? '0' : '150px', flex: 1 }}
-                        onDragOver={(e) => handleDragOver(e, s.id, d)}
-                        onDragLeave={() => setDragOver(null)}
-                        onDrop={(e) => handleDrop(e, s.id, d)}
-                      >
-                        {Array.from({ length: totalSlots }, (_, i) => (
-                          <div key={i} className="absolute w-full border-b border-gray-100" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }} />
-                        ))}
+                    {/* Staff columns container */}
+                    <div className="flex-1 flex relative" style={{ overflow: 'hidden' }}>
+                      {staff.map(s => {
+                        const c = colorMap[s.id]
+                        const appts = getAppts(s.id, d)
+                        const lunch = getLunchBreak(lunchBreaks, s.id, d)
+                        const ls = lunchStyle(lunch)
+                        const isDragOver = dragOver?.staffId === s.id && dragOver?.date === d
 
-                        {/* Lunch break block — hidden from pointer when dragging a booking */}
-                        {!dragAppt && (
+                        const nzNow = new Date(now.toLocaleString('en-US', { timeZone: TZ }))
+                        const minutes = nzNow.getHours() * 60 + nzNow.getMinutes()
+                        const topPx = ((minutes - START_HOUR * 60) / SLOT_MIN) * SLOT_H
+                        const showTimeLine = date === todayNZ() && topPx >= 0 && topPx <= gridH
+
+                        return (
                           <div
-                            draggable
-                            onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
-                            onDragEnd={handleLunchDragEnd}
-                            className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
-                            style={ls}
-                            title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
+                            key={s.id}
+                            className={`relative border-l transition-colors overflow-hidden ${isDragOver ? 'bg-pink-50' : ''}`}
+                            style={{ height: `${gridH}px`, width: 0, minWidth: '150px', flex: 1 }}
+                            onDragOver={(e) => handleDragOver(e, s.id, d)}
+                            onDragLeave={() => setDragOver(null)}
+                            onDrop={(e) => handleDrop(e, s.id, d)}
                           >
-                            <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
-                            <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
-                          </div>
-                        )}
+                            {Array.from({ length: totalSlots }, (_, i) => (
+                              <div key={i} className="absolute w-full border-b border-gray-100" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }} />
+                            ))}
 
-                        {/* Current time line */}
-                        {showTimeLine && (
-                          <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
-                            <div className="flex items-center">
-                              <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
-                              <div className="flex-1 h-[2px] bg-red-500" />
-                            </div>
-                          </div>
-                        )}
+                            {!dragAppt && (
+                              <div
+                                draggable
+                                onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
+                                onDragEnd={handleLunchDragEnd}
+                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                                style={ls}
+                                title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
+                              >
+                                <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
+                                <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                              </div>
+                            )}
 
-                        {/* Appointment blocks */}
-                        {appts.map(a => {
-                          const st = blockStyle(a)
-                          return (
-                            <div
-                              key={a.id}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, a)}
-                              onDragEnd={handleDragEnd}
-                              className={`absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
-                              style={{ ...st, zIndex: 20 }}
-                              onClick={(e) => { if (!dragAppt && !dragLunch) setSelectedAppt(a) }}
-                              title={`${a.customer_name} — ${a.service_name}\n${nzTimeStr(a.start_time)} - ${nzTimeStr(a.end_time)}`}
-                            >
-                              <div className="font-semibold truncate text-sm">{a.customer_name}</div>
-                              {parseInt(st.height) > 30 && <div className="truncate opacity-80 text-xs">{a.service_name}</div>}
-                              {parseInt(st.height) > 50 && <div className="opacity-60 text-xs">{nzTimeStr(a.start_time)}-{nzTimeStr(a.end_time)}</div>}
-                              {a.status === 'checked_in' && parseInt(st.height) > 30 && <div className="text-xs font-bold text-yellow-600">✋ CHECKED IN</div>}
-                            </div>
-                          )
-                        })}
+                            {showTimeLine && (
+                              <div className="absolute left-0 right-0 z-30 pointer-events-none" style={{ top: `${topPx}px` }}>
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1" />
+                                  <div className="flex-1 h-[2px] bg-red-500" />
+                                </div>
+                              </div>
+                            )}
 
-                        {appts.length === 0 && !showAllDates && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className="text-sm text-gray-300">No bookings</span>
+                            {appts.map(a => {
+                              const st = blockStyle(a)
+                              return (
+                                <div
+                                  key={a.id}
+                                  draggable
+                                  onDragStart={(e) => handleDragStart(e, a)}
+                                  onDragEnd={handleDragEnd}
+                                  className={`absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition ${c.bg} ${c.border} ${c.text} ${a.status === 'cancelled' ? 'opacity-40 line-through' : ''} ${a.status === 'completed' ? 'opacity-60' : ''} ${a.status === 'checked_in' ? 'ring-2 ring-yellow-400' : ''}`}
+                                  style={{ ...st, zIndex: 20 }}
+                                  onClick={(e) => { if (!dragAppt && !dragLunch) setSelectedAppt(a) }}
+                                  title={`${a.customer_name} — ${a.service_name}\n${nzTimeStr(a.start_time)} - ${nzTimeStr(a.end_time)}`}
+                                >
+                                  <div className="font-semibold truncate text-sm">{a.customer_name}</div>
+                                  {parseInt(st.height) > 30 && <div className="truncate opacity-80 text-xs">{a.service_name}</div>}
+                                  {parseInt(st.height) > 50 && <div className="opacity-60 text-xs">{nzTimeStr(a.start_time)}-{nzTimeStr(a.end_time)}</div>}
+                                  {a.status === 'checked_in' && parseInt(st.height) > 30 && <div className="text-xs font-bold text-yellow-600">✋ CHECKED IN</div>}
+                                </div>
+                              )
+                            })}
+
+                            {appts.length === 0 && !showAllDates && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-sm text-gray-300">No bookings</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       ))}
 
