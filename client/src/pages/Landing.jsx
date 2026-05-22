@@ -101,6 +101,18 @@ export default function Landing() {
               <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
                 Start for free →
               </Link>
+              <button
+                onClick={async () => {
+                  try {
+                    const data = await api.demoStart()
+                    localStorage.setItem('salon_token', data.token)
+                    window.location.href = '/admin'
+                  } catch (e) { alert('Failed to start demo: ' + e.message) }
+                }}
+                className="border-2 border-pink-200 text-pink-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-pink-50 font-medium transition text-sm md:text-base"
+              >
+                🎮 Try Demo
+              </button>
               <Link to="/login" className="border border-gray-200 text-gray-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base">
                 Sign in
               </Link>

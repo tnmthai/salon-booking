@@ -22,6 +22,7 @@ export const api = {
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   me: () => request('/auth/me'),
+  demoStart: () => request('/demo/start', { method: 'POST' }),
 
   // Salons (public)
   getSalons: () => request('/salons'),

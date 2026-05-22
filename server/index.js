@@ -23,12 +23,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms", "https://scripts.clarity.ms"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics", "https://www.facebook.com", "https://scontent.*.fbcdn.net"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms"],
-      frameSrc: ["'none'"],
+      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://*.facebook.com", "https://*.fbcdn.net"],
+      frameSrc: ["'self'", "https://www.facebook.com", "https://web.facebook.com"],
       objectSrc: ["'none'"],
     }
   }
@@ -100,6 +100,7 @@ app.use('/api/overrides', require('./routes/overrides'));
 app.use('/api/visits', require('./routes/visits'));
 const { router: plansRouter } = require('./routes/plans');
 app.use('/api', plansRouter);
+app.use('/api/demo', require('./routes/demo'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
