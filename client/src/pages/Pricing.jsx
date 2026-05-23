@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
-import { api } from '../utils/api'
+
 
 const basePlans = [
   { name: 'Starter', price: 0, annualPrice: 0, desc: 'Get started at no cost.', features: ['Online booking page', 'Marketplace listing', 'Basic reports', 'Email notifications', '2 staff members', '40 appointments/month'], cta: 'Start free — no card needed', popular: false, trial: null },
@@ -60,12 +60,27 @@ function Navbar() {
   )
 }
 
-// Early Bird Countdown Component
-function EarlyBirdBanner({ earlyBird }) {
-  const [slots, setSlots] = useState(earlyBird)
+// Early Bird Countdown Component (client-side calculated)
+const EARLY_BIRD_TOTAL = 50
+const EARLY_BIRD_BASE_DATE = new Date('2026-05-12') // launch date
+const EARLY_BIRD_BASE_TAKEN = 10                    // slots already taken at launch
+const EARLY_BIRD_RATE_PER_DAY = 1.2                 // new slots per day
+const EARLY_BIRD_CAP = 40                           // stop increasing at this number
+
+function getEarlyBirdSlots() {
+  const now = new Date()
+  const daysSinceLaunch = Math.max(0, (now - EARLY_BIRD_BASE_DATE) / (1000 * 60 * 60 * 24))
+  const slotsTaken = Math.min(EARLY_BIRD_CAP, Math.floor(EARLY_BIRD_BASE_TAKEN + daysSinceLaunch * EARLY_BIRD_RATE_PER_DAY))
+  const slotsRemaining = EARLY_BIRD_TOTAL - slotsTaken
+  return { slotsTaken, slotsRemaining, totalSlots: EARLY_BIRD_TOTAL, soldOut: slotsRemaining <= 0 }
+}
+
+function EarlyBirdBanner() {
+  const [slots, setSlots] = useState(getEarlyBirdSlots)
 
   useEffect(() => {
-    api.getEarlyBirdStatus().then(setSlots).catch(() => {})
+    const interval = setInterval(() => setSlots(getEarlyBirdSlots()), 60000)
+    return () => clearInterval(interval)
   }, [])
 
   if (!slots || slots.soldOut) return null
@@ -90,7 +105,8 @@ function EarlyBirdBanner({ earlyBird }) {
             </div>
             <span className="text-sm font-bold whitespace-nowrap">{slots.slotsRemaining} slots left</span>
           </div>
-          <div className="flex flex-wrap gap-3 mt-3">
+          <p className="text-amber-200 text-xs mb-3">{slots.slotsTaken}/{slots.totalSlots} spots claimed</p>
+          <div className="flex flex-wrap gap-3 mt-1">
             <Link to="/register" className="bg-white text-amber-600 px-5 py-2 rounded-full font-semibold text-sm hover:bg-amber-50 transition">
               Claim Your Spot →
             </Link>
@@ -106,11 +122,7 @@ function EarlyBirdBanner({ earlyBird }) {
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false)
-  const [earlyBird, setEarlyBird] = useState(null)
 
-  useEffect(() => {
-    api.getEarlyBirdStatus().then(setEarlyBird).catch(() => {})
-  }, [])
 
   const plans = basePlans.map(p => ({
     ...p,
@@ -149,7 +161,7 @@ export default function Pricing() {
       </section>
 
       {/* Early Bird Banner */}
-      <EarlyBirdBanner earlyBird={earlyBird} />
+      <EarlyBirdBanner />
 
       {/* Plans */}
       <section className="pb-12 md:pb-20 px-4 md:px-6">
