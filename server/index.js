@@ -22,12 +22,13 @@ addWebsiteColumn(pool);
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics", "https://www.facebook.com", "https://scontent.*.fbcdn.net"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics", "https://www.facebook.com", "https://*.fbcdn.net"],
       fontSrc: ["'self'", "https:", "data:"],
       connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://*.facebook.com", "https://*.fbcdn.net"],
       frameSrc: ["'self'", "https://www.facebook.com", "https://web.facebook.com"],
