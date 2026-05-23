@@ -27,10 +27,13 @@ export default function PlanSettings() {
     const planKey = `${planId}_${cycle}`
     setCheckoutLoading(planKey)
     try {
+      const token = localStorage.getItem('salon_token')
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ planKey })
       })
       const data = await res.json()

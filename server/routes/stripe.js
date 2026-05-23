@@ -27,8 +27,8 @@ router.post('/checkout', async (req, res) => {
     if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
 
     // Verify auth
-    const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token' });
 
     let decoded;
     try { decoded = jwt.verify(token, JWT_SECRET); } catch { return res.status(401).json({ error: 'Invalid token' }); }
@@ -55,7 +55,7 @@ router.post('/checkout', async (req, res) => {
         quantity: 1
       }],
       metadata: {
-        salon_id: String(decoded.salonId || decoded.id),
+        salon_id: String(decoded.salon_id || decoded.id),
         email: decoded.email,
         plan: priceInfo.plan,
         cycle: priceInfo.cycle
