@@ -20,6 +20,8 @@ addWebsiteColumn(pool);
 
 // --- Security ---
 app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
