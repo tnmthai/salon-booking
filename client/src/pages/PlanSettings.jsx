@@ -20,6 +20,31 @@ export default function PlanSettings() {
   const [referralInput, setReferralInput] = useState('')
   const [referralMsg, setReferralMsg] = useState('')
   const [earlyBird, setEarlyBird] = useState(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(null)
+
+  const handleStripeCheckout = async (planId) => {
+    const cycle = billingCycle || 'monthly'
+    const planKey = `${planId}_${cycle}`
+    setCheckoutLoading(planKey)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ planKey })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert(data.error || 'Failed to create checkout')
+      }
+    } catch (e) {
+      alert('Network error: ' + e.message)
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }
 
   const loadPlan = () => {
     setLoading(true)
@@ -270,15 +295,17 @@ export default function PlanSettings() {
                 </button>
               ) : !isActive ? (
                 <button
-                  onClick={async () => {
-                    if (!confirm(`Switch to ${p.name} plan ($${p.price}/mo)?`)) return
-                    try {
-                      const me = await api.me()
-                      await api.updatePlan(me.salon.id, p.id, billingCycle)
-                      loadPlan()
-                      alert(`Switched to ${p.name} plan!`)
-                    } catch (e) { alert(e.message) }
+                  onClick={() => {
+                    if (p.price === 0) {
+                      // Downgrade to free
+                      if (!confirm(`Downgrade to Starter?`)) return
+                      api.me().then(me => api.updatePlan(me.salon.id, 'free', 'monthly')).then(loadPlan).catch(e => alert(e.message))
+                    } else {
+                      // Paid plan — go through Stripe
+                      handleStripeCheckout(p.id)
+                    }
                   }}
+                  disabled={checkoutLoading !== null}
                   className={`w-full py-2.5 rounded-xl text-sm font-semibold transition ${
                     p.id === 'growth'
                       ? 'bg-purple-600 text-white hover:bg-purple-700'
@@ -287,7 +314,14 @@ export default function PlanSettings() {
                       : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {effectivePlan === 'growth' ? `Downgrade to ${p.name}` : p.price === 0 ? 'Downgrade to Starter' : `Upgrade to ${p.name}`}
+                  {checkoutLoading === `${p.id}_${billingCycle || 'monthly'}`
+                    ? 'Redirecting...'
+                    : effectivePlan === 'growth' && p.id !== 'growth'
+                    ? `Downgrade to ${p.name}`
+                    : p.price === 0
+                    ? 'Downgrade to Starter'
+                    : `Upgrade to ${p.name}`
+                  }
                 </button>
               ) : null}
             </div>
