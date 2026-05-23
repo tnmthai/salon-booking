@@ -95,7 +95,7 @@ export default function Landing() {
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> — no complicated setup</span>
             </h1>
             <p className="text-base md:text-lg text-gray-500 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
-              Switch from Timely or Fresha in one day. Accept bookings 24/7, reduce no-shows, and save 5+ hours a week — all from an easy-to-use dashboard.
+              Get more bookings, reduce no-shows, and spend less time managing appointments.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base w-full sm:w-auto text-center">
