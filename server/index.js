@@ -87,7 +87,10 @@ app.use('/api/reviews', publicLimiter);
 app.use('/api', apiLimiter);
 
 // Stripe webhook — needs raw body, must be before express.json()
-app.use('/api/stripe', require('./routes/stripe'));
+const stripeRouter = require('./routes/stripe');
+// Only apply raw body to webhook endpoint
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/stripe', stripeRouter);
 
 app.use(express.json({ limit: '10kb' }));
 
