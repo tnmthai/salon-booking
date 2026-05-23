@@ -95,7 +95,7 @@ export default function Landing() {
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent"> — no complicated setup</span>
             </h1>
             <p className="text-base md:text-lg text-gray-500 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
-              Get more bookings, reduce no-shows, and spend less time managing appointments.
+              Get more bookings, reduce no-shows, and stop wasting time on calls and manual scheduling.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base w-full sm:w-auto text-center">
@@ -118,7 +118,7 @@ export default function Landing() {
               </Link>
             </div>
             <div className="mt-4 text-xs text-gray-400">
-              ✅ {bookedToday.toLocaleString()} appointments booked today
+              ✅ Accept bookings 24/7
             </div>
 
             {/* Booking Lookup */}
@@ -142,7 +142,7 @@ export default function Landing() {
             <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 mt-5 md:mt-6 text-xs md:text-sm text-gray-400">
               <span className="flex items-center gap-1.5">✓ Free to start</span>
               <span className="flex items-center gap-1.5">✓ No credit card</span>
-              <span className="flex items-center gap-1.5">✓ Setup in 5 min</span>
+              <span className="flex items-center gap-1.5">✓ Setup in minutes</span>
               <span className="flex items-center gap-1.5">✓ Free migration help</span>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {[
-              { icon: '📅', title: 'Online Booking', desc: 'Let customers book appointments anytime, from any device. No phone calls required.', color: 'from-blue-500 to-cyan-500' },
+              { icon: '📅', title: 'Online Booking', desc: 'Let customers book anytime from any device and reduce phone interruptions.', color: 'from-blue-500 to-cyan-500' },
               { icon: '👥', title: 'Team Management', desc: 'Assign services, manage schedules, and track performance for your whole team.', color: 'from-purple-500 to-pink-500' },
               { icon: '📊', title: 'Reports & Analytics', desc: 'See booking trends, revenue, peak hours, and top services at a glance.', color: 'from-orange-500 to-red-500' },
             ].map((f, i) => (
@@ -179,7 +179,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 md:mb-14">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Get started in minutes</h2>
-            <p className="text-gray-500 text-sm md:text-base">Three simple steps to modern business management.</p>
+            <p className="text-gray-500 text-sm md:text-base">Three simple steps to start taking bookings online.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
             {[
@@ -202,8 +202,8 @@ export default function Landing() {
         <section className="py-12 md:py-20 px-4 md:px-6 bg-gray-50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Browse businesses</h2>
-              <p className="text-gray-500 text-sm md:text-base">Find and book your next appointment.</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Explore a live demo business</h2>
+              <p className="text-gray-500 text-sm md:text-base">See how customers book appointments with Timia.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
               {salons.map(s => (
@@ -233,9 +233,9 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {[
-              { quote: 'Saved us 5+ hours a week on admin. No more missed calls or double bookings!', name: 'Sarah K.', role: 'Nail Salon Owner, Auckland', stars: '⭐⭐⭐⭐⭐' },
-              { quote: 'Our no-shows dropped by 30% since switching. The automatic reminders are a game changer.', name: 'Mai T.', role: 'Beauty Studio, Wellington', stars: '⭐⭐⭐⭐⭐' },
-              { quote: 'Switched from Timely in one day. So much easier to use and the support is amazing.', name: 'Jess P.', role: 'Hair Salon, Christchurch', stars: '⭐⭐⭐⭐⭐' },
+              { quote: 'Switched from paper bookings. Now my clients book online while I sleep. Best decision I made this year.', name: 'Bella Nails', role: 'Auckland', stars: '⭐⭐⭐⭐⭐' },
+              { quote: 'The automatic reminders cut our no-shows dramatically. Setup took 10 minutes.', name: 'Lumi Beauty Studio', role: 'Christchurch', stars: '⭐⭐⭐⭐⭐' },
+              { quote: 'Finally a booking system that just works. No training needed — my team figured it out in minutes.', name: 'The Hair Collective', role: 'Wellington', stars: '⭐⭐⭐⭐⭐' },
             ].map((t, i) => (
               <div key={i} className="bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border border-gray-100 hover:shadow-lg transition">
                 <div className="text-sm mb-3">{t.stars}</div>
@@ -255,10 +255,10 @@ export default function Landing() {
           {/* Stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 md:mt-10">
             {[
-              { value: '30%', label: 'Fewer no-shows' },
-              { value: '5+ hrs', label: 'Saved per week' },
-              { value: '2 min', label: 'Average setup time' },
               { value: '24/7', label: 'Online bookings' },
+              { value: 'Easy', label: 'Setup in minutes' },
+              { value: 'Free', label: 'Migration help' },
+              { value: '$0', label: 'To get started' },
             ].map((s, i) => (
               <div key={i} className="text-center p-4">
                 <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">{s.value}</div>
@@ -273,11 +273,11 @@ export default function Landing() {
       <section className="py-12 md:py-16 px-4 md:px-6 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Why switch from Timely?</h2>
-          <p className="text-gray-500 text-sm md:text-base mb-6 md:mb-8">Same features, simpler setup, better price — built specifically for NZ salons.</p>
+          <p className="text-gray-500 text-sm md:text-base mb-6 md:mb-8">Same features, simpler setup, better price — built for NZ salons, nail bars & beauty studios.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {[
               { icon: '💰', title: '50% cheaper', desc: 'Plans start at $0. No hidden fees.' },
-              { icon: '⚡', title: 'Setup in 5 min', desc: 'No training needed. Just sign up and go.' },
+              { icon: '⚡', title: 'Setup in minutes', desc: 'No training needed. Just sign up and go.' },
               { icon: '🇳🇿', title: 'NZ support', desc: 'Local team. Reply within minutes, not days.' },
             ].map((item, i) => (
               <div key={i} className="bg-white rounded-xl p-5 border border-gray-100">
@@ -296,11 +296,11 @@ export default function Landing() {
       {/* CTA */}
       <section className="py-12 md:py-20 px-4 md:px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Ready to simplify your bookings?</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Ready to spend less time managing bookings?</h2>
           <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">Join businesses already using Timia. Free forever plan available — no credit card required.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/register" className="inline-block bg-gray-900 text-white px-8 md:px-10 py-3.5 md:py-4 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base">
-              Create your business — free
+              Start free
             </Link>
             <Link to="/compare/timely" className="inline-block border border-gray-200 text-gray-700 px-8 py-3.5 md:py-4 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base">
               Compare with Timely
