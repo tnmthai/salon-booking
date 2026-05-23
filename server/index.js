@@ -87,10 +87,8 @@ app.use('/api/reviews', publicLimiter);
 app.use('/api', apiLimiter);
 
 // Stripe webhook — needs raw body, must be before express.json()
-const stripeRouter = require('./routes/stripe');
-// Only apply raw body to webhook endpoint
-app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
-app.use('/api/stripe', stripeRouter);
+const stripeWebhook = require('./routes/stripe').webhookHandler;
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.json({ limit: '10kb' }));
 
@@ -110,6 +108,10 @@ app.use('/api/visits', require('./routes/visits'));
 const { router: plansRouter } = require('./routes/plans');
 app.use('/api', plansRouter);
 app.use('/api/demo', require('./routes/demo'));
+
+// Stripe checkout (needs JSON body)
+const stripeCheckout = require('./routes/stripe').checkoutHandler;
+app.post('/api/stripe/checkout', stripeCheckout);
 
 // Health check
 app.get('/api/health', async (req, res) => {

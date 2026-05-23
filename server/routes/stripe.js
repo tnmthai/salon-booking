@@ -21,7 +21,7 @@ const PLAN_PRICES = {
 };
 
 // Create checkout session
-router.post('/checkout', async (req, res) => {
+async function checkoutHandler(req, res) {
   try {
     const stripe = getStripe();
     if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
@@ -68,10 +68,10 @@ router.post('/checkout', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
+}
 
 // Stripe webhook
-router.post('/webhook', async (req, res) => {
+async function webhookHandler(req, res) {
   try {
     const stripe = getStripe();
     if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
@@ -124,6 +124,8 @@ router.post('/webhook', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
+}
 
 module.exports = router;
+module.exports.checkoutHandler = checkoutHandler;
+module.exports.webhookHandler = webhookHandler;
