@@ -81,7 +81,7 @@ export default function PlanSettings() {
   }
 
   const handleEarlyBird = async () => {
-    if (!confirm('Claim Early Bird? Starter at $7/mo forever!')) return
+    if (!confirm('Claim Early Bird? Plus at $7/mo forever!')) return
     try {
       const res = await api.claimEarlyBird()
       alert(res.message)
@@ -179,7 +179,7 @@ export default function PlanSettings() {
             <span className="font-bold">Early Bird Available!</span>
           </div>
           <p className="text-amber-100 text-sm mb-3">
-            {earlyBird.slotsRemaining} slots left — Starter at <strong className="text-white">${earlyBird.starterPrice}/mo forever</strong>
+            {earlyBird.slotsRemaining} slots left — Plus at <strong className="text-white">${earlyBird.starterPrice}/mo forever</strong>
           </p>
           <button onClick={handleEarlyBird} className="bg-white text-amber-600 px-4 py-2 rounded-full text-sm font-semibold hover:bg-amber-50 transition">
             Claim Early Bird →

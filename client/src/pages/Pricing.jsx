@@ -12,7 +12,7 @@ const basePlans = [
 const faqs = [
   { q: 'Is there really a free plan?', a: 'Yes! Free forever. No credit card required.' },
   { q: 'How does the free trial work?', a: 'Free users get 3 months of Starter features free. Starter users can try Growth for 60 days. No credit card needed — your plan auto-downgrades when the trial ends.' },
-  { q: 'What is the Early Bird offer?', a: 'The first 50 shops to sign up get Starter at $7/mo forever — a locked-in price that never increases. Once all 50 slots are taken, the offer ends.' },
+  { q: 'What is the Early Bird offer?', a: 'The first 10 shops to sign up get Plus at $7/mo forever — a locked-in price that never increases. Once all 10 slots are taken, the offer ends.' },
   { q: 'How does annual billing work?', a: 'Save 20% by paying annually. Starter drops to $8.80/mo ($105.60/year, save $26.40) and Growth drops to $23.20/mo ($278.40/year, save $69.60).' },
   { q: 'Can I upgrade or downgrade anytime?', a: 'Absolutely. Switch plans anytime, no lock-in.' },
   { q: 'What payment methods do you accept?', a: 'All major credit cards through Stripe.' },
@@ -104,7 +104,7 @@ function EarlyBirdBanner() {
             <span className="font-bold text-lg">Early Bird Launch Special</span>
           </div>
           <p className="text-amber-100 mb-3 text-sm md:text-base">
-            First 50 shops get <strong className="text-white">Starter at $7/mo forever</strong> — locked-in price!
+            First 10 shops get <strong className="text-white">Plus at $7/mo forever</strong> — locked-in price!
           </p>
           <div className="flex items-center gap-3 mb-2">
             <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
