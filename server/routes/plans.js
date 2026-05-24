@@ -332,6 +332,33 @@ router.get('/early-bird/status', async (req, res) => {
   }
 });
 
+// Admin: update early bird config
+router.patch('/early-bird/config', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!isSuperAdmin(decoded.email)) return res.status(403).json({ error: 'Forbidden' });
+
+    const { totalSlots, slotsTaken, starterPrice } = req.body;
+    const updates = [];
+    const values = [];
+    let idx = 1;
+    if (totalSlots !== undefined) { updates.push(`total_slots = $${idx++}`); values.push(Number(totalSlots)); }
+    if (slotsTaken !== undefined) { updates.push(`slots_taken = $${idx++}`); values.push(Number(slotsTaken)); }
+    if (starterPrice !== undefined) { updates.push(`starter_price = $${idx++}`); values.push(Number(starterPrice)); }
+    if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
+
+    updates.push(`updated_at = NOW()`);
+    await db.query(`UPDATE early_bird_config SET ${updates.join(', ')} WHERE id = 1`, values);
+    const config = await db.query('SELECT * FROM early_bird_config WHERE id = 1');
+    const cfg = config.rows[0];
+    res.json({ totalSlots: cfg.total_slots, slotsTaken: cfg.slots_taken, slotsRemaining: cfg.total_slots - cfg.slots_taken, starterPrice: cfg.starter_price });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Referral: generate code ──────────────────────────────────
 router.post('/referral/code', async (req, res) => {
   try {
