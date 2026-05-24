@@ -226,7 +226,7 @@ export default function PlanSettings() {
       </div>
 
       {/* Billing Toggle */}
-      {!isEarlyBird && plan !== 'free' && (
+      {!isEarlyBird && (
         <div className="flex items-center gap-3 mb-6 justify-center">
           <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
           <button

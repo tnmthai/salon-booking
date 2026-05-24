@@ -76,10 +76,17 @@ function getEarlyBirdSlots() {
 }
 
 function EarlyBirdBanner() {
-  const [slots, setSlots] = useState(getEarlyBirdSlots)
+  const [slots, setSlots] = useState(null)
 
   useEffect(() => {
-    const interval = setInterval(() => setSlots(getEarlyBirdSlots()), 60000)
+    fetch('/api/early-bird/status').then(r => r.json()).then(data => {
+      if (!data.error) setSlots(data)
+    }).catch(() => {})
+    const interval = setInterval(() => {
+      fetch('/api/early-bird/status').then(r => r.json()).then(data => {
+        if (!data.error) setSlots(data)
+      }).catch(() => {})
+    }, 60000)
     return () => clearInterval(interval)
   }, [])
 
