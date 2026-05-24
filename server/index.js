@@ -117,7 +117,7 @@ app.post('/api/stripe/checkout', stripeCheckout);
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ status: 'ok', db: 'connected', version: 'mt-v5' });
+    res.json({ status: 'ok', db: 'connected' });
   } catch (err) {
     res.json({ status: 'error', db: 'disconnected' });
   }
@@ -160,7 +160,7 @@ app.get('/api/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing,
-        u.name as owner_name, u.email as owner_email, u.id as owner_id
+        u.name as owner_name, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
       WHERE s.show_on_landing = true
@@ -178,7 +178,7 @@ app.get('/api/explore/salons', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT s.id, s.name, s.slug, s.address, s.phone, s.description, s.plan, s.show_on_landing, s.show_in_explore,
-        u.name as owner_name, u.email as owner_email, u.id as owner_id
+        u.name as owner_name, u.id as owner_id
       FROM salons s
       LEFT JOIN users u ON u.salon_id = s.id AND u.role = 'owner'
       WHERE s.show_in_explore = true

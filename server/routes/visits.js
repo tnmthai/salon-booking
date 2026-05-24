@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, isSuperAdmin } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 
 // Track a page visit (public — no auth required)

@@ -39,6 +39,15 @@ router.get('/', authMiddleware, async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
   const { image_url, caption } = req.body;
   if (!image_url) return res.status(400).json({ error: 'Image URL required' });
+  // Validate URL protocol to prevent XSS via javascript: URIs
+  try {
+    const parsed = new URL(image_url);
+    if (!['http:', 'https:', 'data:'].includes(parsed.protocol)) {
+      return res.status(400).json({ error: 'Invalid image URL protocol' });
+    }
+  } catch {
+    return res.status(400).json({ error: 'Invalid image URL' });
+  }
 
   try {
     const { rows } = await db.query(

@@ -95,12 +95,17 @@ async function initDB(pool) {
 async function seedAdmin(pool) {
   try {
     const bcrypt = require('bcryptjs');
-    const hash = await bcrypt.hash('Thai123@', 10);
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      console.warn('⚠️  ADMIN_PASSWORD env var not set — skipping admin seed');
+      return;
+    }
+    const hash = await bcrypt.hash(adminPassword, 10);
     await pool.query(
       `INSERT INTO users (email, password_hash, name, role) 
        VALUES ($1, $2, $3, $4) 
        ON CONFLICT (email) DO UPDATE SET password_hash = $2`,
-      ['admin@tnmthai.com', hash, 'Admin', 'super_admin']
+      [process.env.ADMIN_EMAIL || 'admin@tnmthai.com', hash, 'Admin', 'super_admin']
     );
     console.log('Admin user seeded');
   } catch (err) {

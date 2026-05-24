@@ -259,6 +259,8 @@ function reviewRequestEmail({ customerName, salonName, serviceName, date, bookin
 
 function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, address, website }) {
   salonName = escapeHtml(salonName); slug = escapeHtml(slug); ownerName = escapeHtml(ownerName); email = escapeHtml(email); phone = escapeHtml(phone); address = escapeHtml(address);
+  // Validate website URL protocol to prevent javascript: injection in href
+  const safeWebsite = website && /^https?:\/\//.test(website) ? escapeHtml(website) : null;
   return `
     <!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
@@ -275,7 +277,7 @@ function newShopNotificationEmail({ salonName, slug, ownerName, email, phone, ad
             <tr><td style="padding:4px 0;color:#888;">Slug</td><td style="padding:4px 0;"><a href="https://www.timia.nz/${slug}/book">${slug}</a></td></tr>
             ${address ? `<tr><td style="padding:4px 0;color:#888;">Address</td><td style="padding:4px 0;">${address}</td></tr>` : ''}
             ${phone ? `<tr><td style="padding:4px 0;color:#888;">Phone</td><td style="padding:4px 0;">${phone}</td></tr>` : ''}
-            ${website ? `<tr><td style="padding:4px 0;color:#888;">Website</td><td style="padding:4px 0;"><a href="${website}">${website}</a></td></tr>` : ''}
+            ${safeWebsite ? `<tr><td style="padding:4px 0;color:#888;">Website</td><td style="padding:4px 0;"><a href="${safeWebsite}">${safeWebsite}</a></td></tr>` : ''}
           </table>
         </div>
         <div style="background:#fdf2f8;border-radius:8px;padding:20px;margin:24px 0;">

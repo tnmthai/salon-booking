@@ -286,7 +286,7 @@ router.post('/public', async (req, res) => {
 
     const { rows } = await db.query(
       'INSERT INTO appointments (salon_id, service_id, staff_id, customer_id, start_time, end_time, price, status, booking_code, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-      [salon_id, primaryService.id, staff_id, customer_id, start_time, end_time, price, 'confirmed', bookingCode, notes || null]
+      [salon_id, primaryService.id, staff_id, customer_id, start_time, end_time, price, 'confirmed', bookingCode, notes ? notes.replace(/[<>]/g, '') : null]
     );
 
     // Store multiple services in junction table (Priority 6)
@@ -435,7 +435,7 @@ router.put('/:id/cancel', async (req, res) => {
 
     // Send cancellation email (non-blocking)
     try {
-      const { sendEmail, cancellationEmail } = require('../utils/email');
+      const { sendEmail, cancellationEmail, cancellationOwnerEmail } = require('../utils/email');
       const bookingDate = new Date(appt.start_time);
       const dateStr = bookingDate.toLocaleDateString('en-NZ', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       const timeStr = bookingDate.toLocaleTimeString('en-NZ', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
