@@ -127,6 +127,8 @@ function AdminLayout({ salon, user, onLogout }) {
                 </NavDropdown>
                 <NavDropdown label="More">
                   {salon?.slug && <NavDropdownItem to={`/${salon.slug}/book`}>🔗 Booking Page</NavDropdownItem>}
+                  {salon?.slug && <NavDropdownItem to={`/kiosk/${salon.slug}`}>📱 Kiosk Check-in</NavDropdownItem>}
+                  <NavDropdownItem to="/kiosk-guide">📖 Kiosk Guide</NavDropdownItem>
                   <NavDropdownItem to="/admin/services">💅 Services</NavDropdownItem>
                   <NavDropdownItem to="/admin/gallery">🖼 Gallery</NavDropdownItem>
                   <NavDropdownItem to="/admin/reviews">⭐ Reviews</NavDropdownItem>
@@ -168,6 +170,10 @@ function AdminLayout({ salon, user, onLogout }) {
                   {salon?.slug && (
                     <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-pink-600 hover:bg-pink-50 rounded-lg font-medium">🔗 Booking Page ↗</a>
                   )}
+                  {salon?.slug && (
+                    <Link to={`/kiosk/${salon.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📱 Kiosk Check-in</Link>
+                  )}
+                  <Link to="/kiosk-guide" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📖 Kiosk Guide</Link>
                   <Link to="/admin/staff" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 Staff</Link>
                   <Link to="/admin/schedule" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 Schedule</Link>
                   <Link to="/admin/services" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">💅 Services</Link>

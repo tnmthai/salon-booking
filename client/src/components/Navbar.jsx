@@ -21,6 +21,7 @@ export default function Navbar() {
             { to: '/pricing', label: 'Pricing' },
             { to: '/about', label: 'About' },
             { to: '/lookup', label: 'Find booking' },
+            { to: '/kiosk-guide', label: 'Kiosk Guide' },
           ].map(link => (
             <Link
               key={link.to}
@@ -54,6 +55,7 @@ export default function Navbar() {
               { to: '/pricing', label: 'Pricing' },
               { to: '/about', label: 'About' },
               { to: '/lookup', label: 'Find booking' },
+              { to: '/kiosk-guide', label: 'Kiosk Guide' },
               { to: '/login', label: 'Sign in' },
             ].map(link => (
               <Link
