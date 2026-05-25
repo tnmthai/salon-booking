@@ -141,6 +141,13 @@ export const api = {
   // Complete appointment (staff)
   completeAppointment: (id) => request(`/appointments/${id}/complete`, { method: 'PUT' }),
 
+  // Kiosk
+  getKioskAppointments: (slug, params) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/appointments/kiosk/${slug}?${qs}`);
+  },
+  kioskCheckIn: (appointmentId) => request(`/appointments/${appointmentId}/kiosk-checkin`, { method: 'PUT' }),
+
   // Loyalty
   getLoyaltyByPhone: (identifier) => request(`/loyalty/${identifier}`),
   getLoyaltyPublic: (slug, identifier) => request(`/loyalty/public/${slug}/${identifier}`),

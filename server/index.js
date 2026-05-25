@@ -80,6 +80,7 @@ const apiLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 app.use('/api/appointments/public', publicLimiter);
 app.use('/api/appointments/lookup', publicLimiter);
+app.use('/api/appointments/kiosk', publicLimiter);
 app.use('/api/visits', publicLimiter);
 app.use('/api/loyalty/public', publicLimiter);
 app.use('/api/contact', publicLimiter);

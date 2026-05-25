@@ -545,6 +545,104 @@ router.put('/:id/reschedule', async (req, res) => {
   }
 });
 
+// GET kiosk appointments — today's appointments for a salon by slug, filtered by phone or code
+router.get('/kiosk/:slug', async (req, res) => {
+  const { phone, code } = req.query;
+  if (!phone && !code) return res.status(400).json({ error: 'Provide phone or code' });
+  try {
+    // Resolve salon slug to id + timezone
+    const salonResult = await db.query('SELECT id, timezone FROM salons WHERE slug = $1', [req.params.slug]);
+    if (!salonResult.rows.length) return res.status(404).json({ error: 'Salon not found' });
+    const salonId = salonResult.rows[0].id;
+    const tz = salonResult.rows[0].timezone || 'Pacific/Auckland';
+
+    // Get "today" in salon's timezone
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD
+
+    let query, params;
+    if (code) {
+      query = `
+        SELECT a.id, a.start_time, a.end_time, a.status, a.booking_code,
+          COALESCE(a.service_name, s.name) as service_name,
+          st.name as staff_name,
+          c.name as customer_name, c.phone as customer_phone
+        FROM appointments a
+        LEFT JOIN services s ON a.service_id = s.id
+        LEFT JOIN staff st ON a.staff_id = st.id
+        LEFT JOIN customers c ON a.customer_id = c.id
+        WHERE a.salon_id = $1
+          AND a.booking_code = $2
+          AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $3)::date = $4::date
+          AND a.status != 'cancelled'
+        ORDER BY a.start_time ASC`;
+      params = [salonId, code.toUpperCase(), tz, todayStr];
+    } else {
+      query = `
+        SELECT a.id, a.start_time, a.end_time, a.status, a.booking_code,
+          COALESCE(a.service_name, s.name) as service_name,
+          st.name as staff_name,
+          c.name as customer_name, c.phone as customer_phone
+        FROM appointments a
+        LEFT JOIN services s ON a.service_id = s.id
+        LEFT JOIN staff st ON a.staff_id = st.id
+        LEFT JOIN customers c ON a.customer_id = c.id
+        WHERE a.salon_id = $1
+          AND c.phone = $2
+          AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $3)::date = $4::date
+          AND a.status != 'cancelled'
+        ORDER BY a.start_time ASC`;
+      params = [salonId, phone, tz, todayStr];
+    }
+
+    const { rows } = await db.query(query, params);
+    res.json(rows);
+  } catch (err) {
+    console.error('[KIOSK] Error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT kiosk check-in — mark appointment as checked_in (no auth required)
+router.put('/:id/kiosk-checkin', async (req, res) => {
+  try {
+    // Get the appointment
+    const appt = await db.query(
+      `SELECT a.*, sal.timezone FROM appointments a
+       JOIN salons sal ON a.salon_id = sal.id
+       WHERE a.id = $1`,
+      [req.params.id]
+    );
+    if (!appt.rows.length) return res.status(404).json({ error: 'Appointment not found' });
+
+    const a = appt.rows[0];
+    const tz = a.timezone || 'Pacific/Auckland';
+
+    // Verify appointment is today in salon's timezone
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: tz });
+    const apptDate = new Date(a.start_time).toLocaleDateString('en-CA', { timeZone: tz });
+    if (todayStr !== apptDate) {
+      return res.status(400).json({ error: 'Appointment is not for today' });
+    }
+
+    // Only confirmed appointments can be checked in
+    if (a.status !== 'confirmed') {
+      return res.status(400).json({ error: `Cannot check in — current status is '${a.status}'` });
+    }
+
+    const { rows } = await db.query(
+      "UPDATE appointments SET status = 'checked_in' WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('[KIOSK] Check-in error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PUT update appointment status
 router.put('/:id', authMiddleware, async (req, res) => {
   const { status, start_time, end_time, staff_id, price, service_name } = req.body;

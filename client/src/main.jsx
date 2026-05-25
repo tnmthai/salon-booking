@@ -37,6 +37,8 @@ import About from './pages/About'
 import ContactPage from './pages/ContactPage'
 import Explore from './pages/Explore'
 import CompareTimely from './pages/CompareTimely'
+import Kiosk from './pages/Kiosk'
+import KioskGuide from './pages/KioskGuide'
 
 function ProtectedRoute({ children }) {
   if (!isLoggedIn()) return <Navigate to="/login" />;
@@ -282,6 +284,8 @@ function AppInner() {
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/legal" element={<Legal />} />
         <Route path="/:slug/book" element={<Booking />} />
+        <Route path="/kiosk/:slug" element={<Kiosk />} />
+        <Route path="/kiosk-guide" element={<KioskGuide />} />
         <Route path="/admin/*" element={
           <ProtectedRoute>
             <AdminLayout salon={salon} user={user} onLogout={handleLogout} />
