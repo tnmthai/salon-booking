@@ -578,6 +578,8 @@ router.get('/kiosk/:slug', async (req, res) => {
         ORDER BY a.start_time ASC`;
       params = [salonId, code.toUpperCase(), tz, todayStr];
     } else {
+      // Normalize phone: strip all non-digit characters for flexible matching
+      const normalizedPhone = phone.replace(/[^0-9]/g, '');
       query = `
         SELECT a.id, a.start_time, a.end_time, a.status, a.booking_code,
           COALESCE(a.service_name, s.name) as service_name,
@@ -588,11 +590,11 @@ router.get('/kiosk/:slug', async (req, res) => {
         LEFT JOIN staff st ON a.staff_id = st.id
         LEFT JOIN customers c ON a.customer_id = c.id
         WHERE a.salon_id = $1
-          AND c.phone = $2
+          AND regexp_replace(c.phone, '[^0-9]', '', 'g') = $2
           AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $3)::date = $4::date
           AND a.status != 'cancelled'
         ORDER BY a.start_time ASC`;
-      params = [salonId, phone, tz, todayStr];
+      params = [salonId, normalizedPhone, tz, todayStr];
     }
 
     const { rows } = await db.query(query, params);

@@ -167,13 +167,24 @@ export default function Kiosk() {
     })
   }
 
-  // Number pad keys
+  // Number pad keys (phone mode)
   const numKeys = [
     ['1', '2', '3'],
     ['4', '5', '6'],
     ['7', '8', '9'],
     ['clear', '0', 'del'],
   ]
+
+  // Alpha-numeric keys (code mode) — booking codes use A-Z (no I/O) + 2-9
+  const codeKeys = [
+    ['1', '2', '3', '4', '5', '6', '7'],
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+    ['8', '9', 'clear', 'del', 'P', 'K', 'L'],
+  ]
+
+  const activeKeys = inputMode === 'code' ? codeKeys : numKeys
 
   if (error && !salon) {
     return (
@@ -290,9 +301,9 @@ export default function Kiosk() {
               )}
             </div>
 
-            {/* Number pad */}
-            <div className="kiosk-numpad">
-              {numKeys.map((row, ri) => (
+            {/* Keypad */}
+            <div className={`kiosk-numpad ${inputMode === 'code' ? 'kiosk-numpad-alpha' : ''}`}>
+              {activeKeys.map((row, ri) => (
                 <div key={ri} className="kiosk-numpad-row">
                   {row.map(key => (
                     <button
@@ -722,6 +733,12 @@ export default function Kiosk() {
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .kiosk-numpad-alpha .kiosk-numpad-key {
+          min-height: 44px;
+          font-size: 17px;
+          border-radius: 10px;
         }
 
         .kiosk-numpad-key:active {
