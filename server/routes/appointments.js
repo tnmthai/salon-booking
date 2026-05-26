@@ -562,6 +562,7 @@ router.get('/kiosk/:slug', async (req, res) => {
 
     let query, params;
     if (code) {
+      // Code is unique — no date filter needed
       query = `
         SELECT a.id, a.start_time, a.end_time, a.status, a.booking_code,
           COALESCE(a.service_name, s.name) as service_name,
@@ -573,10 +574,9 @@ router.get('/kiosk/:slug', async (req, res) => {
         LEFT JOIN customers c ON a.customer_id = c.id
         WHERE a.salon_id = $1
           AND a.booking_code = $2
-          AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $3)::date = $4::date
           AND a.status != 'cancelled'
         ORDER BY a.start_time ASC`;
-      params = [salonId, code.toUpperCase(), tz, todayStr];
+      params = [salonId, code.toUpperCase()];
     } else {
       // Normalize phone: strip all non-digit characters for flexible matching
       const normalizedPhone = phone.replace(/[^0-9]/g, '');
