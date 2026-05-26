@@ -341,7 +341,10 @@ export default function Kiosk() {
                 ← Back
               </button>
               <h2 className="kiosk-results-title">
-                {appointments.length} appointment{appointments.length !== 1 ? 's' : ''} today
+                {inputMode === 'code'
+                  ? `${appointments.length} appointment found`
+                  : `${appointments.length} upcoming appointment${appointments.length !== 1 ? 's' : ''}`
+                }
               </h2>
             </div>
 
@@ -349,7 +352,19 @@ export default function Kiosk() {
               {appointments.map(appt => (
                 <div key={appt.id} className={`kiosk-appt-card ${appt.status === 'checked_in' ? 'kiosk-appt-checked' : ''}`}>
                   <div className="kiosk-appt-info">
-                    <div className="kiosk-appt-time">{formatTime(appt.start_time)}</div>
+                    <div className="kiosk-appt-time">
+                      {(() => {
+                        const apptDate = new Date(appt.start_time).toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' });
+                        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' });
+                        if (apptDate !== today) {
+                          return <>
+                            <span className="kiosk-appt-date">{new Date(appt.start_time).toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            <span>{formatTime(appt.start_time)}</span>
+                          </>;
+                        }
+                        return formatTime(appt.start_time);
+                      })()}
+                    </div>
                     <div className="kiosk-appt-service">{appt.service_name}</div>
                     <div className="kiosk-appt-staff">with {appt.staff_name}</div>
                     {appt.customer_name && (
@@ -841,6 +856,19 @@ export default function Kiosk() {
           font-weight: 700;
           color: #ff6b9d;
           margin-bottom: 4px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+        }
+
+        .kiosk-appt-date {
+          font-size: 13px;
+          font-weight: 600;
+          color: #fbbf24;
+          background: rgba(251, 191, 36, 0.15);
+          padding: 2px 8px;
+          border-radius: 6px;
         }
 
         .kiosk-appt-service {
