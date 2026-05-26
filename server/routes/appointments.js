@@ -591,10 +591,9 @@ router.get('/kiosk/:slug', async (req, res) => {
         LEFT JOIN customers c ON a.customer_id = c.id
         WHERE a.salon_id = $1
           AND regexp_replace(c.phone, '[^0-9]', '', 'g') = $2
-          AND (a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $3)::date = $4::date
-          AND a.status != 'cancelled'
+          AND a.status NOT IN ('cancelled', 'completed')
         ORDER BY a.start_time ASC`;
-      params = [salonId, normalizedPhone, tz, todayStr];
+      params = [salonId, normalizedPhone];
     }
 
     const { rows } = await db.query(query, params);
