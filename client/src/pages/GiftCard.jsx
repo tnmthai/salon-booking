@@ -26,6 +26,12 @@ export default function GiftCard() {
 
   useEffect(() => {
     api.getSalon(slug).then(setSalon).catch(() => setError('Salon not found'))
+    // Check if redirected back from Stripe
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('purchased') === '1') {
+      setStep(3)
+      setResult({ purchased: true })
+    }
   }, [slug])
 
   const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : amount
@@ -41,13 +47,13 @@ export default function GiftCard() {
     }
     setLoading(true)
     try {
-      const res = await api.purchaseGiftCard({
+      const res = await api.giftCardCheckout({
         slug,
         amount: selectedAmount,
         ...form,
       })
-      setResult(res)
-      setStep(3)
+      // Redirect to Stripe checkout
+      window.location.href = res.url
     } catch (err) {
       alert(err.message)
     }
@@ -181,24 +187,29 @@ export default function GiftCard() {
         )}
 
         {/* Step 3: Done */}
-        {step === 3 && result && (
+        {step === 3 && (
           <div className="text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold mb-2">Gift Card Purchased!</h2>
-            <p className="text-gray-500 mb-6">Share this code with your recipient</p>
-            <div className="bg-white rounded-xl shadow p-6 mb-6">
-              <div className="text-xs text-gray-500 uppercase mb-1">Gift Card Code</div>
-              <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">{result.code}</div>
-              <div className="text-lg font-semibold mt-2">${selectedAmount.toFixed(2)}</div>
-              {result.recipient_name && (
-                <div className="text-sm text-gray-500 mt-1">For: {result.recipient_name}</div>
-              )}
-              <div className="text-xs text-gray-400 mt-2">
-                Expires: {new Date(result.expires_at).toLocaleDateString('en-NZ')}
+            <p className="text-gray-500 mb-6">{result?.code ? 'Share this code with your recipient' : 'Check your email for the gift card code'}</p>
+            {result?.code ? (
+              <div className="bg-white rounded-xl shadow p-6 mb-6">
+                <div className="text-xs text-gray-500 uppercase mb-1">Gift Card Code</div>
+                <div className="text-3xl font-bold text-pink-600 font-mono tracking-wider">{result.code}</div>
+                <div className="text-lg font-semibold mt-2">${selectedAmount.toFixed(2)}</div>
+                {result.recipient_name && (
+                  <div className="text-sm text-gray-500 mt-1">For: {result.recipient_name}</div>
+                )}
+                <div className="text-xs text-gray-400 mt-2">
+                  Expires: {new Date(result.expires_at).toLocaleDateString('en-NZ')}
+                </div>
               </div>
-            </div>
-            {result.recipient_email && (
-              <p className="text-sm text-gray-500 mb-4">📧 Sent to {result.recipient_email}</p>
+            ) : (
+              <div className="bg-white rounded-xl shadow p-6 mb-6">
+                <div className="text-lg font-semibold text-green-600">✅ Payment Successful</div>
+                <p className="text-sm text-gray-500 mt-2">Your gift card has been created and the code has been sent to {form.purchaser_email || 'your email'}.</p>
+                <p className="text-sm text-gray-400 mt-1">You can also check the code using the lookup below.</p>
+              </div>
             )}
             <button onClick={() => { setStep(1); setResult(null); setForm({ purchaser_name: '', purchaser_email: '', recipient_name: '', recipient_email: '', message: '' }); }}
               className="bg-pink-600 text-white px-6 py-3 rounded-xl hover:bg-pink-700">

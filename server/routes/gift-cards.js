@@ -2,15 +2,80 @@ const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware, isSuperAdmin } = require('../middleware/auth');
 
+// Lazy-init Stripe
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  const Stripe = require('stripe');
+  return new Stripe(key, { apiVersion: '2026-04-22.dahlia' });
+}
+
 // Generate unique gift card code
 function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I,O,0,1 to avoid confusion
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
 
-// POST /api/gift-cards/purchase — Public: buy a gift card
+// POST /api/gift-cards/checkout — Public: create Stripe checkout for gift card
+router.post('/checkout', async (req, res) => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
+
+    const { slug, amount, purchaser_name, purchaser_email, recipient_name, recipient_email, message } = req.body;
+    if (!slug || !amount || amount < 5 || amount > 500) {
+      return res.status(400).json({ error: 'Invalid amount (min $5, max $500)' });
+    }
+    if (!purchaser_name || !purchaser_email) {
+      return res.status(400).json({ error: 'Purchaser name and email required' });
+    }
+
+    const salon = await db.query('SELECT id, name FROM salons WHERE slug = $1', [slug]);
+    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
+
+    const origin = req.headers.origin || `https://www.timia.nz`;
+    const amountCents = Math.round(amount * 100);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: purchaser_email,
+      line_items: [{
+        price_data: {
+          currency: 'nzd',
+          product_data: {
+            name: `Gift Card — ${salon.rows[0].name}`,
+            description: `$${amount} gift card for ${salon.rows[0].name}${recipient_name ? ` (for ${recipient_name})` : ''}`,
+          },
+          unit_amount: amountCents,
+        },
+        quantity: 1,
+      }],
+      metadata: {
+        type: 'gift_card',
+        salon_id: String(salon.rows[0].id),
+        slug,
+        amount: String(amount),
+        purchaser_name,
+        purchaser_email,
+        recipient_name: recipient_name || '',
+        recipient_email: recipient_email || '',
+        message: message || '',
+      },
+      success_url: `${origin}/${slug}/gift-card?purchased=1`,
+      cancel_url: `${origin}/${slug}/gift-card?cancelled=1`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/gift-cards/purchase — Direct purchase (no Stripe, for testing/admin)
 router.post('/purchase', async (req, res) => {
   try {
     const { slug, amount, purchaser_name, purchaser_email, recipient_name, recipient_email, message } = req.body;
@@ -24,7 +89,6 @@ router.post('/purchase', async (req, res) => {
     const salon = await db.query('SELECT id FROM salons WHERE slug = $1', [slug]);
     if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
 
-    // Generate unique code
     let code;
     for (let i = 0; i < 10; i++) {
       code = generateCode();
@@ -33,7 +97,7 @@ router.post('/purchase', async (req, res) => {
     }
 
     const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year expiry
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
     const { rows } = await db.query(
       `INSERT INTO gift_cards (salon_id, code, amount, balance, purchaser_name, purchaser_email, recipient_name, recipient_email, message, expires_at)
@@ -95,7 +159,6 @@ router.post('/redeem', async (req, res) => {
     if (new Date(card.expires_at) < new Date()) return res.status(400).json({ error: 'Gift card has expired' });
     if (parseFloat(card.balance) <= 0) return res.status(400).json({ error: 'Gift card has no balance' });
 
-    // Get appointment total if appointment_id provided
     let redeemAmount = parseFloat(card.balance);
     if (appointment_id) {
       const appt = await db.query(
@@ -110,7 +173,6 @@ router.post('/redeem', async (req, res) => {
       }
     }
 
-    // Deduct from balance
     const newBalance = parseFloat(card.balance) - redeemAmount;
     const newStatus = newBalance <= 0 ? 'redeemed' : 'active';
 
@@ -119,7 +181,6 @@ router.post('/redeem', async (req, res) => {
       [newBalance, newStatus, 'redeemed', card.id]
     );
 
-    // Log redemption
     await db.query(
       'INSERT INTO gift_card_redemptions (gift_card_id, appointment_id, amount_used) VALUES ($1, $2, $3)',
       [card.id, appointment_id || null, redeemAmount]
@@ -166,4 +227,32 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Helper: create gift card after Stripe payment (called from webhook)
+async function createGiftCardFromSession(session) {
+  const m = session.metadata;
+  if (m.type !== 'gift_card') return;
+
+  const salon = await db.query('SELECT id FROM salons WHERE slug = $1', [m.slug]);
+  if (!salon.rows.length) return;
+
+  let code;
+  for (let i = 0; i < 10; i++) {
+    code = generateCode();
+    const exists = await db.query('SELECT id FROM gift_cards WHERE code = $1', [code]);
+    if (!exists.rows.length) break;
+  }
+
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+  await db.query(
+    `INSERT INTO gift_cards (salon_id, code, amount, balance, purchaser_name, purchaser_email, recipient_name, recipient_email, message, stripe_payment_id, expires_at)
+     VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [salon.rows[0].id, code, m.amount, m.purchaser_name, m.purchaser_email, m.recipient_name, m.recipient_email, m.message, session.payment_intent || session.id, expiresAt]
+  );
+
+  console.log(`[Stripe] Gift card ${code} created for salon ${m.slug} ($${m.amount})`);
+}
+
 module.exports = router;
+module.exports.createGiftCardFromSession = createGiftCardFromSession;

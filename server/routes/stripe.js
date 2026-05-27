@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const { createGiftCardFromSession } = require('./gift-cards');
 
 // Lazy-init Stripe to avoid build-time errors
 function getStripe() {
@@ -89,7 +90,16 @@ async function webhookHandler(req, res) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const { salon_id, plan, cycle } = session.metadata || {};
+      const meta = session.metadata || {};
+
+      // Gift card purchase
+      if (meta.type === 'gift_card') {
+        await createGiftCardFromSession(session);
+        return res.json({ received: true });
+      }
+
+      // Plan subscription
+      const { salon_id, plan, cycle } = meta;
 
       if (salon_id && plan) {
         const now = new Date();

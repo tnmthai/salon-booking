@@ -88,6 +88,7 @@ export const api = {
 
   // Gift Cards
   purchaseGiftCard: (data) => request('/gift-cards/purchase', { method: 'POST', body: JSON.stringify(data) }),
+  giftCardCheckout: (data) => request('/gift-cards/checkout', { method: 'POST', body: JSON.stringify(data) }),
   lookupGiftCard: (code) => request(`/gift-cards/lookup/${code}`),
   getGiftCards: () => request('/gift-cards'),
   redeemGiftCard: (data) => request('/gift-cards/redeem', { method: 'POST', body: JSON.stringify(data) }),
