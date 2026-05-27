@@ -1,6 +1,16 @@
 const router = require('express').Router();
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { authMiddleware, isSuperAdmin } = require('../middleware/auth');
+
+// Rate limiter for gift card lookup — prevent brute-force code guessing
+const giftCardLookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 lookups per 15 min per IP
+  message: { error: 'Too many lookup attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Lazy-init Stripe
 function getStripe() {
@@ -75,8 +85,8 @@ router.post('/checkout', async (req, res) => {
   }
 });
 
-// POST /api/gift-cards/purchase — Direct purchase (no Stripe, for testing/admin)
-router.post('/purchase', async (req, res) => {
+// POST /api/gift-cards/purchase — Direct purchase (admin only — for manual/test gift cards)
+router.post('/purchase', authMiddleware, async (req, res) => {
   try {
     const { slug, amount, purchaser_name, purchaser_email, recipient_name, recipient_email, message } = req.body;
     if (!slug || !amount || amount < 5 || amount > 500) {
@@ -120,8 +130,8 @@ router.post('/purchase', async (req, res) => {
   }
 });
 
-// GET /api/gift-cards/lookup/:code — Public: check gift card balance
-router.get('/lookup/:code', async (req, res) => {
+// GET /api/gift-cards/lookup/:code — Public: check gift card balance (rate-limited)
+router.get('/lookup/:code', giftCardLookupLimiter, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT code, amount, balance, status, recipient_name, expires_at, created_at
@@ -140,8 +150,8 @@ router.get('/lookup/:code', async (req, res) => {
   }
 });
 
-// POST /api/gift-cards/redeem — Public: apply gift card to appointment
-router.post('/redeem', async (req, res) => {
+// POST /api/gift-cards/redeem — Auth required: apply gift card to appointment
+router.post('/redeem', authMiddleware, async (req, res) => {
   try {
     const { code, salon_slug, appointment_id } = req.body;
     if (!code) return res.status(400).json({ error: 'Gift card code required' });
@@ -215,10 +225,15 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/gift-cards/:id — Auth: cancel a gift card
+// DELETE /api/gift-cards/:id — Auth: cancel a gift card (must belong to your salon)
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const { rows } = await db.query('UPDATE gift_cards SET status = $1 WHERE id = $2 RETURNING *', ['cancelled', req.params.id]);
+    const salonId = isSuperAdmin(req.user.email) ? null : req.user.salon_id;
+    const query = salonId
+      ? 'UPDATE gift_cards SET status = $1 WHERE id = $2 AND salon_id = $3 RETURNING *'
+      : 'UPDATE gift_cards SET status = $1 WHERE id = $2 RETURNING *';
+    const params = salonId ? ['cancelled', req.params.id, salonId] : ['cancelled', req.params.id];
+    const { rows } = await db.query(query, params);
     if (!rows.length) return res.status(404).json({ error: 'Gift card not found' });
     res.json({ message: 'Gift card cancelled', gift_card: rows[0] });
   } catch (err) {
