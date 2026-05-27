@@ -88,7 +88,7 @@ export default function GiftCard() {
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-lg mx-auto px-4 py-4">
-          <a href={`/book/${slug}`} className="text-gray-400 hover:text-gray-600 text-sm">← Back to Booking</a>
+          <a href={`/${slug}/book`} className="text-gray-400 hover:text-gray-600 text-sm">← Back to Booking</a>
           <h1 className="text-lg md:text-xl font-bold text-pink-600 mt-1">🎁 {salon?.name || 'Loading...'} — Gift Card</h1>
         </div>
       </div>
