@@ -26,13 +26,16 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics", "https://www.facebook.com", "https://*.fbcdn.net", "https://c.clarity.ms", "https://*.clarity.ms"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://*.facebook.com", "https://*.fbcdn.net"],
+      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://connect.facebook.net", "https://www.facebook.com"],
       frameSrc: ["'self'", "https://www.facebook.com", "https://web.facebook.com"],
       objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'"],
     }
   }
 }));
@@ -78,6 +81,22 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/auth', authLimiter);
+// Stricter limit on login endpoint specifically
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 login attempts per 15 min
+  message: { error: 'Too many login attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+});
+app.use('/api/auth/login', loginLimiter);
+
+// Additional security headers
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+});
 app.use('/api/appointments/public', publicLimiter);
 app.use('/api/appointments/lookup', publicLimiter);
 app.use('/api/appointments/kiosk', publicLimiter);
