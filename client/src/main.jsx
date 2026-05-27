@@ -15,6 +15,7 @@ import Staff from './pages/Staff'
 import StaffBookings from './pages/StaffBookings'
 import Calendar from './pages/Calendar'
 import Booking from './pages/Booking'
+import GiftCard from './pages/GiftCard'
 import Lookup from './pages/Lookup'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
@@ -290,6 +291,7 @@ function AppInner() {
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/legal" element={<Legal />} />
         <Route path="/:slug/book" element={<Booking />} />
+        <Route path="/:slug/gift-card" element={<GiftCard />} />
         <Route path="/kiosk/:slug" element={<Kiosk />} />
         <Route path="/kiosk-guide" element={<KioskGuide />} />
         <Route path="/admin/*" element={

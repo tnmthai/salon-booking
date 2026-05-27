@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const pool = require('./db');
-const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn } = require('./initdb');
+const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn, addGiftCardsTable } = require('./initdb');
 const { authMiddleware, isSuperAdmin } = require('./middleware/auth');
 
 const app = express();
@@ -17,6 +17,7 @@ addStaffActiveColumn(pool);
 addServiceNameColumn(pool);
 addUserActiveColumn(pool);
 addWebsiteColumn(pool);
+addGiftCardsTable(pool);
 
 // --- Security ---
 app.use(helmet({
@@ -125,6 +126,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/overrides', require('./routes/overrides'));
 app.use('/api/visits', require('./routes/visits'));
+app.use('/api/gift-cards', require('./routes/gift-cards'));
 const { router: plansRouter } = require('./routes/plans');
 app.use('/api', plansRouter);
 app.use('/api/demo', require('./routes/demo'));

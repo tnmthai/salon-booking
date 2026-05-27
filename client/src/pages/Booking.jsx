@@ -3,6 +3,37 @@ import { useParams } from 'react-router-dom'
 import { api, getSalonTimezone } from '../utils/api'
 
 const TZ = getSalonTimezone()
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function formatTime(t) {
+  if (!t) return ''
+  const [h, m] = t.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+}
+
+function getOpeningHours(workingHours) {
+  // Group by day_of_week, find earliest start and latest end across all staff
+  const byDay = {}
+  for (const wh of workingHours) {
+    if (!byDay[wh.day_of_week]) byDay[wh.day_of_week] = { starts: [], ends: [] }
+    byDay[wh.day_of_week].starts.push(wh.start_time)
+    byDay[wh.day_of_week].ends.push(wh.end_time)
+  }
+  const result = []
+  for (let d = 1; d <= 7; d++) { // 1=Mon, 7=Sun (ISO)
+    const info = byDay[d]
+    if (info) {
+      const earliest = info.starts.sort()[0]
+      const latest = info.ends.sort().reverse()[0]
+      result.push({ day: d, open: earliest, close: latest, isOpen: true })
+    } else {
+      result.push({ day: d, open: null, close: null, isOpen: false })
+    }
+  }
+  return result
+}
 
 export default function Booking() {
   const { slug } = useParams()
@@ -14,6 +45,7 @@ export default function Booking() {
   const [gallery, setGallery] = useState([])
   const [reviews, setReviews] = useState([])
   const [salonRating, setSalonRating] = useState(null)
+  const [workingHours, setWorkingHours] = useState([])
 
   const [selectedServices, setSelectedServices] = useState([]) // Priority 6: multiple services
   const [selectedStaff, setSelectedStaff] = useState(null)
@@ -38,6 +70,7 @@ export default function Booking() {
     api.getPublicGallery(slug).then(setGallery).catch(console.error)
     api.getPublicReviews(slug).then(setReviews).catch(console.error)
     api.getSalonRating(slug).then(setSalonRating).catch(console.error)
+    api.getPublicWorkingHours(slug).then(setWorkingHours).catch(console.error)
   }, [slug])
 
   useEffect(() => {
@@ -185,6 +218,7 @@ export default function Booking() {
       <div className="bg-white shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <a href="/" className="text-gray-400 hover:text-gray-600 text-sm">← Home</a>
+          <a href={`/${slug}/gift-card`} className="text-pink-500 hover:text-pink-600 text-sm ml-4">🎁 Gift Card</a>
           <div className="flex items-center gap-3 mt-1">
             <h1 className="text-lg md:text-xl font-bold text-pink-600">💅 {salon?.name || 'Loading...'}</h1>
             {salonRating && salonRating.total_reviews > 0 && (
@@ -192,6 +226,28 @@ export default function Booking() {
             )}
           </div>
           {salon?.address && <p className="text-sm text-gray-500 mt-1">📍 {salon.address}</p>}
+          {/* Opening Hours */}
+          {workingHours.length > 0 && (
+            <details className="mt-3">
+              <summary className="text-sm text-pink-600 cursor-pointer hover:text-pink-700 font-medium">
+                🕐 Opening Hours
+              </summary>
+              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                {getOpeningHours(workingHours).map(h => {
+                  // Convert ISO day (1=Mon..7=Sun) to display
+                  const dayLabel = h.day === 7 ? 'Sun' : ['Mon','Tue','Wed','Thu','Fri','Sat'][h.day - 1]
+                  return (
+                    <div key={h.day} className="flex justify-between">
+                      <span className="font-medium">{dayLabel}</span>
+                      <span className={h.isOpen ? 'text-gray-600' : 'text-red-400'}>
+                        {h.isOpen ? `${formatTime(h.open)} – ${formatTime(h.close)}` : 'Closed'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </details>
+          )}
         </div>
       </div>
 

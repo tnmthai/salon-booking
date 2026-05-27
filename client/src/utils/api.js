@@ -86,6 +86,13 @@ export const api = {
   setWorkingHours: (staffId, schedule) => request(`/working-hours/staff/${staffId}`, { method: 'POST', body: JSON.stringify({ schedule }) }),
   getPublicWorkingHours: (slug) => request(`/working-hours/public/${slug}`),
 
+  // Gift Cards
+  purchaseGiftCard: (data) => request('/gift-cards/purchase', { method: 'POST', body: JSON.stringify(data) }),
+  lookupGiftCard: (code) => request(`/gift-cards/lookup/${code}`),
+  getGiftCards: () => request('/gift-cards'),
+  redeemGiftCard: (data) => request('/gift-cards/redeem', { method: 'POST', body: JSON.stringify(data) }),
+  cancelGiftCard: (id) => request(`/gift-cards/${id}`, { method: 'DELETE' }),
+
   // Reports
   getReportStats: (params) => {
     const qs = new URLSearchParams(params).toString();
