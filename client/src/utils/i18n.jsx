@@ -87,7 +87,50 @@ const vi = {
   language: 'Ngôn ngữ',
 }
 
-const dicts = { en, vi }
+const mi = {
+  dashboard: 'Papa Mahi', services: 'Ngā Ratonga', staff: 'Ngā Kaimahi', calendar: 'Maramataka',
+  users: 'Ngā Kaitaki', allShops: 'Ngā Toa Katoa', bookingPage: 'Whārangi Tono', logout: 'Takiuru',
+  totalServices: 'Ngā Ratonga', totalStaff: 'Ngā Kaimahi', confirmed: 'Whakaaetia', totalCustomers: 'Ngā Kiritaki',
+  bookingsTab: 'Ngā Tono', customersTab: 'Ngā Kiritaki', allStatus: 'Ngā Tūnga Katoa',
+  confirmedStatus: 'Whakaaetia', completedStatus: 'Oti', cancelledStatus: 'Whakakorehia',
+  today: 'Inanahi', prev: '← Mua', next: 'Whakamua →', noBookings: 'Kāore he tono i kitea',
+  time: 'Wā', customer: 'Kiritaki', phone: 'Waea', service: 'Ratonga',
+  price: 'Utu', status: 'Tūnga', actions: 'Ngā Mahi', complete: 'Whakaoti', cancel: 'Whakakore',
+  noCustomers: 'Kāore anō he kiritaki', joined: 'Hono mai',
+  addService: 'Tāpiri Ratonga', editService: 'Whakatika Ratonga', serviceName: 'Ingoa Ratonga',
+  category: 'Momo', duration: 'Roa (meneti)', priceLabel: 'Utu ($)',
+  description: 'Whakaahuatanga', update: 'Whakahou', add: 'Tāpiri',
+  addStaff: 'Tāpiri Kaimahi', editStaff: 'Whakatika Kaimahi', staffName: 'Ingoa',
+  role: 'Tūranga', selectRole: '-- Tīpakohia te Tūranga --',
+  allStaff: 'Ngā Kaimahi Katoa',
+  userManagement: 'Whakahaere Kaitaki', editUser: 'Whakatika Kaitaki', deleteUser: 'Mukua tēnei kaitaki?',
+  admin: 'Kaiwhakahaere', owner: 'Kaipupuri',
+  edit: 'Whakatika', delete: 'Muku', cancelBtn: 'Whakakore', save: 'Tiaki',
+  loading: 'Kei te uta...', noData: 'Kāore he raraunga',
+  bookAppointment: 'Tono Hōtaka', chooseService: 'Tīpakohia he Ratonga',
+  chooseStaff: 'Tīpakohia he Kaimahi', chooseDate: 'Tīpakohia te Rā', chooseTime: 'Tīpakohia te Wā',
+  yourInfo: 'Ō Mōhiohio', summary: 'Whakarāpopoto', confirmBooking: 'Whakau te Tono',
+  bookingConfirmed: 'Kua Whakaaetia te Tono!', bookAnother: 'Tono anō',
+  back: 'Hoki', nextBtn: 'Whakamua', name: 'Ingoa', email: 'Īmēra', notes: 'Tuhipoka',
+  durationLabel: 'Roa', noSlots: 'Kāore he wā wātea. Whakamātauhia he rā kē.',
+  loadingServices: 'Kei te uta ngā ratonga...',
+  salonBooking: 'Papa Tono Timia', registerSalon: 'Rēhita tō pakihi', signIn: 'Takiuru mai',
+  subtitle: 'Papa tono mō ngā pakihi ratonga. Rēhitia i ngā meneti.',
+  bookOnline: 'Tono ā-ipurangi 24/7', bookOnlineDesc: 'Ka tono ngā kiritaki i te wā e hiahiatia ana, kāore he waea',
+  staffMgmt: 'Whakahaere Kapa', staffMgmtDesc: 'Whakaratoa ngā ratonga, tirohia ngā hōtaka mō te rā/wiki',
+  dashOverview: 'Tirohanga Papa Mahi', dashOverviewDesc: 'Tirohia ngā tatauranga tono, moni whiwhi, kiritaki',
+  salonsOnPlatform: 'Ngā Pakihi i te Papa', bookNow: 'Tono Ināianei →',
+  loginTitle: 'Takiuru mai', registerTitle: 'Rēhita tō pakihi',
+  registerSubtitle: 'Waihanga he pūkete ka tīmoko ki te whiwhi tono',
+  salonName: 'Ingoa Pakihi', salonOwner: 'Kaipupuri', createSalon: 'Waihanga Pakihi',
+  creating: 'Kei te waihanga...', noAccount: 'Kāore he pūkete?', haveAccount: 'Kua mau he pūkete?',
+  password: 'Kupuhipa',
+  reviews: 'Ngā Arotake', gallery: 'Tānga Whakaahua', daysOff: 'Ngā Rā Wātea', reports: 'Ngā Pūrongo',
+  loyaltyPoints: 'Ngā Tono Pūmau', myDashboard: 'Tō Papa Mahi', mySchedule: 'Tō Hōtaka',
+  language: 'Reo',
+}
+
+const dicts = { en, vi, mi }
 const I18nContext = createContext()
 
 export function I18nProvider({ children }) {

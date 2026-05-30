@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
+import { useI18n } from '../utils/i18n'
 
 export default function Footer() {
+  const { lang, switchLang } = useI18n()
+
   return (
     <footer className="border-t border-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -11,8 +14,16 @@ export default function Footer() {
               <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
               <span className="text-sm text-gray-400">© 2026 Timia</span>
             </div>
-
           </div>
+          <select
+            value={lang}
+            onChange={(e) => switchLang(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600"
+          >
+            <option value="en">English</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="mi">Māori</option>
+          </select>
         </div>
 
         {/* Links grid */}
