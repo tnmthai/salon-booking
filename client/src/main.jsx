@@ -154,6 +154,8 @@ function AdminLayout({ salon, user, onLogout }) {
                 <option value="en">EN</option>
                 <option value="vi">VI</option>
                 <option value="mi">MI</option>
+                <option value="zh">中文</option>
+                <option value="hi">हिन्दी</option>
               </select>
               <span className="text-gray-500 text-xs">{user?.name}</span>
               <button onClick={onLogout} className="text-gray-400 hover:text-red-500 text-sm">{t('logout')}</button>
@@ -207,6 +209,8 @@ function AdminLayout({ salon, user, onLogout }) {
                     <option value="en">EN</option>
                     <option value="vi">VI</option>
                     <option value="mi">MI</option>
+                    <option value="zh">中文</option>
+                    <option value="hi">हिन्दी</option>
                   </select>
                   <span className="text-gray-500 text-xs">{user?.name}</span>
                 </div>

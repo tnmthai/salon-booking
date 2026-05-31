@@ -26,6 +26,8 @@ function Navbar() {
             <option value="en">EN</option>
             <option value="vi">VI</option>
             <option value="mi">MI</option>
+                <option value="zh">中文</option>
+                <option value="hi">हिन्दी</option>
           </select>
           <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">{t('getStarted')}</Link>
         </div>
@@ -50,6 +52,8 @@ function Navbar() {
                 <option value="en">EN</option>
                 <option value="vi">VI</option>
                 <option value="mi">MI</option>
+                <option value="zh">中文</option>
+                <option value="hi">हिन्दी</option>
               </select>
             </div>
             <Link to="/register" onClick={() => setOpen(false)} className="block mt-2 text-center bg-gray-900 text-white py-2.5 rounded-full text-sm font-medium">{t('getStarted')}</Link>

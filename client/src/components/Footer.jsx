@@ -22,6 +22,8 @@ export default function Footer() {
             <option value="en">English</option>
             <option value="vi">Tiếng Việt</option>
             <option value="mi">Māori</option>
+            <option value="zh">中文</option>
+            <option value="hi">हिन्दी</option>
           </select>
         </div>
 
