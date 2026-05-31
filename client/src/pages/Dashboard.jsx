@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api, getSalonTimezone, setSalonTimezone } from '../utils/api'
-import { translations } from '../utils/translations'
+import { useI18n } from '../utils/i18n'
 
 
 export default function Dashboard() {
-  const t = (k) => translations[k] || k
+  const { t } = useI18n()
   const [tab, setTab] = useState('bookings')
   const [appts, setAppts] = useState([])
   const [customers, setCustomers] = useState([])

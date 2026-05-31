@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useI18n } from '../utils/i18n'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const { t, lang, switchLang } = useI18n()
   const isActive = (path) => location.pathname === path
+
+  const navLinks = [
+    { to: '/features', label: t('features') },
+    { to: '/pricing', label: t('pricing') },
+    { to: '/about', label: t('about') },
+    { to: '/lookup', label: t('findBooking') },
+    { to: '/kiosk-guide', label: t('kioskGuide') },
+  ]
 
   return (
     <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
@@ -16,13 +26,7 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
-          {[
-            { to: '/features', label: 'Features' },
-            { to: '/pricing', label: 'Pricing' },
-            { to: '/about', label: 'About' },
-            { to: '/lookup', label: 'Find booking' },
-            { to: '/kiosk-guide', label: 'Kiosk Guide' },
-          ].map(link => (
+          {navLinks.map(link => (
             <Link
               key={link.to}
               to={link.to}
@@ -31,8 +35,17 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">Sign in</Link>
-          <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">Get Started</Link>
+          <select
+            value={lang}
+            onChange={(e) => switchLang(e.target.value)}
+            className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 mx-1"
+          >
+            <option value="en">EN</option>
+            <option value="vi">VI</option>
+            <option value="mi">MI</option>
+          </select>
+          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('signIn')}</Link>
+          <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">{t('getStarted')}</Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -50,14 +63,7 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-2 space-y-0.5">
-            {[
-              { to: '/features', label: 'Features' },
-              { to: '/pricing', label: 'Pricing' },
-              { to: '/about', label: 'About' },
-              { to: '/lookup', label: 'Find booking' },
-              { to: '/kiosk-guide', label: 'Kiosk Guide' },
-              { to: '/login', label: 'Sign in' },
-            ].map(link => (
+            {navLinks.map(link => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -68,11 +74,29 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="block py-2.5 px-3 text-sm rounded-lg text-gray-700 hover:text-pink-600 hover:bg-gray-50"
+            >
+              {t('signIn')}
+            </Link>
+            <div className="flex items-center gap-2 px-3 py-2">
+              <select
+                value={lang}
+                onChange={(e) => switchLang(e.target.value)}
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600"
+              >
+                <option value="en">EN</option>
+                <option value="vi">VI</option>
+                <option value="mi">MI</option>
+              </select>
+            </div>
+            <Link
               to="/register"
               onClick={() => setOpen(false)}
               className="block mt-2 text-center bg-gray-900 text-white py-2.5 rounded-full text-sm font-medium hover:bg-gray-800"
             >
-              Get Started
+              {t('getStarted')}
             </Link>
           </div>
         </div>

@@ -1,11 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { setLanguage, getLanguage } from './translations'
+import { createContext, useContext, useState } from 'react'
 
 const en = {
   dashboard: 'Dashboard', services: 'Services', staff: 'Staff', calendar: 'Calendar',
   users: 'Users', allShops: 'All Shops', bookingPage: 'Booking Page', logout: 'Logout',
   totalServices: 'Services', totalStaff: 'Staff', confirmed: 'Confirmed', totalCustomers: 'Customers',
-  bookingsTab: 'Bookings', customersTab: 'Customers', allStatus: 'All Status',
+  bookingsTab: 'Bookings', customersTab: 'Customers', settingsTab: 'Settings', allStatus: 'All Status',
   confirmedStatus: 'Confirmed', completedStatus: 'Completed', cancelledStatus: 'Cancelled',
   today: 'Today', prev: '← Prev', next: 'Next →', noBookings: 'No bookings found',
   time: 'Time', customer: 'Customer', phone: 'Phone', service: 'Service',
@@ -24,7 +23,7 @@ const en = {
   bookAppointment: 'Book Appointment', chooseService: 'Choose a Service',
   chooseStaff: 'Choose Staff', chooseDate: 'Choose Date', chooseTime: 'Choose Time',
   yourInfo: 'Your Information', summary: 'Summary', confirmBooking: 'Confirm Booking',
-  bookingConfirmed: 'Booking Confirmed!', bookAnother: 'Book Another',
+  bookingConfirmed: 'Booking Confirmed!',
   back: 'Back', nextBtn: 'Next', name: 'Name', email: 'Email', notes: 'Notes',
   durationLabel: 'Duration', noSlots: 'No available slots. Try another date.',
   loadingServices: 'Loading services...',
@@ -42,13 +41,77 @@ const en = {
   reviews: 'Reviews', gallery: 'Gallery', daysOff: 'Days Off', reports: 'Reports',
   loyaltyPoints: 'Loyalty Points', myDashboard: 'My Dashboard', mySchedule: 'My Schedule',
   language: 'Language',
+
+  // Booking page keys
+  selectServices: 'Select 1-3 services',
+  servicesSelected: 'service(s) selected',
+  total: 'Total',
+  home: 'Home',
+  ourWork: 'Our Work',
+  reviewsCount: 'Reviews',
+  booking: 'Booking',
+  confirm: 'Confirm',
+  chooseServices: 'Choose Services',
+  selectStaff: 'Select Staff',
+  selectDate: 'Select Date',
+  selectTime: 'Select Time',
+  fullName: 'Full Name',
+  phonePlaceholder: 'Phone',
+  emailOptional: 'Email (optional)',
+  notesOptional: 'Notes (optional)',
+  loyaltyHint: 'Enter your correct phone & email to collect loyalty points!',
+  summaryTitle: 'Summary',
+  servicesLabel: 'Services',
+  staffLabel: 'Staff',
+  dateLabel: 'Date',
+  timeLabel: 'Time',
+  durationLabelKey: 'Duration',
+  totalLabel: 'Total',
+  bookingSuccess: 'Booking Confirmed!',
+  bookingSuccessMsg: 'your appointment at',
+  hasBeenConfirmed: 'has been confirmed.',
+  bookingCode: 'Booking Code',
+  bookAnother: 'Book Another',
+  noSlotsTitle: 'No available slots on this date',
+  noSlotsHint: 'Staff may be off or fully booked',
+  findingNext: 'Finding next available date...',
+  nextAvailable: 'Next available:',
+  goTo: 'Go to',
+  bookingAction: 'Booking...',
+  staffMayBeOff: 'Staff may be off or fully booked',
+  selectedTotal: 'selected',
+  minTotal: 'min',
+  pleaseEnterName: 'Please enter a valid name (at least 2 characters)',
+  nameNoNumbers: 'Name cannot contain numbers',
+  pleaseEnterPhone: 'Please enter a valid phone number (at least 7 digits)',
+  pleaseEnterEmail: 'Please enter a valid email address',
+  pleaseSelectSlot: 'Please select a time slot',
+  salonNotFound: 'Salon not found',
+
+  // Admin nav keys
+  team: 'Team',
+  schedule: 'Schedule',
+  more: 'More',
+  account: 'Account',
+  plan: 'Plan',
+  settings: 'Settings',
+  kioskCheckin: 'Kiosk Check-in',
+  kioskGuide: 'Kiosk Guide',
+  superAdmin: 'Super Admin',
+
+  // Landing navbar keys
+  features: 'Features',
+  pricing: 'Pricing',
+  about: 'About',
+  findBooking: 'Find booking',
+  getStarted: 'Get Started',
 }
 
 const vi = {
   dashboard: 'Bảng điều khiển', services: 'Dịch vụ', staff: 'Nhân viên', calendar: 'Lịch',
   users: 'Người dùng', allShops: 'Tất cả cửa hàng', bookingPage: 'Trang đặt lịch', logout: 'Đăng xuất',
   totalServices: 'Dịch vụ', totalStaff: 'Nhân viên', confirmed: 'Đã xác nhận', totalCustomers: 'Khách hàng',
-  bookingsTab: 'Lịch hẹn', customersTab: 'Khách hàng', allStatus: 'Tất cả trạng thái',
+  bookingsTab: 'Lịch hẹn', customersTab: 'Khách hàng', settingsTab: 'Cài đặt', allStatus: 'Tất cả trạng thái',
   confirmedStatus: 'Đã xác nhận', completedStatus: 'Hoàn thành', cancelledStatus: 'Đã hủy',
   today: 'Hôm nay', prev: '← Trước', next: 'Tiếp →', noBookings: 'Không có lịch hẹn',
   time: 'Thời gian', customer: 'Khách hàng', phone: 'Điện thoại', service: 'Dịch vụ',
@@ -67,7 +130,7 @@ const vi = {
   bookAppointment: 'Đặt lịch hẹn', chooseService: 'Chọn dịch vụ',
   chooseStaff: 'Chọn nhân viên', chooseDate: 'Chọn ngày', chooseTime: 'Chọn giờ',
   yourInfo: 'Thông tin của bạn', summary: 'Tóm tắt', confirmBooking: 'Xác nhận đặt lịch',
-  bookingConfirmed: 'Đã xác nhận lịch hẹn!', bookAnother: 'Đặt lịch khác',
+  bookingConfirmed: 'Đã xác nhận lịch hẹn!',
   back: 'Quay lại', nextBtn: 'Tiếp', name: 'Họ tên', email: 'Email', notes: 'Ghi chú',
   durationLabel: 'Thời lượng', noSlots: 'Không có giờ trống. Thử ngày khác.',
   loadingServices: 'Đang tải dịch vụ...',
@@ -85,13 +148,76 @@ const vi = {
   reviews: 'Đánh giá', gallery: 'Thư viện ảnh', daysOff: 'Ngày nghỉ', reports: 'Báo cáo',
   loyaltyPoints: 'Điểm tích lũy', myDashboard: 'Bảng điều khiển', mySchedule: 'Lịch của tôi',
   language: 'Ngôn ngữ',
+
+  // Booking page keys
+  selectServices: 'Chọn 1-3 dịch vụ',
+  servicesSelected: 'dịch vụ đã chọn',
+  total: 'Tổng cộng',
+  home: 'Trang chủ',
+  ourWork: 'Thư viện ảnh',
+  reviewsCount: 'Đánh giá',
+  booking: 'Đặt lịch',
+  confirm: 'Xác nhận',
+  chooseServices: 'Chọn dịch vụ',
+  selectStaff: 'Chọn nhân viên',
+  selectDate: 'Chọn ngày',
+  selectTime: 'Chọn giờ',
+  fullName: 'Họ và tên',
+  phonePlaceholder: 'Số điện thoại',
+  emailOptional: 'Email (tùy chọn)',
+  notesOptional: 'Ghi chú (tùy chọn)',
+  loyaltyHint: 'Nhập đúng số điện thoại & email để tích điểm!',
+  summaryTitle: 'Tóm tắt',
+  servicesLabel: 'Dịch vụ',
+  staffLabel: 'Nhân viên',
+  dateLabel: 'Ngày',
+  timeLabel: 'Giờ',
+  durationLabelKey: 'Thời lượng',
+  totalLabel: 'Tổng cộng',
+  bookingSuccess: 'Đã xác nhận lịch hẹn!',
+  bookingSuccessMsg: 'lịch hẹn tại',
+  hasBeenConfirmed: 'đã được xác nhận.',
+  bookingCode: 'Mã đặt lịch',
+  noSlotsTitle: 'Không có giờ trống ngày này',
+  noSlotsHint: 'Nhân viên nghỉ hoặc đã kín lịch',
+  findingNext: 'Đang tìm ngày trống tiếp theo...',
+  nextAvailable: 'Ngày trống tiếp theo',
+  goTo: 'Đến ngày',
+  bookingAction: 'Đang đặt lịch...',
+  staffMayBeOff: 'Nhân viên nghỉ hoặc đã kín lịch',
+  selectedTotal: 'đã chọn',
+  minTotal: 'phút',
+  pleaseEnterName: 'Vui lòng nhập họ tên (ít nhất 2 ký tự)',
+  nameNoNumbers: 'Họ tên không được chứa số',
+  pleaseEnterPhone: 'Vui lòng nhập số điện thoại (ít nhất 7 chữ số)',
+  pleaseEnterEmail: 'Vui lòng nhập đúng định dạng email',
+  pleaseSelectSlot: 'Vui lòng chọn giờ',
+  salonNotFound: 'Không tìm thấy salon',
+
+  // Admin nav keys
+  team: 'Đội ngũ',
+  schedule: 'Lịch làm việc',
+  more: 'Thêm',
+  account: 'Tài khoản',
+  plan: 'Gói dịch vụ',
+  settings: 'Cài đặt',
+  kioskCheckin: 'Check-in Kiosk',
+  kioskGuide: 'Hướng dẫn Kiosk',
+  superAdmin: 'Quản trị cấp cao',
+
+  // Landing navbar keys
+  features: 'Tính năng',
+  pricing: 'Bảng giá',
+  about: 'Giới thiệu',
+  findBooking: 'Tìm lịch hẹn',
+  getStarted: 'Bắt đầu',
 }
 
 const mi = {
   dashboard: 'Papa Mahi', services: 'Ngā Ratonga', staff: 'Ngā Kaimahi', calendar: 'Maramataka',
   users: 'Ngā Kaitaki', allShops: 'Ngā Toa Katoa', bookingPage: 'Whārangi Tono', logout: 'Takiuru',
   totalServices: 'Ngā Ratonga', totalStaff: 'Ngā Kaimahi', confirmed: 'Whakaaetia', totalCustomers: 'Ngā Kiritaki',
-  bookingsTab: 'Ngā Tono', customersTab: 'Ngā Kiritaki', allStatus: 'Ngā Tūnga Katoa',
+  bookingsTab: 'Ngā Tono', customersTab: 'Ngā Kiritaki', settingsTab: 'Ngā Tautuhinga', allStatus: 'Ngā Tūnga Katoa',
   confirmedStatus: 'Whakaaetia', completedStatus: 'Oti', cancelledStatus: 'Whakakorehia',
   today: 'Inanahi', prev: '← Mua', next: 'Whakamua →', noBookings: 'Kāore he tono i kitea',
   time: 'Wā', customer: 'Kiritaki', phone: 'Waea', service: 'Ratonga',
@@ -110,7 +236,7 @@ const mi = {
   bookAppointment: 'Tono Hōtaka', chooseService: 'Tīpakohia he Ratonga',
   chooseStaff: 'Tīpakohia he Kaimahi', chooseDate: 'Tīpakohia te Rā', chooseTime: 'Tīpakohia te Wā',
   yourInfo: 'Ō Mōhiohio', summary: 'Whakarāpopoto', confirmBooking: 'Whakau te Tono',
-  bookingConfirmed: 'Kua Whakaaetia te Tono!', bookAnother: 'Tono anō',
+  bookingConfirmed: 'Kua Whakaaetia te Tono!',
   back: 'Hoki', nextBtn: 'Whakamua', name: 'Ingoa', email: 'Īmēra', notes: 'Tuhipoka',
   durationLabel: 'Roa', noSlots: 'Kāore he wā wātea. Whakamātauhia he rā kē.',
   loadingServices: 'Kei te uta ngā ratonga...',
@@ -128,9 +254,92 @@ const mi = {
   reviews: 'Ngā Arotake', gallery: 'Tānga Whakaahua', daysOff: 'Ngā Rā Wātea', reports: 'Ngā Pūrongo',
   loyaltyPoints: 'Ngā Tono Pūmau', myDashboard: 'Tō Papa Mahi', mySchedule: 'Tō Hōtaka',
   language: 'Reo',
+
+  // Booking page keys
+  selectServices: 'Tīpakohia 1-3 ratonga',
+  servicesSelected: 'ngā ratonga kua tīpakohia',
+  total: 'Tapeke',
+  home: 'Kāinga',
+  ourWork: 'Ā Mātou Mahi',
+  reviewsCount: 'Ngā Arotake',
+  booking: 'Tono',
+  confirm: 'Whakau',
+  chooseServices: 'Tīpakohia ngā Ratonga',
+  selectStaff: 'Tīpakohia te Kaimahi',
+  selectDate: 'Tīpakohia te Rā',
+  selectTime: 'Tīpakohia te Wā',
+  fullName: 'Ingoa Katoa',
+  phonePlaceholder: 'Waea',
+  emailOptional: 'Īmēra (kōwhiringa)',
+  notesOptional: 'Tuhipoka (kōwhiringa)',
+  loyaltyHint: 'Tāurua tō waea & īmēra ki te kohi tono pūmau!',
+  summaryTitle: 'Whakarāpopoto',
+  servicesLabel: 'Ngā Ratonga',
+  staffLabel: 'Ngā Kaimahi',
+  dateLabel: 'Rā',
+  timeLabel: 'Wā',
+  durationLabelKey: 'Roa',
+  totalLabel: 'Tapeke',
+  bookingSuccess: 'Kua Whakaaetia te Tono!',
+  bookingSuccessMsg: 'tō hōtaka ki',
+  hasBeenConfirmed: 'kua whakaaetia.',
+  bookingCode: 'Waehere Tono',
+  noSlotsTitle: 'Kāore he wā wātea i tēnei rā',
+  noSlotsHint: 'Ka taea e te kaimahi te wātea, kua kī rānei',
+  findingNext: 'Kei te rapu rā wātea...',
+  nextAvailable: 'Rā wātea',
+  goTo: 'Haere ki',
+  bookingAction: 'Kei te tono...',
+  staffMayBeOff: 'Ka taea e te kaimahi te wātea, kua kī rānei',
+  selectedTotal: 'kua tīpakohia',
+  minTotal: 'meneti',
+  pleaseEnterName: 'Tāurua he ingoa (2+ pūāhua)',
+  nameNoNumbers: 'Kāore e taea te nama i roto i te ingoa',
+  pleaseEnterPhone: 'Tāurua he waea (7+ nama)',
+  pleaseEnterEmail: 'Tāurua he īmēra tika',
+  pleaseSelectSlot: 'Tīpakohia he wā',
+  salonNotFound: 'Kāore he pakihi i kitea',
+
+  // Admin nav keys
+  team: 'Kapa',
+  schedule: 'Hōtaka',
+  more: 'Anō',
+  account: 'Pūkete',
+  plan: 'Mahere',
+  settings: 'Ngā Tautuhinga',
+  kioskCheckin: 'Takiuru Kiosk',
+  kioskGuide: 'Aratohu Kiosk',
+  superAdmin: 'Kaiwhakahaere Matua',
+
+  // Landing navbar keys
+  features: 'Ngā Āhuatanga',
+  pricing: 'Utu',
+  about: 'Mō Mātou',
+  findBooking: 'Rapu tono',
+  getStarted: 'Tīmata',
 }
 
 const dicts = { en, vi, mi }
+
+// --- Language persistence (single source of truth) ---
+const STORAGE_KEY = 'salon_lang'
+
+export function getLanguage() {
+  return localStorage.getItem(STORAGE_KEY) || 'en'
+}
+
+export function setLanguage(lang) {
+  localStorage.setItem(STORAGE_KEY, lang)
+}
+
+// Standalone t() for non-React contexts (e.g. Proxy wrapper)
+export function t(key) {
+  const lang = getLanguage()
+  const dict = dicts[lang] || en
+  return dict[key] || en[key] || key
+}
+
+// --- React Context ---
 const I18nContext = createContext()
 
 export function I18nProvider({ children }) {
@@ -141,13 +350,13 @@ export function I18nProvider({ children }) {
     setLang(newLang)
   }
 
-  const t = (key) => {
+  const tCtx = (key) => {
     const dict = dicts[lang] || en
     return dict[key] || en[key] || key
   }
 
   return (
-    <I18nContext.Provider value={{ t, lang, switchLang }}>
+    <I18nContext.Provider value={{ t: tCtx, lang, switchLang }}>
       {children}
     </I18nContext.Provider>
   )

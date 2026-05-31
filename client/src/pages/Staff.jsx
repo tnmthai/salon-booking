@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { sanitizeName, sanitizePhone } from '../utils/validation'
-import { translations } from '../utils/translations'
+import { useI18n } from '../utils/i18n'
 
 export default function Staff() {
-  const t = (k) => translations[k] || k
+  const { t } = useI18n()
   const [staff, setStaff] = useState([])
   const [form, setForm] = useState({ name: '', role: '', phone: '', email: '' })
   const [editing, setEditing] = useState(null)

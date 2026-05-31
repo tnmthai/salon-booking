@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { api, getSalonTimezone } from '../utils/api'
-import { translations } from '../utils/translations'
+import { useI18n } from '../utils/i18n'
 
 const STAFF_COLORS = [
   { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', dot: 'bg-blue-500' },
@@ -212,7 +212,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
 }
 
 export default function Calendar() {
-  const t = (k) => translations[k] || k
+  const { t } = useI18n()
   const [date, setDate] = useState(todayNZ())
   const [staffList, setStaffList] = useState([])
   const [appointments, setAppointments] = useState([])
