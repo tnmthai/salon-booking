@@ -4,3 +4,6 @@ Disallow: /admin
 Disallow: /api
 
 Sitemap: https://www.timia.nz/sitemap.xml
+
+# IndexNow
+# Key: 842d43d77ea7f789e79e927f1e4c2a4e
