@@ -181,6 +181,73 @@ const en = {
   landing_msg_sent: "Message sent! We'll get back to you soon.",
   landing_failed_send: 'Failed to send. Please try again.',
 
+  // === Login ===
+  login_back: 'Back to Home',
+  login_title: 'Welcome back',
+  login_subtitle: 'Sign in to manage your salon',
+  login_email: 'Email',
+  login_password: 'Password',
+  login_sign_in: 'Sign in',
+  login_signing_in: 'Signing in...',
+  login_no_account: "Don't have an account?",
+  login_sign_up: 'Sign up',
+
+  // === Register ===
+  register_back: 'Back to Home',
+  register_title: 'Create your business',
+  register_subtitle: 'Start receiving bookings in minutes',
+  register_business_name: 'Business Name *',
+  register_business_placeholder: 'e.g. Bella Hair Studio',
+  register_booking_url: 'Booking URL',
+  register_owner_name: 'Owner Name *',
+  register_owner_placeholder: 'Your name',
+  register_phone: 'Phone',
+  register_email: 'Email *',
+  register_password: 'Password *',
+  register_website: 'Company Website',
+  register_website_optional: '(optional)',
+  register_website_placeholder: 'https://www.yourcompany.com',
+  register_address: 'Address',
+  register_address_placeholder: '123 Main St, Auckland',
+  register_agree: 'I agree to the',
+  register_terms: 'Terms & Conditions',
+  register_creating: 'Creating...',
+  register_create: 'Create Business',
+  register_has_account: 'Already have an account?',
+  register_sign_in: 'Sign in',
+  register_error_salon_name: 'Business name must be at least 2 characters',
+  register_error_owner_name: 'Owner name must be at least 2 characters',
+  register_error_email: 'Please enter a valid email address',
+  register_error_password: 'Password must be at least 6 characters',
+  register_error_phone: 'Please enter a valid phone number (at least 7 digits)',
+
+  // === Lookup ===
+  lookup_title: 'Find Your Booking',
+  lookup_subtitle: 'Enter your booking code or phone number',
+  lookup_code: 'Booking Code',
+  lookup_code_placeholder: 'e.g. ABC123',
+  lookup_phone: 'Phone Number',
+  lookup_phone_placeholder: '021 123 4567',
+  lookup_search: 'Search',
+  lookup_searching: 'Searching...',
+  lookup_not_found: 'No booking found',
+
+  // === Terms ===
+  terms_title: 'Terms & Conditions',
+  terms_last_updated: 'Last updated',
+
+  // === Privacy ===
+  privacy_title: 'Privacy Policy',
+  privacy_last_updated: 'Last updated',
+
+  // === Cookies ===
+  cookies_title: 'Cookie Policy',
+  cookies_last_updated: 'Last updated',
+
+  // === Legal ===
+  legal_title: 'Legal Notice',
+  legal_last_updated: 'Last updated',
+
   // === Features page ===
   features_badge: 'Built for modern businesses',
   features_title_1: 'Everything you need to',
@@ -677,6 +744,73 @@ const vi = {
   landing_msg_sent: 'Đã gửi tin nhắn! Chúng tôi sẽ phản hồi sớm.',
   landing_failed_send: 'Gửi thất bại. Vui lòng thử lại.',
 
+  // === Login ===
+  login_back: 'Quay lại trang chủ',
+  login_title: 'Chào mừng trở lại',
+  login_subtitle: 'Đăng nhập để quản lý salon',
+  login_email: 'Email',
+  login_password: 'Mật khẩu',
+  login_sign_in: 'Đăng nhập',
+  login_signing_in: 'Đang đăng nhập...',
+  login_no_account: 'Chưa có tài khoản?',
+  login_sign_up: 'Đăng ký',
+
+  // === Register ===
+  register_back: 'Quay lại trang chủ',
+  register_title: 'Tạo doanh nghiệp',
+  register_subtitle: 'Bắt đầu nhận lịch hẹn trong vài phút',
+  register_business_name: 'Tên doanh nghiệp *',
+  register_business_placeholder: 'VD: Bella Hair Studio',
+  register_booking_url: 'URL đặt lịch',
+  register_owner_name: 'Tên chủ sở hữu *',
+  register_owner_placeholder: 'Tên của bạn',
+  register_phone: 'Số điện thoại',
+  register_email: 'Email *',
+  register_password: 'Mật khẩu *',
+  register_website: 'Website công ty',
+  register_website_optional: '(tùy chọn)',
+  register_website_placeholder: 'https://www.yourcompany.com',
+  register_address: 'Địa chỉ',
+  register_address_placeholder: '123 Main St, Auckland',
+  register_agree: 'Tôi đồng ý với',
+  register_terms: 'Điều khoản & Điều kiện',
+  register_creating: 'Đang tạo...',
+  register_create: 'Tạo doanh nghiệp',
+  register_has_account: 'Đã có tài khoản?',
+  register_sign_in: 'Đăng nhập',
+  register_error_salon_name: 'Tên doanh nghiệp phải có ít nhất 2 ký tự',
+  register_error_owner_name: 'Tên chủ sở hữu phải có ít nhất 2 ký tự',
+  register_error_email: 'Vui lòng nhập địa chỉ email hợp lệ',
+  register_error_password: 'Mật khẩu phải có ít nhất 6 ký tự',
+  register_error_phone: 'Vui lòng nhập số điện thoại hợp lệ (ít nhất 7 chữ số)',
+
+  // === Lookup ===
+  lookup_title: 'Tìm lịch hẹn',
+  lookup_subtitle: 'Nhập mã đặt lịch hoặc số điện thoại',
+  lookup_code: 'Mã đặt lịch',
+  lookup_code_placeholder: 'VD: ABC123',
+  lookup_phone: 'Số điện thoại',
+  lookup_phone_placeholder: '021 123 4567',
+  lookup_search: 'Tìm kiếm',
+  lookup_searching: 'Đang tìm...',
+  lookup_not_found: 'Không tìm thấy lịch hẹn',
+
+  // === Terms ===
+  terms_title: 'Điều khoản & Điều kiện',
+  terms_last_updated: 'Cập nhật lần cuối',
+
+  // === Privacy ===
+  privacy_title: 'Chính sách bảo mật',
+  privacy_last_updated: 'Cập nhật lần cuối',
+
+  // === Cookies ===
+  cookies_title: 'Chính sách cookie',
+  cookies_last_updated: 'Cập nhật lần cuối',
+
+  // === Legal ===
+  legal_title: 'Thông báo pháp lý',
+  legal_last_updated: 'Cập nhật lần cuối',
+
   // === Features page ===
   features_badge: 'Dành cho doanh nghiệp hiện đại',
   features_title_1: 'Mọi thứ bạn cần để',
@@ -1172,6 +1306,73 @@ const mi = {
   landing_sending: 'Kei te tuku...',
   landing_msg_sent: 'Kua tukuna te karere! Ka whakautu wawe mātou.',
   landing_failed_send: 'I rahua te tuku. Whakamātauhia anō.',
+
+  // === Login ===
+  login_back: 'Hoki ki te Kāinga',
+  login_title: 'Nau mai hoki mai',
+  login_subtitle: 'Takiuru ki te whakahaere i tō whare ātaahua',
+  login_email: 'Īmēra',
+  login_password: 'Kupuhipa',
+  login_sign_in: 'Takiuru',
+  login_signing_in: 'E takiuru ana...',
+  login_no_account: 'Kāore he pūkete?',
+  login_sign_up: 'Rēhita',
+
+  // === Register ===
+  register_back: 'Hoki ki te Kāinga',
+  register_title: 'Waihangia tō pakihi',
+  register_subtitle: 'Tīmata ki te whiwhi tono i ngā meneti',
+  register_business_name: 'Ingoa Pakihi *',
+  register_business_placeholder: 'hei tauira: Bella Hair Studio',
+  register_booking_url: 'URL Tono',
+  register_owner_name: 'Ingoa Kaiwhiwhi *',
+  register_owner_placeholder: 'Tō ingoa',
+  register_phone: 'Waea',
+  register_email: 'Īmēra *',
+  register_password: 'Kupuhipa *',
+  register_website: 'Paetukutuku Kamupene',
+  register_website_optional: '(kōwhiringa)',
+  register_website_placeholder: 'https://www.yourcompany.com',
+  register_address: 'Wāhi noho',
+  register_address_placeholder: '123 Main St, Auckland',
+  register_agree: 'E whakaae ana ahau ki ngā',
+  register_terms: 'Ture & Here',
+  register_creating: 'E waihanga ana...',
+  register_create: 'Waihanga Pakihi',
+  register_has_account: 'Kua whai pūkete?',
+  register_sign_in: 'Takiuru',
+  register_error_salon_name: 'Ko te ingoa pakihi me 2 pūāhua neke atu',
+  register_error_owner_name: 'Ko te ingoa kaiwhiwhi me 2 pūāhua neke atu',
+  register_error_email: 'Tāurua he īmēra whaimana',
+  register_error_password: 'Ko te kupuhipa me 6 pūāhua neke atu',
+  register_error_phone: 'Tāurua he waea whaimana (7 mati neke atu)',
+
+  // === Lookup ===
+  lookup_title: 'Kimi Tono',
+  lookup_subtitle: 'Tāurua tō waehere tono, tau waea rānei',
+  lookup_code: 'Waehere Tono',
+  lookup_code_placeholder: 'hei tauira: ABC123',
+  lookup_phone: 'Tau Waea',
+  lookup_phone_placeholder: '021 123 4567',
+  lookup_search: 'Rapu',
+  lookup_searching: 'E rapu ana...',
+  lookup_not_found: 'Kāore he tono i kitea',
+
+  // === Terms ===
+  terms_title: 'Ture & Here',
+  terms_last_updated: 'Whakahou whakamutunga',
+
+  // === Privacy ===
+  privacy_title: 'Kaupapahere Tūmataiti',
+  privacy_last_updated: 'Whakahou whakamutunga',
+
+  // === Cookies ===
+  cookies_title: 'Kaupapahere Pihi',
+  cookies_last_updated: 'Whakahou whakamutunga',
+
+  // === Legal ===
+  legal_title: 'Pānui Ture',
+  legal_last_updated: 'Whakahou whakamutunga',
 
   // === Features page ===
   features_badge: 'Hangaia mō ngā pakihi o nāianei',
@@ -1670,6 +1871,73 @@ const zh = {
   landing_msg_sent: '消息已发送！我们会尽快回复您。',
   landing_failed_send: '发送失败，请重试。',
 
+  // === Login ===
+  login_back: '返回首页',
+  login_title: '欢迎回来',
+  login_subtitle: '登录以管理您的沙龙',
+  login_email: '邮箱',
+  login_password: '密码',
+  login_sign_in: '登录',
+  login_signing_in: '登录中...',
+  login_no_account: '还没有账户？',
+  login_sign_up: '注册',
+
+  // === Register ===
+  register_back: '返回首页',
+  register_title: '创建您的企业',
+  register_subtitle: '几分钟内开始接受预约',
+  register_business_name: '企业名称 *',
+  register_business_placeholder: '例如：Bella Hair Studio',
+  register_booking_url: '预约链接',
+  register_owner_name: '所有者姓名 *',
+  register_owner_placeholder: '您的姓名',
+  register_phone: '电话',
+  register_email: '邮箱 *',
+  register_password: '密码 *',
+  register_website: '公司网站',
+  register_website_optional: '（可选）',
+  register_website_placeholder: 'https://www.yourcompany.com',
+  register_address: '地址',
+  register_address_placeholder: '123 Main St, Auckland',
+  register_agree: '我同意',
+  register_terms: '条款和条件',
+  register_creating: '创建中...',
+  register_create: '创建企业',
+  register_has_account: '已有账户？',
+  register_sign_in: '登录',
+  register_error_salon_name: '企业名称至少需要2个字符',
+  register_error_owner_name: '所有者姓名至少需要2个字符',
+  register_error_email: '请输入有效的邮箱地址',
+  register_error_password: '密码至少需要6个字符',
+  register_error_phone: '请输入有效的电话号码（至少7位数字）',
+
+  // === Lookup ===
+  lookup_title: '查找预约',
+  lookup_subtitle: '输入预约代码或电话号码',
+  lookup_code: '预约代码',
+  lookup_code_placeholder: '例如：ABC123',
+  lookup_phone: '电话号码',
+  lookup_phone_placeholder: '021 123 4567',
+  lookup_search: '搜索',
+  lookup_searching: '搜索中...',
+  lookup_not_found: '未找到预约',
+
+  // === Terms ===
+  terms_title: '条款和条件',
+  terms_last_updated: '最后更新',
+
+  // === Privacy ===
+  privacy_title: '隐私政策',
+  privacy_last_updated: '最后更新',
+
+  // === Cookies ===
+  cookies_title: 'Cookie政策',
+  cookies_last_updated: '最后更新',
+
+  // === Legal ===
+  legal_title: '法律声明',
+  legal_last_updated: '最后更新',
+
   // === Features page ===
   features_badge: '专为现代企业打造',
   features_title_1: '您需要的一切来',
@@ -2166,6 +2434,73 @@ const hi = {
   landing_sending: 'भेज रहे हैं...',
   landing_msg_sent: 'संदेश भेज दिया गया! हम जल्द ही जवाब देंगे।',
   landing_failed_send: 'भेजने में विफल। कृपया पुनः प्रयास करें।',
+
+  // === Login ===
+  login_back: 'होम पर वापस',
+  login_title: 'वापसी पर स्वागत',
+  login_subtitle: 'अपने सैलून को प्रबंधित करने के लिए साइन इन करें',
+  login_email: 'ईमेल',
+  login_password: 'पासवर्ड',
+  login_sign_in: 'साइन इन',
+  login_signing_in: 'साइन इन हो रहा है...',
+  login_no_account: 'खाता नहीं है?',
+  login_sign_up: 'साइन अप',
+
+  // === Register ===
+  register_back: 'होम पर वापस',
+  register_title: 'अपना व्यवसाय बनाएं',
+  register_subtitle: 'मिनटों में बुकिंग प्राप्त करना शुरू करें',
+  register_business_name: 'व्यवसाय का नाम *',
+  register_business_placeholder: 'जैसे: Bella Hair Studio',
+  register_booking_url: 'बुकिंग URL',
+  register_owner_name: 'मालिक का नाम *',
+  register_owner_placeholder: 'आपका नाम',
+  register_phone: 'फ़ोन',
+  register_email: 'ईमेल *',
+  register_password: 'पासवर्ड *',
+  register_website: 'कंपनी वेबसाइट',
+  register_website_optional: '(वैकल्पिक)',
+  register_website_placeholder: 'https://www.yourcompany.com',
+  register_address: 'पता',
+  register_address_placeholder: '123 Main St, Auckland',
+  register_agree: 'मैं सहमत हूं',
+  register_terms: 'नियम और शर्तें',
+  register_creating: 'बनाया जा रहा है...',
+  register_create: 'व्यवसाय बनाएं',
+  register_has_account: 'पहले से खाता है?',
+  register_sign_in: 'साइन इन',
+  register_error_salon_name: 'व्यवसाय का नाम कम से कम 2 अक्षरों का होना चाहिए',
+  register_error_owner_name: 'मालिक का नाम कम से कम 2 अक्षरों का होना चाहिए',
+  register_error_email: 'कृपया एक वैध ईमेल पता दर्ज करें',
+  register_error_password: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए',
+  register_error_phone: 'कृपया एक वैध फ़ोन नंबर दर्ज करें (कम से कम 7 अंक)',
+
+  // === Lookup ===
+  lookup_title: 'बुकिंग खोजें',
+  lookup_subtitle: 'अपना बुकिंग कोड या फ़ोन नंबर दर्ज करें',
+  lookup_code: 'बुकिंग कोड',
+  lookup_code_placeholder: 'जैसे: ABC123',
+  lookup_phone: 'फ़ोन नंबर',
+  lookup_phone_placeholder: '021 123 4567',
+  lookup_search: 'खोजें',
+  lookup_searching: 'खोज रहा है...',
+  lookup_not_found: 'कोई बुकिंग नहीं मिली',
+
+  // === Terms ===
+  terms_title: 'नियम और शर्तें',
+  terms_last_updated: 'अंतिम अपडेट',
+
+  // === Privacy ===
+  privacy_title: 'गोपनीयता नीति',
+  privacy_last_updated: 'अंतिम अपडेट',
+
+  // === Cookies ===
+  cookies_title: 'कुकी नीति',
+  cookies_last_updated: 'अंतिम अपडेट',
+
+  // === Legal ===
+  legal_title: 'कानूनी सूचना',
+  legal_last_updated: 'अंतिम अपडेट',
 
   // === Features page ===
   features_badge: 'आधुनिक व्यवसायों के लिए बनाया गया',

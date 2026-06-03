@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
+import { useI18n } from '../utils/i18n'
 
 export default function Login({ onLogin }) {
+  const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,7 +30,7 @@ export default function Login({ onLogin }) {
       {/* Top bar */}
       <div className="p-4">
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition">
-          ← Back to Home
+          ← {t('login_back')}
         </Link>
       </div>
 
@@ -40,8 +42,8 @@ export default function Login({ onLogin }) {
               <span className="w-10 h-10 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">T</span>
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">Welcome back</h1>
-            <p className="text-sm text-gray-500">Sign in to manage your salon</p>
+            <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">{t('login_title')}</h1>
+            <p className="text-sm text-gray-500">{t('login_subtitle')}</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -49,26 +51,26 @@ export default function Login({ onLogin }) {
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('login_email')}</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
               </div>
               <div className="mb-5">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('login_password')}</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
               </div>
               <button type="submit" disabled={loading}
                 className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 text-sm font-medium transition">
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? t('login_signing_in') : t('login_sign_in')}
               </button>
             </form>
           </div>
 
           <p className="text-center mt-5 text-sm text-gray-500">
-            Don't have an account? <Link to="/register" className="text-pink-600 font-medium hover:underline">Sign up</Link>
+            {t('login_no_account')} <Link to="/register" className="text-pink-600 font-medium hover:underline">{t('login_sign_up')}</Link>
           </p>
         </div>
       </div>

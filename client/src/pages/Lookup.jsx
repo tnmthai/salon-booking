@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, getSalonTimezone } from '../utils/api'
+import { useI18n } from '../utils/i18n'
 
 const TZ = getSalonTimezone()
 
@@ -11,6 +12,7 @@ const statusColors = {
 }
 
 export default function Lookup() {
+  const { t } = useI18n()
   const [searchParams] = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('code') || '')
   const [results, setResults] = useState([])
@@ -210,8 +212,8 @@ export default function Lookup() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Search */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Look up your booking</h1>
-          <p className="text-gray-500">Enter your booking code or phone number to view your appointments</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('lookup_title')}</h1>
+          <p className="text-gray-500">{t('lookup_subtitle')}</p>
         </div>
 
         <form onSubmit={(e) => handleSearch(e)} className="bg-white rounded-2xl shadow-lg p-6 mb-8">
@@ -220,12 +222,12 @@ export default function Lookup() {
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Booking code (e.g. ABC12345) or phone number"
+              placeholder={t('lookup_code_placeholder') + ' / ' + t('lookup_phone_placeholder')}
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base focus:border-pink-500 focus:outline-none transition"
             />
             <button type="submit" disabled={loading}
               className="w-full bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 disabled:opacity-50 transition">
-              {loading ? '...' : '🔍 Search'}
+              {loading ? '...' : '🔍 ' + t('lookup_search')}
             </button>
           </div>
         </form>

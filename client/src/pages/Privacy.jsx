@@ -1,20 +1,22 @@
 import { Link } from 'react-router-dom'
+import { useI18n } from '../utils/i18n'
 
 export default function Privacy() {
+  const { t } = useI18n()
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition">
-            ← Back to Home
+            ← {t('login_back')}
           </Link>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-          <p className="text-sm text-gray-500 mb-8">Last updated: 10 May 2026</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('privacy_title')}</h1>
+          <p className="text-sm text-gray-500 mb-8">{t('privacy_last_updated')}: 10 May 2026</p>
 
           <div className="prose prose-gray max-w-none space-y-8">
             <section>

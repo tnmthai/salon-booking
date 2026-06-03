@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
 import { sanitizeName, sanitizePhone, sanitizeSlug } from '../utils/validation'
+import { useI18n } from '../utils/i18n'
 
 export default function Register({ onLogin }) {
+  const { t } = useI18n()
   const [form, setForm] = useState({
     salon_name: '', slug: '', email: '', password: '', owner_name: '', phone: '', address: '', website: ''
   })
@@ -77,7 +79,7 @@ export default function Register({ onLogin }) {
       {/* Top bar */}
       <div className="p-4">
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition">
-          ← Back to Home
+          ← {t('register_back')}
         </Link>
       </div>
 
@@ -89,8 +91,8 @@ export default function Register({ onLogin }) {
               <span className="w-10 h-10 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">T</span>
               <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Timia</span>
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">Create your business</h1>
-            <p className="text-sm text-gray-500">Start receiving bookings in minutes</p>
+            <h1 className="text-xl font-semibold text-gray-900 mt-6 mb-1">{t('register_title')}</h1>
+            <p className="text-sm text-gray-500">{t('register_subtitle')}</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -99,14 +101,14 @@ export default function Register({ onLogin }) {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Business Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_business_name')}</label>
                   <input value={form.salon_name} onChange={e => {
                     setForm({...form, salon_name: e.target.value, slug: generateSlug(e.target.value)})
-                  }} placeholder="e.g. Bella Hair Studio"
+                  }} placeholder={t('register_business_placeholder')}
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Booking URL</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_booking_url')}</label>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-sm shrink-0">www.timia.nz/</span>
                     <input value={form.slug} onChange={e => setForm({...form, slug: sanitizeSlug(e.target.value)})}
@@ -115,39 +117,39 @@ export default function Register({ onLogin }) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Owner Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_owner_name')}</label>
                   <input value={form.owner_name} onChange={e => setForm({...form, owner_name: e.target.value})}
-                    placeholder="Your name"
+                    placeholder={t('register_owner_placeholder')}
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_phone')}</label>
                   <input value={form.phone} type="tel" onChange={e => setForm({...form, phone: e.target.value})}
                     placeholder="021 123 4567"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_email')}</label>
                   <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
                     placeholder="you@example.com"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Password *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_password')}</label>
                   <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
                     placeholder="••••••••"
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" minLength={6} required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Website <span className="text-gray-400">(optional)</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_website')} <span className="text-gray-400">{t('register_website_optional')}</span></label>
                   <input value={form.website} onChange={e => setForm({...form, website: e.target.value})}
-                    placeholder="https://www.yourcompany.com"
+                    placeholder={t('register_website_placeholder')}
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('register_address')}</label>
                   <input value={form.address} onChange={e => setForm({...form, address: e.target.value})}
-                    placeholder="123 Main St, Auckland"
+                    placeholder={t('register_address_placeholder')}
                     className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition" />
                 </div>
               </div>
@@ -155,18 +157,18 @@ export default function Register({ onLogin }) {
                 <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                   className="rounded border-gray-300 mt-0.5" required />
                 <span className="text-sm text-gray-500">
-                  I agree to the <Link to="/terms" className="text-pink-600 hover:underline" target="_blank">Terms & Conditions</Link>
+                  {t('register_agree')} <Link to="/terms" className="text-pink-600 hover:underline" target="_blank">{t('register_terms')}</Link>
                 </span>
               </label>
               <button type="submit" disabled={loading || !agreed}
                 className="w-full bg-gray-900 text-white py-2.5 rounded-xl hover:bg-gray-800 disabled:opacity-50 mt-4 text-sm font-medium transition">
-                {loading ? 'Creating...' : 'Create Business'}
+                {loading ? t('register_creating') : t('register_create')}
               </button>
             </form>
           </div>
 
           <p className="text-center mt-5 text-sm text-gray-500">
-            Already have an account? <Link to="/login" className="text-pink-600 font-medium hover:underline">Sign in</Link>
+            {t('register_has_account')} <Link to="/login" className="text-pink-600 font-medium hover:underline">{t('register_sign_in')}</Link>
           </p>
         </div>
       </div>
