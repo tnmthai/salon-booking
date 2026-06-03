@@ -38,6 +38,7 @@ export default function Footer() {
             <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">{t('footer_company')}</p>
             <Link to="/about" className="block hover:text-gray-600 transition">{t('footer_about')}</Link>
             <Link to="/contact" className="block hover:text-gray-600 transition">{t('footer_contact')}</Link>
+            <Link to="/blog" className="block hover:text-gray-600 transition">Blog</Link>
           </div>
           <div className="space-y-2">
             <p className="font-medium text-gray-500 text-xs uppercase tracking-wider">{t('footer_account')}</p>
