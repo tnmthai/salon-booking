@@ -23,13 +23,6 @@ function Navbar() {
           <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('about')}</Link>
           <Link to="/lookup" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('findBooking')}</Link>
           <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('signIn')}</Link>
-          <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white text-gray-600 mx-1">
-            <option value="en">EN</option>
-            <option value="vi">VI</option>
-            <option value="mi">MI</option>
-                <option value="zh">中文</option>
-                <option value="hi">हिन्दी</option>
-          </select>
           <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">{t('getStarted')}</Link>
         </div>
         <button onClick={() => setOpen(!open)} className="md:hidden p-2 -mr-2 text-gray-600 hover:text-gray-900" aria-label="Menu">
@@ -49,15 +42,6 @@ function Navbar() {
             <Link to="/about" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">{t('about')}</Link>
             <Link to="/lookup" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">{t('findBooking')}</Link>
             <Link to="/login" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">{t('signIn')}</Link>
-            <div className="flex items-center gap-2 px-3 py-2">
-              <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-600">
-                <option value="en">EN</option>
-                <option value="vi">VI</option>
-                <option value="mi">MI</option>
-                <option value="zh">中文</option>
-                <option value="hi">हिन्दी</option>
-              </select>
-            </div>
             <Link to="/register" onClick={() => setOpen(false)} className="block mt-2 text-center bg-gray-900 text-white py-2.5 rounded-full text-sm font-medium">{t('getStarted')}</Link>
           </div>
         </div>
