@@ -773,95 +773,211 @@ app.put('/api/appointments/:id/complete', async (req, res) => {
   }
 });
 
-// SEO routes - serve sitemap.xml and robots.txt directly
-app.get('/sitemap.xml', (req, res) => {
-  res.set('Content-Type', 'application/xml');
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.timia.nz</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/features</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/pricing</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/about</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/contact</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/register</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/login</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/lookup</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/terms</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/privacy</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/cookies</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  <url>
-    <loc>https://www.timia.nz/legal</loc>
-    <lastmod>2026-05-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.2</priority>
-  </url>
-</urlset>`);
+// === SEO & Bot Routes (must be BEFORE SPA catch-all) ===
+
+// IndexNow verification key file
+const INDEXNOW_KEY = '9c41a25e4c2f4b8a9d6e7f0a1b3c5d8e';
+app.get(`/${INDEXNOW_KEY}.txt`, (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send(INDEXNOW_KEY);
 });
 
+// IndexNow API endpoint (auto-submit new URLs)
+app.post('/indexnow', express.json(), async (req, res) => {
+  try {
+    const urls = req.body?.urlList || [req.body?.url].filter(Boolean);
+    if (!urls.length) return res.status(400).json({ error: 'No URLs provided' });
+    const response = await fetch('https://api.indexnow.org/IndexNow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ host: 'www.timia.nz', urlList: urls, key: INDEXNOW_KEY }),
+    });
+    res.json({ status: response.status, urls: urls.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// robots.txt
 app.get('/robots.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
   res.send(`User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api
+Disallow: /lookup
+Disallow: /login
 
 Sitemap: https://www.timia.nz/sitemap.xml`);
 });
+
+// Sitemap with all public pages + dynamic salon slugs
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    // Fetch public salon slugs for dynamic pages
+    let salonUrls = '';
+    try {
+      const { rows } = await pool.query(
+        "SELECT slug, created_at FROM salons WHERE show_in_explore = true ORDER BY created_at DESC"
+      );
+      salonUrls = rows.map(s => `  <url>
+    <loc>https://www.timia.nz/${s.slug}/book</loc>
+    <lastmod>${(s.created_at || new Date()).toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('\n');
+    } catch (e) { /* ignore */ }
+
+    res.set('Content-Type', 'application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.timia.nz</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/features</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/pricing</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/about</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/contact</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/explore</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/register</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/terms</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/privacy</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/cookies</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/legal</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/blog</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/blog/best-booking-software-nz</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/blog/how-to-reduce-no-shows</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/blog/start-salon-business-nz</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.timia.nz/compare/timely</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+${salonUrls}
+</urlset>`);
+  } catch (err) {
+    res.status(500).send('<error>sitemap generation failed</error>');
+  }
+});
+
+// Dynamic meta tags for salon booking pages (SEO for SPA routes)
+app.get('/:slug/book', async (req, res) => {
+  const { slug } = req.params;
+  // Skip non-salon routes
+  if (['api', 'admin', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(slug)) {
+    return res.sendFile(path.join(clientPath, 'index.html'));
+  }
+  try {
+    const { rows } = await pool.query('SELECT name, description, address FROM salons WHERE slug = $1', [slug]);
+    if (rows.length) {
+      const salon = rows[0];
+      const metaTitle = `Book ${salon.name} — Online Booking | Timia`;
+      const metaDesc = salon.description
+        ? salon.description.substring(0, 155)
+        : `Book an appointment at ${salon.name} in ${salon.address || 'New Zealand'}. Online booking 24/7.`;
+      const html = buildSPAWithMeta({
+        title: metaTitle,
+        description: metaDesc,
+        url: `https://www.timia.nz/${slug}/book`,
+        type: 'website',
+      });
+      res.set('Content-Type', 'text/html');
+      return res.send(html);
+    }
+  } catch (e) { /* fall through to SPA */ }
+  res.sendFile(path.join(clientPath, 'index.html'));
+});
+
+// Build SPA HTML with custom meta tags
+function buildSPAWithMeta({ title, description, url, type = 'website' }) {
+  const fs = require('fs');
+  let html = fs.readFileSync(path.join(clientPath, 'index.html'), 'utf8');
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+  html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${description}$2`);
+  html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${title}$2`);
+  html = html.replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${description}$2`);
+  html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`);
+  html = html.replace(/(<meta property="og:type" content=")[^"]*(")/, `$1${type}$2`);
+  html = html.replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${title}$2`);
+  html = html.replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${description}$2`);
+  html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
+  return html;
+}
 
 // Serve static client build in production
 const clientPath = path.join(__dirname, '..', 'client', 'dist');

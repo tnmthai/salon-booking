@@ -28,6 +28,10 @@ import Reports from './pages/Reports'
 import StaffDashboard from './pages/StaffDashboard'
 import Gallery from './pages/Gallery'
 import Reviews from './pages/Reviews'
+import BlogIndex from './pages/blog/BlogIndex'
+import BestBookingSoftwareNZ from './pages/blog/BestBookingSoftwareNZ'
+import HowToReduceNoShows from './pages/blog/HowToReduceNoShows'
+import StartSalonBusinessNZ from './pages/blog/StartSalonBusinessNZ'
 import Overrides from './pages/Overrides'
 import PlanSettings from './pages/PlanSettings'
 import Settings from './pages/Settings'
@@ -292,6 +296,10 @@ function AppInner() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/compare/timely" element={<CompareTimely />} />
+        <Route path="/blog" element={<BlogIndex />} />
+        <Route path="/blog/best-booking-software-nz" element={<BestBookingSoftwareNZ />} />
+        <Route path="/blog/how-to-reduce-no-shows" element={<HowToReduceNoShows />} />
+        <Route path="/blog/start-salon-business-nz" element={<StartSalonBusinessNZ />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/cookies" element={<Cookies />} />
