@@ -247,6 +247,20 @@ function AdminLayout({ salon, user, onLogout }) {
   );
 }
 
+function GA4Tracker() {
+  const location = window.location;
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+        page_location: location.href,
+        page_title: document.title
+      });
+    }
+  }, [location.pathname, location.search]);
+  return null;
+}
+
 function AppInner() {
   const [salon, setSalon] = useState(null);
   const [user, setUser] = useState(null);
@@ -285,6 +299,7 @@ function AppInner() {
 
   return (
     <BrowserRouter>
+      <GA4Tracker />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={isLoggedIn() ? <Navigate to="/admin" /> : <Login onLogin={handleLogin} />} />
@@ -324,6 +339,17 @@ function App() { window.__v=3
       <AppInner />
     </I18nProvider>
   );
+}
+
+// GA4 SPA page view tracking
+function trackPageView(path) {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'page_view', {
+      page_path: path,
+      page_location: window.location.href,
+      page_title: document.title
+    });
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />)
