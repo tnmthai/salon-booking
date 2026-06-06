@@ -27,11 +27,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.clarity.ms", "https://scripts.clarity.ms", "https://connect.facebook.net", "https://staticxx.facebook.com", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://mediaserver.realestate.co.nz", "https://cloudinary.roomies.pics", "https://www.facebook.com", "https://*.fbcdn.net", "https://c.clarity.ms", "https://*.clarity.ms"],
       fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://connect.facebook.net", "https://www.facebook.com"],
+      connectSrc: ["'self'", "https://t.clarity.ms", "https://www.clarity.ms", "https://www.facebook.com", "https://connect.facebook.net", "https://www.facebook.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://analytics.google.com"],
       frameSrc: ["'self'", "https://www.facebook.com", "https://web.facebook.com"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
