@@ -1103,6 +1103,10 @@ async function run(sql) {
 
   // Early bird config
   await run(`CREATE TABLE IF NOT EXISTS early_bird_config (id INTEGER PRIMARY KEY DEFAULT 1, total_slots INTEGER DEFAULT 50, slots_taken INTEGER DEFAULT 0, starter_price DECIMAL(10,2) DEFAULT 7.00, updated_at TIMESTAMP DEFAULT NOW())`);
+
+  // Email verification codes for passwordless login
+  await run(`CREATE TABLE IF NOT EXISTS verification_codes (id SERIAL PRIMARY KEY, email VARCHAR(300) NOT NULL, code VARCHAR(6) NOT NULL, expires_at TIMESTAMP NOT NULL, used BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT NOW())`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_vcodes_email ON verification_codes(email, used)`);
   await pool.query('INSERT INTO early_bird_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING');
 
   console.log('Database initialized');

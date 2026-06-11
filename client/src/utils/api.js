@@ -21,6 +21,8 @@ export const api = {
   // Auth
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  sendCode: (data) => request('/auth/send-code', { method: 'POST', body: JSON.stringify(data) }),
+  verifyCode: (data) => request('/auth/verify-code', { method: 'POST', body: JSON.stringify(data) }),
   me: () => request('/auth/me'),
   demoStart: () => request('/demo/start', { method: 'POST' }),
 

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
 const { validateEmail, validatePassword, validateName, validateSlug, validatePhone, validateText } = require('../utils/validation');
@@ -203,6 +204,189 @@ router.post('/login', async (req, res) => {
       token,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, salon_id: user.salon_id },
       salon: { id: user.salon_id, name: user.salon_name, slug: user.salon_slug, timezone: user.timezone || 'Pacific/Auckland' },
+    });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Rate limit tracking for verification codes (in-memory)
+const codeRateLimits = new Map();
+
+function checkCodeRateLimit(email) {
+  const key = email.toLowerCase();
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000; // 10 minutes
+  const maxCodes = 5;
+
+  if (!codeRateLimits.has(key)) {
+    codeRateLimits.set(key, []);
+  }
+  const timestamps = codeRateLimits.get(key).filter(t => now - t < windowMs);
+  codeRateLimits.set(key, timestamps);
+  return timestamps.length < maxCodes;
+}
+
+function recordCodeSent(email) {
+  const key = email.toLowerCase();
+  if (!codeRateLimits.has(key)) codeRateLimits.set(key, []);
+  codeRateLimits.get(key).push(Date.now());
+}
+
+// POST /api/auth/send-code — send email verification code
+router.post('/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string' || email.length > 300) {
+    return res.status(400).json({ error: 'Valid email required' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Rate limit check
+  if (!checkCodeRateLimit(email)) {
+    return res.status(429).json({ error: 'Too many codes requested. Please try again later.' });
+  }
+
+  try {
+    // Generate 6-digit code
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store in DB
+    await db.query(
+      'INSERT INTO verification_codes (email, code, expires_at) VALUES ($1, $2, $3)',
+      [email.toLowerCase(), code, expiresAt]
+    );
+
+    // Send email
+    const { sendEmail, verificationCodeEmail } = require('../utils/email');
+    await sendEmail(
+      email.toLowerCase(),
+      'Your Timia Login Code',
+      verificationCodeEmail({ code, email: email.toLowerCase() })
+    );
+
+    recordCodeSent(email);
+
+    console.log(`[AUTH] Verification code sent to ${email.toLowerCase()}`);
+    res.json({ ok: true, message: 'Code sent' });
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Failed to send code' });
+  }
+});
+
+// POST /api/auth/verify-code — verify code and login/register
+router.post('/verify-code', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email and code required' });
+  }
+  if (typeof email !== 'string' || email.length > 300) {
+    return res.status(400).json({ error: 'Invalid email' });
+  }
+  if (typeof code !== 'string' || code.length !== 6) {
+    return res.status(400).json({ error: 'Invalid code format' });
+  }
+
+  try {
+    // Find valid, unused, non-expired code
+    const result = await db.query(
+      `SELECT id FROM verification_codes
+       WHERE email = $1 AND code = $2 AND used = FALSE AND expires_at > NOW()
+       ORDER BY created_at DESC LIMIT 1`,
+      [email.toLowerCase(), code]
+    );
+
+    if (!result.rows.length) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+
+    // Mark code as used
+    await db.query('UPDATE verification_codes SET used = TRUE WHERE id = $1', [result.rows[0].id]);
+
+    // Check if user exists
+    const userResult = await db.query(
+      `SELECT u.*, s.name as salon_name, s.slug as salon_slug, s.timezone
+       FROM users u LEFT JOIN salons s ON u.salon_id = s.id
+       WHERE u.email = $1`,
+      [email.toLowerCase()]
+    );
+
+    let user, salon;
+    let isNew = false;
+
+    if (userResult.rows.length) {
+      // Existing user — login
+      user = userResult.rows[0];
+      if (user.is_active === false) {
+        return res.status(403).json({ error: 'Account is deactivated' });
+      }
+      salon = { id: user.salon_id, name: user.salon_name, slug: user.salon_slug, timezone: user.timezone || 'Pacific/Auckland' };
+    } else {
+      // New user — auto-register
+      isNew = true;
+      const emailPrefix = email.split('@')[0];
+      const salonName = 'My Salon';
+      const slug = crypto.randomBytes(4).toString('hex'); // 8-char random slug
+
+      // Create salon
+      const salonResult = await db.query(
+        'INSERT INTO salons (name, slug, email) VALUES ($1, $2, $3) RETURNING *',
+        [salonName, slug, email.toLowerCase()]
+      );
+      salon = salonResult.rows[0];
+
+      // Create owner user (no password — they use email codes)
+      const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+      const userInsert = await db.query(
+        "INSERT INTO users (salon_id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, 'owner') RETURNING id, email, name, role, salon_id",
+        [salon.id, email.toLowerCase(), passwordHash, emailPrefix, 'owner']
+      );
+      user = userInsert.rows[0];
+
+      // Apply registration bonuses (same as /register)
+      try {
+        const { applyRegistrationBonuses } = require('./plans');
+        await applyRegistrationBonuses(salon.id);
+      } catch (e) {
+        console.error('[BONUS] Failed to apply registration bonuses:', e.message);
+      }
+
+      // Notify support about new shop
+      try {
+        const { sendEmail, newShopNotificationEmail } = require('../utils/email');
+        await sendEmail(
+          'support@timia.nz',
+          `🏪 New Shop (code login): ${salonName}`,
+          newShopNotificationEmail({
+            salonName,
+            slug,
+            ownerName: emailPrefix,
+            email: email.toLowerCase(),
+            phone: null,
+            address: null,
+            website: null,
+          })
+        );
+      } catch (e) {
+        console.error('[EMAIL] Failed to send new shop notification:', e.message);
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user.id, salon_id: user.salon_id || salon.id, email: email.toLowerCase(), role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role, salon_id: user.salon_id || salon.id },
+      salon: { id: salon.id, name: salon.name, slug: salon.slug, timezone: salon.timezone || 'Pacific/Auckland' },
+      is_new: isNew,
     });
   } catch (err) {
     console.error('[ERROR]', err.message);

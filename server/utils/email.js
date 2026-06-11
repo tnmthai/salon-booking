@@ -405,4 +405,27 @@ function loyaltyReminderEmail({ customerName, salonName, totalPoints, totalVisit
   `;
 }
 
-module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail, completionEmail, loyaltyReminderEmail };
+function verificationCodeEmail({ code, email }) {
+  return `
+    <!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#f9fafb;">
+      <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">🔐</div>
+          <h1 style="color:#111;font-size:24px;margin:0;">Your Login Code</h1>
+        </div>
+        <p style="color:#555;font-size:16px;">Hi,</p>
+        <p style="color:#555;">Use the following code to sign in to your Timia account:</p>
+        <div style="background:#fdf2f8;border:2px solid #f9a8d4;border-radius:12px;padding:24px;margin:28px 0;text-align:center;">
+          <div style="font-size:40px;font-weight:700;color:#ec4899;letter-spacing:8px;font-family:monospace;">${code}</div>
+        </div>
+        <p style="color:#888;font-size:14px;text-align:center;">This code expires in <strong>10 minutes</strong>.</p>
+        <p style="color:#888;font-size:13px;margin-top:24px;text-align:center;">If you didn't request this code, you can safely ignore this email.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
+        <p style="color:#aaa;font-size:12px;text-align:center;">Timia — Salon Booking Platform</p>
+      </div>
+    </body></html>
+  `;
+}
+
+module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail, completionEmail, loyaltyReminderEmail, verificationCodeEmail };
