@@ -342,7 +342,7 @@ router.post('/verify-code', async (req, res) => {
       // Create owner user (no password — they use email codes)
       const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
       const userInsert = await db.query(
-        "INSERT INTO users (salon_id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, 'owner') RETURNING id, email, name, role, salon_id",
+        'INSERT INTO users (salon_id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, role, salon_id',
         [salon.id, email.toLowerCase(), passwordHash, emailPrefix, 'owner']
       );
       user = userInsert.rows[0];
