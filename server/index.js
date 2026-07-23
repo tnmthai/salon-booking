@@ -1012,7 +1012,7 @@ async function run(sql) {
   // Working hours table
   await run(`CREATE TABLE IF NOT EXISTS working_hours (id SERIAL PRIMARY KEY, staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE, day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6), start_time TIME NOT NULL, end_time TIME NOT NULL, is_active BOOLEAN DEFAULT true, created_at TIMESTAMP DEFAULT NOW())`);
   await run(`CREATE INDEX IF NOT EXISTS idx_working_hours_staff ON working_hours(staff_id)`);
-  await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_working_hours_unique ON working_hours(staff_id, day_of_week)`);
+  // Note: intentionally NOT unique — allows split shifts (multiple time slots per day)
 
   // Link staff to user accounts
   await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL`);

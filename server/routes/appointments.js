@@ -110,32 +110,26 @@ router.get('/slots', async (req, res) => {
     );
 
     let workStart, workEnd;
+    let wh; // will be set in else branch (regular working hours, supports split shifts)
     if (override.rows.length > 0) {
       if (!override.rows[0].is_active) return res.json([]); // Day off override
       workStart = override.rows[0].start_time;
       workEnd = override.rows[0].end_time;
     } else {
-      // Fall back to regular working hours
+      // Fall back to regular working hours — supports split shifts (multiple rows per day)
       const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-      const wh = await db.query(
-        'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true',
+      wh = await db.query(
+        'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true ORDER BY start_time',
         [staff_id, dayOfWeek]
       );
       if (!wh.rows.length) return res.json([]); // Staff doesn't work this day
-      workStart = wh.rows[0].start_time;
-      workEnd = wh.rows[0].end_time;
     }
 
-    // Convert NZ working hours to UTC for slot generation
-    // NZ timezone: UTC+12 (NZST) in winter, UTC+13 (NZDT) in summer
-    // Use Intl to get the correct offset for the given date
+    // Helper: convert NZ local time → UTC
     function nzToUtc(d, hours, minutes) {
-      // Server runs in UTC, so new Date("YYYY-MM-DDTHH:MM:SS") is parsed as UTC.
-      // We need to interpret the date components as NZ local time and convert to UTC.
       const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
       const g = (t) => parts.find(p => p.type === t).value;
       const dateStr = `${g('year')}-${g('month')}-${g('day')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-      // Parse as NZ local time by getting the offset from UTC
       const nzLocal = new Date(dateStr + '.000Z');
       const utcEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
       const nzEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: tz }));
@@ -144,7 +138,6 @@ router.get('/slots', async (req, res) => {
     }
 
     // Get existing appointments for this staff on this date
-    // Convert date to UTC range using timezone
     const dayStart = new Date(date + 'T00:00:00');
     const dayEnd = new Date(date + 'T23:59:59');
     const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
@@ -159,35 +152,40 @@ router.get('/slots', async (req, res) => {
       [staff_id, utcStart.toISOString(), utcEnd.toISOString()]
     );
 
-    // Generate slots at 30-min intervals in UTC
+    // Generate slots at 30-min intervals in UTC for EACH working hours range
     const slots = [];
-    const [startH, startM] = workStart.split(':').map(Number);
-    const [endH, endM] = workEnd.split(':').map(Number);
-    const baseDate = new Date(date + 'T12:00:00'); // noon to avoid date boundary issues
-    let current = nzToUtc(baseDate, startH, startM);
-    const end = nzToUtc(baseDate, endH, endM);
-
+    const baseDate = new Date(date + 'T12:00:00');
     const now = new Date();
 
-    while (current.getTime() + duration * 60000 <= end.getTime()) {
-      const slotStart = new Date(current);
-      const slotEnd = new Date(current.getTime() + duration * 60000);
+    // Use the correct wh array: override rows if override, else regular wh rows
+    const workRanges = override.rows.length > 0
+      ? [{ start_time: workStart, end_time: workEnd }]
+      : wh.rows;
 
-      // Skip past slots
-      if (slotStart > now) {
-        // Check overlap with existing appointments
-        const overlaps = appts.rows.some(a => {
-          const aStart = new Date(a.start_time);
-          const aEnd = new Date(a.end_time);
-          return slotStart < aEnd && slotEnd > aStart;
-        });
+    for (const range of workRanges) {
+      const [startH, startM] = range.start_time.split(':').map(Number);
+      const [endH, endM] = range.end_time.split(':').map(Number);
+      let current = nzToUtc(baseDate, startH, startM);
+      const end = nzToUtc(baseDate, endH, endM);
 
-        if (!overlaps) {
-          slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
+      while (current.getTime() + duration * 60000 <= end.getTime()) {
+        const slotStart = new Date(current);
+        const slotEnd = new Date(current.getTime() + duration * 60000);
+
+        if (slotStart > now) {
+          const overlaps = appts.rows.some(a => {
+            const aStart = new Date(a.start_time);
+            const aEnd = new Date(a.end_time);
+            return slotStart < aEnd && slotEnd > aStart;
+          });
+
+          if (!overlaps) {
+            slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
+          }
         }
-      }
 
-      current.setMinutes(current.getMinutes() + 30);
+        current.setMinutes(current.getMinutes() + 30);
+      }
     }
 
     res.json(slots);

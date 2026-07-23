@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// 12-hour time format for display, 24-hour value for DB
+function fmt12h(h, m) {
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
 const TIME_SLOTS = [];
 for (let h = 6; h <= 23; h++) {
-  TIME_SLOTS.push(`${String(h).padStart(2, '0')}:00`);
-  TIME_SLOTS.push(`${String(h).padStart(2, '0')}:30`);
+  TIME_SLOTS.push({ value: `${String(h).padStart(2, '0')}:00`, label: fmt12h(h, 0) });
+  TIME_SLOTS.push({ value: `${String(h).padStart(2, '0')}:30`, label: fmt12h(h, 30) });
 }
 
 export default function StaffSchedule() {
@@ -155,15 +162,15 @@ export default function StaffSchedule() {
                     <div className="flex items-center gap-3 flex-1">
                       <select value={day.start_time} onChange={e => updateTime(index, 'start_time', e.target.value)}
                         className="border rounded-lg px-3 py-2 text-sm">
-                        {TIME_SLOTS.filter(t => t < (day.end_time || '23:30')).map(t => (
-                          <option key={t} value={t}>{t}</option>
+                        {TIME_SLOTS.filter(t => t.value < (day.end_time || '23:30')).map(t => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
                         ))}
                       </select>
                       <span className="text-gray-400">to</span>
                       <select value={day.end_time} onChange={e => updateTime(index, 'end_time', e.target.value)}
                         className="border rounded-lg px-3 py-2 text-sm">
-                        {TIME_SLOTS.filter(t => t > (day.start_time || '06:00')).map(t => (
-                          <option key={t} value={t}>{t}</option>
+                        {TIME_SLOTS.filter(t => t.value > (day.start_time || '06:00')).map(t => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
                         ))}
                       </select>
                       <button onClick={() => applyToAll(index)}
