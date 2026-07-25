@@ -92,27 +92,35 @@ async function generateStaffSlots(staffId, salonId, date, duration, tz) {
     workRanges = wh.rows;
   }
 
-  // Helper: convert local time → UTC
-  function nzToUtc(d, hours, minutes) {
-    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
-    const g = (t) => parts.find(p => p.type === t).value;
-    const dateStr = `${g('year')}-${g('month')}-${g('day')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-    const nzLocal = new Date(dateStr + '.000Z');
-    const utcEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const nzEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: tz }));
-    const offsetMs = utcEquiv.getTime() - nzEquiv.getTime();
-    return new Date(nzLocal.getTime() + offsetMs);
+  // Helper: get timezone offset in minutes for a given date string
+  function getTzOffset(dateStr, timezone) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const ref = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+    // Extract offset like 'GMT+12:00' or 'GMT-05:00'
+    const parts = new Intl.DateTimeFormat('en', { timeZone: timezone, timeZoneName: 'longOffset' }).formatToParts(ref);
+    let tzName = parts.find(p => p.type === 'timeZoneName')?.value || '';
+    let match = tzName.match(/GMT([+-])(\d+)(?::(\d+))?/);
+    if (!match) {
+      const parts2 = new Intl.DateTimeFormat('en', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(ref);
+      tzName = parts2.find(p => p.type === 'timeZoneName')?.value || '';
+      match = tzName.match(/([+-])(\d+)(?::(\d+))?/);
+      if (!match) return 0; // fallback
+    }
+    const sign = match[1] === '+' ? 1 : -1;
+    return (parseInt(match[2]) * 60 + parseInt(match[3] || '0')) * sign;
   }
 
-  // Get existing appointments for this staff on this date
-  const dayStart = new Date(date + 'T00:00:00');
-  const dayEnd = new Date(date + 'T23:59:59');
-  const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
-  const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
-  const startOff = new Date(startStr).getTime() - dayStart.getTime();
-  const endOff = new Date(endStr).getTime() - dayEnd.getTime();
-  const utcStart = new Date(dayStart.getTime() - startOff);
-  const utcEnd = new Date(dayEnd.getTime() - endOff);
+  // Convert local date + time to UTC Date (timezone-independent)
+  function localToUtc(dateStr, hours, minutes, timezone) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const offsetMinutes = getTzOffset(dateStr, timezone);
+    const localEpoch = Date.UTC(y, m - 1, d, hours, minutes, 0);
+    return new Date(localEpoch - offsetMinutes * 60000);
+  }
+
+  // Get existing appointments for this staff on this date (in UTC)
+  const utcStart = localToUtc(date, 0, 0, tz);
+  const utcEnd = localToUtc(date, 23, 59, tz);
   const appts = await db.query(
     `SELECT start_time, end_time FROM appointments 
      WHERE staff_id = $1 AND start_time >= $2 AND start_time <= $3 AND status != 'cancelled'`,
@@ -120,14 +128,13 @@ async function generateStaffSlots(staffId, salonId, date, duration, tz) {
   );
 
   const slots = [];
-  const baseDate = new Date(date + 'T12:00:00');
   const now = new Date();
 
   for (const range of workRanges) {
     const [startH, startM] = range.start_time.split(':').map(Number);
     const [endH, endM] = range.end_time.split(':').map(Number);
-    let current = nzToUtc(baseDate, startH, startM);
-    const end = nzToUtc(baseDate, endH, endM);
+    let current = localToUtc(date, startH, startM, tz);
+    const end = localToUtc(date, endH, endM, tz);
 
     while (current.getTime() + duration * 60000 <= end.getTime()) {
       const slotStart = new Date(current);
