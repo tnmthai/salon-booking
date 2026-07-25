@@ -453,8 +453,8 @@ export default function Booking() {
 /* ── Calendar Widget ── */
 function CalendarWidget({ selectedDate, onSelectDate, minDate, timezone }) {
   const todayStr = todayInTimezone(timezone || 'Pacific/Auckland')
-  const [viewMonth, setViewMonth] = useState(today.getMonth())
-  const [viewYear, setViewYear] = useState(today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth())
+  const [viewYear, setViewYear] = useState(new Date().getFullYear())
 
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const daysOfWeek = ['Mo','Tu','We','Th','Fr','Sa','Su']
