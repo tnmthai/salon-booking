@@ -116,4 +116,84 @@ router.get('/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/reports/shop-stats — per-shop booking stats grouped by day/week/month/quarter/year (super admin)
+router.get('/shop-stats', authMiddleware, async (req, res) => {
+  try {
+    const { group_by, salon_id, from, to } = req.query;
+    
+    // Only super admin can access this
+    if (!isSuperAdmin(req.user.email)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    let where = [];
+    let params = [];
+    let idx = 1;
+
+    if (salon_id) {
+      where.push(`a.salon_id = $${idx++}`);
+      params.push(salon_id);
+    }
+    if (from) {
+      where.push(`a.start_time >= $${idx++}`);
+      params.push(from);
+    }
+    if (to) {
+      where.push(`a.start_time < $${idx++}`);
+      params.push(to + 'T23:59:59');
+    }
+
+    const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
+    // Determine date truncation
+    let dateTrunc, orderFormat;
+    switch (group_by) {
+      case 'week':
+        dateTrunc = 'week';
+        orderFormat = "YYYY-MM-DD";
+        break;
+      case 'month':
+        dateTrunc = 'month';
+        orderFormat = "YYYY-MM";
+        break;
+      case 'quarter':
+        dateTrunc = 'quarter';
+        orderFormat = "YYYY-Q";
+        break;
+      case 'year':
+        dateTrunc = 'year';
+        orderFormat = "YYYY";
+        break;
+      default:
+        dateTrunc = 'day';
+        orderFormat = "YYYY-MM-DD";
+    }
+
+    const result = await db.query(`
+      SELECT
+        sl.name as salon_name,
+        sl.id as salon_id,
+        sl.slug as salon_slug,
+        DATE_TRUNC('${dateTrunc}', a.start_time)::date as period_start,
+        TO_CHAR(DATE_TRUNC('${dateTrunc}', a.start_time), '${orderFormat}') as period_label,
+        COUNT(*) as total_bookings,
+        COUNT(*) FILTER (WHERE a.status = 'confirmed') as confirmed,
+        COUNT(*) FILTER (WHERE a.status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE a.status = 'cancelled') as cancelled,
+        COALESCE(SUM(CASE WHEN a.status IN ('confirmed', 'completed') THEN COALESCE(a.price, s.price) ELSE 0 END), 0) as revenue
+      FROM appointments a
+      JOIN salons sl ON a.salon_id = sl.id
+      LEFT JOIN services s ON a.service_id = s.id
+      ${whereClause}
+      GROUP BY sl.name, sl.id, sl.slug, DATE_TRUNC('${dateTrunc}', a.start_time)
+      ORDER BY sl.name, period_start ASC
+    `, params);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('[ERROR]', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

@@ -101,6 +101,10 @@ export const api = {
     const qs = new URLSearchParams(params).toString();
     return request(`/reports/stats?${qs}`);
   },
+  getShopStats: (params) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/reports/shop-stats?${qs}`);
+  },
 
   // Reviews
   getReviews: () => request('/reviews'),

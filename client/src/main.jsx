@@ -28,6 +28,7 @@ import Reports from './pages/Reports'
 import StaffDashboard from './pages/StaffDashboard'
 import Gallery from './pages/Gallery'
 import Reviews from './pages/Reviews'
+import ShopStats from './pages/ShopStats'
 import BlogIndex from './pages/blog/BlogIndex'
 import BestBookingSoftwareNZ from './pages/blog/BestBookingSoftwareNZ'
 import HowToReduceNoShows from './pages/blog/HowToReduceNoShows'
@@ -120,6 +121,7 @@ function AdminLayout({ salon, user, onLogout }) {
               <>
                 <Link to="/admin/users" className="text-orange-600 hover:text-orange-700 font-medium">👥 {t('users')}</Link>
                 <Link to="/admin/shops" className="text-orange-600 hover:text-orange-700 font-medium">🏪 {t('allShops')}</Link>
+                <Link to="/admin/shop-stats" className="text-orange-600 hover:text-orange-700 font-medium">📊 {t('shopStats')}</Link>
               </>
             )}
             {!isSuperAdmin && isOwner && (
@@ -199,6 +201,7 @@ function AdminLayout({ salon, user, onLogout }) {
                 <>
                   <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-orange-600 hover:bg-orange-50 rounded-lg font-medium">👥 {t('users')}</Link>
                   <Link to="/admin/shops" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-orange-600 hover:bg-orange-50 rounded-lg font-medium">🏪 {t('allShops')}</Link>
+                  <Link to="/admin/shop-stats" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-orange-600 hover:bg-orange-50 rounded-lg font-medium">📊 Thống kê</Link>
                 </>
               )}
               {isStaff && (
@@ -242,6 +245,7 @@ function AdminLayout({ salon, user, onLogout }) {
           {isOwner && <Route path="/loyalty" element={<Loyalty />} />}
         {isStaff && <Route path="/staff-dashboard" element={<StaffDashboard />} />}
         {isSuperAdmin && <Route path="/shops" element={<AdminShops />} />}
+        {isSuperAdmin && <Route path="/shop-stats" element={<ShopStats />} />}
       </Routes>
     </div>
   );
