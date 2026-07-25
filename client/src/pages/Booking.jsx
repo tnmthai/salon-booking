@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { api, getSalonTimezone } from '../utils/api'
+import { api, getSalonTimezone, setSalonTimezone } from '../utils/api'
 import { useI18n } from '../utils/i18n'
 
 const TZ = getSalonTimezone()
 
-// Today's date in local timezone (YYYY-MM-DD)
-function todayLocal() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// Today's date in a given timezone (YYYY-MM-DD)
+function todayInTimezone(tz) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  } catch {
+    // Fallback to browser local
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
 }
 
 export default function Booking() {
@@ -27,6 +32,7 @@ export default function Booking() {
   const [selectedStaff, setSelectedStaff] = useState(0) // 0 = Any Staff
   const [selectedDate, setSelectedDate] = useState('')
   const [nextAvailable, setNextAvailable] = useState(null)
+  const [salonTz, setSalonTz] = useState('Pacific/Auckland')
   const [checkingNext, setCheckingNext] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '', notes: '' })
@@ -38,7 +44,9 @@ export default function Booking() {
   useEffect(() => {
     api.getSalon(slug).then(salonData => {
       setSalon(salonData)
-      // Track page visit
+      const tz = salonData.timezone || 'Pacific/Auckland'
+      setSalonTz(tz)
+      setSalonTimezone(tz)
       api.trackVisit(salonData.id, 'booking').catch(() => {})
     }).catch(() => setError(t('salonNotFound')))
     api.getPublicServices(slug).then(setServices).catch(console.error)
@@ -124,11 +132,13 @@ export default function Booking() {
     }
     setLoading(true)
     try {
+      // Use the actual staff from the selected slot (important for 'any staff')
+      const actualStaffId = selectedSlot.staff_id || selectedStaff
       const result = await api.createPublicAppointment({
         salon_id: salon.id,
         service_id: selectedServices[0], // Primary service
         service_ids: selectedServices, // All services (Priority 6)
-        staff_id: selectedStaff,
+        staff_id: actualStaffId,
         customer_name: customer.name.trim(),
         customer_phone: customer.phone.trim(),
         customer_email: customer.email?.trim() || '',
@@ -144,7 +154,10 @@ export default function Booking() {
   }
 
   const selectedServiceNames = selectedServices.map(id => services.find(s => s.id == id)).filter(Boolean)
-  const staff = staffList.find(s => s.id == selectedStaff)
+  // Resolve actual staff info: prefer slot's staff_name, else lookup by id
+  const resolvedStaffName = selectedSlot?.staff_name 
+    || (selectedStaff > 0 ? staffList.find(s => s.id == selectedStaff)?.name : null)
+    || (t('anyStaff') || 'Any Staff')
 
   if (error) {
     return (
@@ -165,7 +178,7 @@ export default function Booking() {
         <p className="text-gray-500 mb-6">{customer.name}, {t('bookingSuccessMsg')} <strong>{salon?.name}</strong> {t('hasBeenConfirmed')}</p>
         <div className="bg-white rounded-xl shadow p-6 text-left">
           <div className="mb-2"><strong>{t('servicesLabel')}:</strong> {selectedServiceNames.map(s => s.name).join(', ')}</div>
-          <div className="mb-2"><strong>{t('staffLabel')}:</strong> {staff?.name}</div>
+          <div className="mb-2"><strong>{t('staffLabel')}:</strong> {resolvedStaffName}</div>
           <div className="mb-2"><strong>{t('dateLabel')}:</strong> {selectedDate}</div>
           <div className="mb-2"><strong>{t('timeLabel')}:</strong> {selectedSlot && new Date(selectedSlot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}</div>
           <div className="mb-2"><strong>{t('durationLabelKey')}:</strong> {totalDuration} {t('minTotal')}</div>
@@ -289,7 +302,8 @@ export default function Booking() {
             <CalendarWidget
               selectedDate={selectedDate}
               onSelectDate={(d) => { setSelectedDate(d); setNextAvailable(null); setSelectedSlot(null); }}
-              minDate={todayLocal()}
+              minDate={todayInTimezone(salonTz)}
+              timezone={salonTz}
             />
 
             {/* Time slots (shown when date is selected) */}
@@ -437,8 +451,8 @@ export default function Booking() {
 }
 
 /* ── Calendar Widget ── */
-function CalendarWidget({ selectedDate, onSelectDate, minDate }) {
-  const todayStr = todayLocal()
+function CalendarWidget({ selectedDate, onSelectDate, minDate, timezone }) {
+  const todayStr = todayInTimezone(timezone || 'Pacific/Auckland')
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [viewYear, setViewYear] = useState(today.getFullYear())
 

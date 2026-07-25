@@ -423,7 +423,7 @@ app.put('/api/salons/:id/owner', async (req, res) => {
 app.get('/api/salons/:slug', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, slug, address, phone, email, description, opening_hour, closing_hour FROM salons WHERE slug = $1',
+      'SELECT id, name, slug, address, phone, email, description, opening_hour, closing_hour, timezone FROM salons WHERE slug = $1',
       [req.params.slug]
     );
     if (!rows.length) return res.status(404).json({ error: 'Salon not found' });
