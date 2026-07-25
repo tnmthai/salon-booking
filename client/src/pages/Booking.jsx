@@ -5,6 +5,12 @@ import { useI18n } from '../utils/i18n'
 
 const TZ = getSalonTimezone()
 
+// Today's date in local timezone (YYYY-MM-DD)
+function todayLocal() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export default function Booking() {
   const { slug } = useParams()
   const { t, lang, switchLang } = useI18n()
@@ -283,7 +289,7 @@ export default function Booking() {
             <CalendarWidget
               selectedDate={selectedDate}
               onSelectDate={(d) => { setSelectedDate(d); setNextAvailable(null); setSelectedSlot(null); }}
-              minDate={new Date().toISOString().split('T')[0]}
+              minDate={todayLocal()}
             />
 
             {/* Time slots (shown when date is selected) */}
@@ -432,7 +438,7 @@ export default function Booking() {
 
 /* ── Calendar Widget ── */
 function CalendarWidget({ selectedDate, onSelectDate, minDate }) {
-  const today = new Date()
+  const todayStr = todayLocal()
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [viewYear, setViewYear] = useState(today.getFullYear())
 
@@ -463,7 +469,6 @@ function CalendarWidget({ selectedDate, onSelectDate, minDate }) {
 
   const isToday = (d) => {
     const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     return dateStr === todayStr
   }
 
