@@ -18,7 +18,7 @@ export default function Booking() {
   const [salonRating, setSalonRating] = useState(null)
 
   const [selectedServices, setSelectedServices] = useState([]) // Priority 6: multiple services
-  const [selectedStaff, setSelectedStaff] = useState(null)
+  const [selectedStaff, setSelectedStaff] = useState(0) // 0 = Any Staff
   const [selectedDate, setSelectedDate] = useState('')
   const [nextAvailable, setNextAvailable] = useState(null)
   const [checkingNext, setCheckingNext] = useState(false)
@@ -43,18 +43,16 @@ export default function Booking() {
   }, [slug])
 
   useEffect(() => {
-    if (selectedStaff && selectedServices.length > 0 && selectedDate) {
-      // For multi-service, pass total duration
+    if (selectedServices.length > 0 && selectedDate) {
+      const staffParam = selectedStaff ? selectedStaff : 'any'
       const totalDur = selectedServices.reduce((sum, svcId) => {
         const svc = services.find(s => s.id == svcId)
         return sum + (svc?.duration_min || 30)
       }, 0)
-      // Use service_ids param for multi-service
-      const params = `slug=${slug}&staff_id=${selectedStaff}&service_ids=${selectedServices.join(',')}&date=${selectedDate}`
+      const params = `slug=${slug}&staff_id=${staffParam}&service_ids=${selectedServices.join(',')}&date=${selectedDate}`
       setNextAvailable(null)
       fetch(`/api/appointments/slots?${params}`).then(r => r.json()).then(async (data) => {
         setSlots(data)
-        // If no slots, find next available date
         if (data.length === 0) {
           setCheckingNext(true)
           for (let i = 1; i <= 14; i++) {
@@ -62,7 +60,7 @@ export default function Booking() {
             d.setDate(d.getDate() + i)
             const dateStr = d.toISOString().split('T')[0]
             try {
-              const check = await fetch(`/api/appointments/slots?slug=${slug}&staff_id=${selectedStaff}&service_ids=${selectedServices.join(',')}&date=${dateStr}`)
+              const check = await fetch(`/api/appointments/slots?slug=${slug}&staff_id=${staffParam}&service_ids=${selectedServices.join(',')}&date=${dateStr}`)
               const checkData = await check.json()
               if (checkData.length > 0) {
                 setNextAvailable(dateStr)
@@ -209,11 +207,11 @@ export default function Booking() {
 
         {/* Progress */}
         <div className="flex items-center justify-center gap-1 md:gap-2 mb-8">
-          {[1, 2, 3, 4].map(s => (
+          {[1, 2, 3].map(s => (
             <div key={s} className={`flex items-center gap-1 md:gap-2 ${step >= s ? 'text-pink-600' : 'text-gray-300'}`}>
               <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold ${step >= s ? 'bg-pink-600 text-white' : 'bg-gray-200'}`}>{s}</div>
-              <span className="text-xs md:text-sm hidden md:inline">{s === 1 ? t('chooseServices') : s === 2 ? t('selectStaff') : s === 3 ? t('selectTime') : t('confirm')}</span>
-              {s < 4 && <div className={`w-4 md:w-8 h-0.5 ${step > s ? 'bg-pink-600' : 'bg-gray-200'}`} />}
+              <span className="text-xs md:text-sm hidden md:inline">{s === 1 ? t('chooseServices') : s === 2 ? (t('selectDateTime') || 'Date & Time') : t('confirm')}</span>
+              {s < 3 && <div className={`w-4 md:w-8 h-0.5 ${step > s ? 'bg-pink-600' : 'bg-gray-200'}`} />}
             </div>
           ))}
         </div>
@@ -258,80 +256,114 @@ export default function Booking() {
           </div>
         )}
 
-        {/* Step 2: Staff & Date */}
+        {/* Combined Step 2: Staff + Calendar + Time Slots */}
         {step === 2 && (
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t('chooseStaff')}</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {/* Staff selector with Any Staff option */}
+            <h3 className="text-lg font-semibold mb-3">{t('chooseStaff')}</h3>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button onClick={() => setSelectedStaff(0)}
+                className={`px-4 py-2.5 rounded-xl border-2 text-center transition ${
+                  selectedStaff === 0 ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300 bg-white'
+                }`}>
+                <div className="text-sm font-bold">👥 {t('anyStaff') || 'Any Staff'}</div>
+              </button>
               {staffList.map(s => (
                 <button key={s.id} onClick={() => setSelectedStaff(s.id)}
-                  className={`p-3 rounded-xl border-2 text-center transition ${selectedStaff == s.id ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-300 bg-white'}`}>
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg">{s.name.charAt(0)}</div>
+                  className={`px-4 py-2.5 rounded-xl border-2 text-center transition ${
+                    selectedStaff == s.id ? 'border-purple-600 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300 bg-white'
+                  }`}>
                   <div className="text-sm font-medium">{s.name}</div>
-                  <div className="text-xs text-gray-400">{s.role}</div>
                 </button>
               ))}
             </div>
-            <h3 className="text-lg font-semibold mb-4">{t('chooseDate')}</h3>
-            <input type="date" value={selectedDate} min={new Date().toISOString().split('T')[0]}
-              onChange={e => { setSelectedDate(e.target.value); setNextAvailable(null); }}
-              className="border rounded-lg px-3 py-2 mb-6" />
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setStep(1)} className="border px-4 py-2.5 rounded-lg">{t('back')}</button>
-              <button onClick={() => setStep(3)} disabled={!selectedStaff || !selectedDate}
-                className="flex-1 md:flex-none bg-pink-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 font-medium">{t('nextBtn')}</button>
-            </div>
-          </div>
-        )}
 
-        {/* Step 3: Time */}
-        {step === 3 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">{t('chooseTime')}</h3>
-            <p className="text-sm text-gray-500 mb-4">{t('durationLabel')}: {totalDuration} {t('minTotal')} ({selectedServiceNames.map(s => s.name).join(' + ')})</p>
-            {slots.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-3">😔</div>
-                <p className="text-gray-500 font-medium">{t('noSlotsTitle')}</p>
-                <p className="text-sm text-gray-400 mt-1">{t('staffMayBeOff')}</p>
-                {checkingNext && <p className="text-sm text-pink-500 mt-3">🔍 {t('findingNext')}</p>}
-                {nextAvailable && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500">{t('nextAvailable')}:</p>
-                    <p className="text-lg font-bold text-pink-600 mt-1">
-                      {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </p>
-                    <button
-                      onClick={() => setSelectedDate(nextAvailable)}
-                      className="mt-3 bg-pink-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-pink-700"
-                    >
-                      {t('goTo')} {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })} →
-                    </button>
+            {/* Calendar widget */}
+            <h3 className="text-lg font-semibold mb-3">{t('chooseDate')}</h3>
+            <CalendarWidget
+              selectedDate={selectedDate}
+              onSelectDate={(d) => { setSelectedDate(d); setNextAvailable(null); setSelectedSlot(null); }}
+              minDate={new Date().toISOString().split('T')[0]}
+            />
+
+            {/* Time slots (shown when date is selected) */}
+            {selectedDate && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold">{t('chooseTime')}</h3>
+                  <p className="text-sm text-gray-500">
+                    {totalDuration} {t('minTotal')} {selectedStaff > 0 && `· ${staffList.find(s => s.id == selectedStaff)?.name}`}
+                  </p>
+                </div>
+
+                {slots.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-xl">
+                    <div className="text-4xl mb-3">😔</div>
+                    <p className="text-gray-500 font-medium">{t('noSlotsTitle')}</p>
+                    <p className="text-sm text-gray-400 mt-1">{t('staffMayBeOff')}</p>
+                    {checkingNext && <p className="text-sm text-pink-500 mt-3">🔍 {t('findingNext')}</p>}
+                    {nextAvailable && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-500">{t('nextAvailable')}:</p>
+                        <p className="text-lg font-bold text-pink-600 mt-1">
+                          {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </p>
+                        <button
+                          onClick={() => setSelectedDate(nextAvailable)}
+                          className="mt-3 bg-pink-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-pink-700"
+                        >
+                          {t('goTo')} {new Date(nextAvailable + 'T00:00:00').toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })} →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm text-gray-500">{slots.length} {t('availableSlots') || 'available'}</span>
+                      {selectedStaff === 0 && (
+                        <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">{t('anyStaff') || 'All staff'}</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2.5">
+                      {slots.map((slot, i) => {
+                        const staffName = slot.staff_name
+                        return (
+                          <button key={i} onClick={() => setSelectedSlot(slot)}
+                            className={`p-3 rounded-xl border-2 text-center transition ${
+                              selectedSlot?.start === slot.start && selectedSlot?.staff_id === slot.staff_id
+                                ? 'border-green-600 bg-green-50 ring-2 ring-green-200'
+                                : 'border-gray-200 hover:border-green-300 bg-white'
+                            }`}>
+                            <div className="font-medium">
+                              {new Date(slot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            {selectedStaff === 0 && staffName && (
+                              <div className="text-[10px] text-gray-400 mt-0.5 truncate">{staffName}</div>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
-            ) : (
-              <div>
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                {slots.map((slot, i) => (
-                  <button key={i} onClick={() => setSelectedSlot(slot)}
-                    className={`p-3 rounded-xl border-2 text-center transition ${selectedSlot?.start === slot.start ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-green-300 bg-white'}`}>
-                    <div className="font-medium">{new Date(slot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}</div>
-                  </button>
-                ))}
-              </div>
-              </div>
             )}
+
             <div className="flex gap-2 mt-6">
-              <button onClick={() => setStep(2)} className="border px-4 py-2.5 rounded-lg">{t('back')}</button>
-              <button onClick={() => setStep(4)} disabled={!selectedSlot}
-                className="flex-1 md:flex-none bg-pink-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 font-medium">{t('nextBtn')}</button>
+              <button onClick={() => setStep(1)} className="border px-4 py-2.5 rounded-lg">{t('back')}</button>
+              <button onClick={() => setStep(3)} disabled={!selectedSlot || !selectedDate}
+                className="flex-1 md:flex-none bg-pink-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 font-medium">
+                {selectedSlot 
+                  ? `${t('nextBtn')} — ${new Date(selectedSlot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}`
+                  : t('selectTime')}
+              </button>
             </div>
           </div>
         )}
 
-        {/* Step 4: Confirm */}
-        {step === 4 && (
+        {/* Step 3: Confirm (was step 4) */}
+        {step === 3 && (
           <div>
             <h3 className="text-lg font-semibold mb-4">{t('yourInfo')}</h3>
             <div className="bg-white rounded-xl shadow p-4 md:p-6 mb-6">
@@ -347,7 +379,7 @@ export default function Booking() {
               <h4 className="font-semibold mb-3">📋 {t('summaryTitle')}</h4>
               <div className="space-y-1 text-sm">
                 <div><strong>{t('servicesLabel')}:</strong> {selectedServiceNames.map(s => `${s.name} ($${s.price})`).join(', ')}</div>
-                <div><strong>{t('staffLabel')}:</strong> {staff?.name}</div>
+                <div><strong>{t('staffLabel')}:</strong> {selectedStaff > 0 ? staffList.find(s => s.id == selectedStaff)?.name : '👥 ' + (t('anyStaff') || 'Any Staff')}</div>
                 <div><strong>{t('dateLabel')}:</strong> {selectedDate}</div>
                 <div><strong>{t('timeLabel')}:</strong> {selectedSlot && new Date(selectedSlot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}</div>
                 <div><strong>{t('durationLabelKey')}:</strong> {totalDuration} {t('minTotal')}</div>
@@ -355,7 +387,7 @@ export default function Booking() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setStep(3)} className="border px-4 py-2.5 rounded-lg">{t('back')}</button>
+              <button onClick={() => setStep(2)} className="border px-4 py-2.5 rounded-lg">{t('back')}</button>
               <button onClick={handleBook} disabled={!customer.name || !customer.phone || loading}
                 className="flex-1 bg-pink-600 text-white px-6 py-2.5 rounded-lg disabled:opacity-50 font-medium">
                 {loading ? t('bookingAction') : `✅ ${t('confirmBooking')}`}
@@ -393,6 +425,94 @@ export default function Booking() {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Calendar Widget ── */
+function CalendarWidget({ selectedDate, onSelectDate, minDate }) {
+  const today = new Date()
+  const [viewMonth, setViewMonth] = useState(today.getMonth())
+  const [viewYear, setViewYear] = useState(today.getFullYear())
+
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  const daysOfWeek = ['Mo','Tu','We','Th','Fr','Sa','Su']
+
+  const firstDay = new Date(viewYear, viewMonth, 1)
+  const lastDay = new Date(viewYear, viewMonth + 1, 0)
+  const startPad = (firstDay.getDay() + 6) % 7 // Monday as first day
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1) }
+    else setViewMonth(viewMonth - 1)
+  }
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1) }
+    else setViewMonth(viewMonth + 1)
+  }
+
+  const isDisabled = (d) => {
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    return minDate && dateStr < minDate
+  }
+
+  const isSelected = (d) => {
+    return selectedDate === `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  }
+
+  const isToday = (d) => {
+    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    return dateStr === todayStr
+  }
+
+  const cells = []
+  // Empty cells before first day
+  for (let i = 0; i < startPad; i++) cells.push(<div key={`pad-${i}`} />)
+  // Day cells
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const disabled = isDisabled(d)
+    const selected = isSelected(d)
+    const todayClass = isToday(d)
+    cells.push(
+      <button
+        key={d}
+        disabled={disabled}
+        onClick={() => !disabled && onSelectDate(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`)}
+        className={`w-full aspect-square rounded-lg text-sm font-medium transition flex items-center justify-center
+          ${selected ? 'bg-pink-600 text-white ring-2 ring-pink-300' : ''}
+          ${!selected && todayClass ? 'bg-pink-100 text-pink-700 font-bold' : ''}
+          ${!selected && !todayClass && !disabled ? 'hover:bg-pink-50 text-gray-700' : ''}
+          ${disabled ? 'text-gray-200 cursor-not-allowed' : 'cursor-pointer'}
+        `}
+      >
+        {d}
+      </button>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow p-4 max-w-sm">
+      {/* Month/Year navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <div className="font-semibold text-sm">{months[viewMonth]} {viewYear}</div>
+        <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {daysOfWeek.map(d => (
+          <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+        ))}
+      </div>
+      {/* Day grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {cells}
       </div>
     </div>
   )

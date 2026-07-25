@@ -70,7 +70,89 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// GET available time slots for booking
+// Helper: generate slots for a single staff member
+async function generateStaffSlots(staffId, salonId, date, duration, tz) {
+  // Check for working hours overrides first
+  const override = await db.query(
+    'SELECT is_active, start_time, end_time FROM working_hours_overrides WHERE staff_id = $1 AND date = $2',
+    [staffId, date]
+  );
+
+  let workRanges;
+  if (override.rows.length > 0) {
+    if (!override.rows[0].is_active) return []; // Day off override
+    workRanges = [{ start_time: override.rows[0].start_time, end_time: override.rows[0].end_time }];
+  } else {
+    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+    const wh = await db.query(
+      'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true ORDER BY start_time',
+      [staffId, dayOfWeek]
+    );
+    if (!wh.rows.length) return [];
+    workRanges = wh.rows;
+  }
+
+  // Helper: convert local time → UTC
+  function nzToUtc(d, hours, minutes) {
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+    const g = (t) => parts.find(p => p.type === t).value;
+    const dateStr = `${g('year')}-${g('month')}-${g('day')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+    const nzLocal = new Date(dateStr + '.000Z');
+    const utcEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const nzEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: tz }));
+    const offsetMs = utcEquiv.getTime() - nzEquiv.getTime();
+    return new Date(nzLocal.getTime() + offsetMs);
+  }
+
+  // Get existing appointments for this staff on this date
+  const dayStart = new Date(date + 'T00:00:00');
+  const dayEnd = new Date(date + 'T23:59:59');
+  const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
+  const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
+  const startOff = new Date(startStr).getTime() - dayStart.getTime();
+  const endOff = new Date(endStr).getTime() - dayEnd.getTime();
+  const utcStart = new Date(dayStart.getTime() - startOff);
+  const utcEnd = new Date(dayEnd.getTime() - endOff);
+  const appts = await db.query(
+    `SELECT start_time, end_time FROM appointments 
+     WHERE staff_id = $1 AND start_time >= $2 AND start_time <= $3 AND status != 'cancelled'`,
+    [staffId, utcStart.toISOString(), utcEnd.toISOString()]
+  );
+
+  const slots = [];
+  const baseDate = new Date(date + 'T12:00:00');
+  const now = new Date();
+
+  for (const range of workRanges) {
+    const [startH, startM] = range.start_time.split(':').map(Number);
+    const [endH, endM] = range.end_time.split(':').map(Number);
+    let current = nzToUtc(baseDate, startH, startM);
+    const end = nzToUtc(baseDate, endH, endM);
+
+    while (current.getTime() + duration * 60000 <= end.getTime()) {
+      const slotStart = new Date(current);
+      const slotEnd = new Date(current.getTime() + duration * 60000);
+
+      if (slotStart > now) {
+        const overlaps = appts.rows.some(a => {
+          const aStart = new Date(a.start_time);
+          const aEnd = new Date(a.end_time);
+          return slotStart < aEnd && slotEnd > aStart;
+        });
+
+        if (!overlaps) {
+          slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
+        }
+      }
+
+      current.setMinutes(current.getMinutes() + 30);
+    }
+  }
+
+  return slots;
+}
+
+// GET available time slots for booking (supports staff_id='any')
 router.get('/slots', async (req, res) => {
   try {
     const { slug, staff_id, service_id, date, duration: customDuration, service_ids } = req.query;
@@ -80,12 +162,9 @@ router.get('/slots', async (req, res) => {
 
     const salonResult = await db.query('SELECT id, timezone FROM salons WHERE slug = $1', [slug]);
     const salonId = salonResult.rows[0]?.id;
+    if (!salonId) return res.status(404).json({ error: 'Salon not found' });
     const tz = salonResult.rows[0]?.timezone || 'Pacific/Auckland';
-
-    // Get salon
-    const salon = await db.query('SELECT id FROM salons WHERE slug = $1', [slug]);
-    if (!salon.rows.length) return res.status(404).json({ error: 'Salon not found' });
-    const salon_id = salon.rows[0].id;
+    const salon_id = salonId;
 
     // Get service duration — support multiple services (Priority 6)
     let duration;
@@ -103,91 +182,25 @@ router.get('/slots', async (req, res) => {
       return res.status(400).json({ error: 'Provide service_id, service_ids, or duration' });
     }
 
-    // Check for working hours overrides first (Priority 5)
-    const override = await db.query(
-      'SELECT is_active, start_time, end_time FROM working_hours_overrides WHERE staff_id = $1 AND date = $2',
-      [staff_id, date]
-    );
-
-    let workStart, workEnd;
-    let wh; // will be set in else branch (regular working hours, supports split shifts)
-    if (override.rows.length > 0) {
-      if (!override.rows[0].is_active) return res.json([]); // Day off override
-      workStart = override.rows[0].start_time;
-      workEnd = override.rows[0].end_time;
-    } else {
-      // Fall back to regular working hours — supports split shifts (multiple rows per day)
-      const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-      wh = await db.query(
-        'SELECT start_time, end_time FROM working_hours WHERE staff_id = $1 AND day_of_week = $2 AND is_active = true ORDER BY start_time',
-        [staff_id, dayOfWeek]
-      );
-      if (!wh.rows.length) return res.json([]); // Staff doesn't work this day
-    }
-
-    // Helper: convert NZ local time → UTC
-    function nzToUtc(d, hours, minutes) {
-      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
-      const g = (t) => parts.find(p => p.type === t).value;
-      const dateStr = `${g('year')}-${g('month')}-${g('day')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-      const nzLocal = new Date(dateStr + '.000Z');
-      const utcEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: 'UTC' }));
-      const nzEquiv = new Date(nzLocal.toLocaleString('en-US', { timeZone: tz }));
-      const offsetMs = utcEquiv.getTime() - nzEquiv.getTime();
-      return new Date(nzLocal.getTime() + offsetMs);
-    }
-
-    // Get existing appointments for this staff on this date
-    const dayStart = new Date(date + 'T00:00:00');
-    const dayEnd = new Date(date + 'T23:59:59');
-    const startStr = dayStart.toLocaleString('en-US', { timeZone: tz });
-    const endStr = dayEnd.toLocaleString('en-US', { timeZone: tz });
-    const startOff = new Date(startStr).getTime() - dayStart.getTime();
-    const endOff = new Date(endStr).getTime() - dayEnd.getTime();
-    const utcStart = new Date(dayStart.getTime() - startOff);
-    const utcEnd = new Date(dayEnd.getTime() - endOff);
-    const appts = await db.query(
-      `SELECT start_time, end_time FROM appointments 
-       WHERE staff_id = $1 AND start_time >= $2 AND start_time <= $3 AND status != 'cancelled'`,
-      [staff_id, utcStart.toISOString(), utcEnd.toISOString()]
-    );
-
-    // Generate slots at 30-min intervals in UTC for EACH working hours range
-    const slots = [];
-    const baseDate = new Date(date + 'T12:00:00');
-    const now = new Date();
-
-    // Use the correct wh array: override rows if override, else regular wh rows
-    const workRanges = override.rows.length > 0
-      ? [{ start_time: workStart, end_time: workEnd }]
-      : wh.rows;
-
-    for (const range of workRanges) {
-      const [startH, startM] = range.start_time.split(':').map(Number);
-      const [endH, endM] = range.end_time.split(':').map(Number);
-      let current = nzToUtc(baseDate, startH, startM);
-      const end = nzToUtc(baseDate, endH, endM);
-
-      while (current.getTime() + duration * 60000 <= end.getTime()) {
-        const slotStart = new Date(current);
-        const slotEnd = new Date(current.getTime() + duration * 60000);
-
-        if (slotStart > now) {
-          const overlaps = appts.rows.some(a => {
-            const aStart = new Date(a.start_time);
-            const aEnd = new Date(a.end_time);
-            return slotStart < aEnd && slotEnd > aStart;
-          });
-
-          if (!overlaps) {
-            slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
-          }
+    // Support staff_id='any' — fetch slots for ALL active staff
+    if (staff_id === 'any' || staff_id === '0') {
+      const staffRows = await db.query('SELECT id, name FROM staff WHERE salon_id = $1 AND active = true', [salon_id]);
+      const allSlots = [];
+      for (const st of staffRows.rows) {
+        const staffSlots = await generateStaffSlots(st.id, salon_id, date, duration, tz);
+        for (const s of staffSlots) {
+          s.staff_id = st.id;
+          s.staff_name = st.name;
         }
-
-        current.setMinutes(current.getMinutes() + 30);
+        allSlots.push(...staffSlots);
       }
+      // Sort by time, then group overlapping slots from different staff
+      allSlots.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      return res.json(allSlots);
     }
 
+    // Single staff
+    const slots = await generateStaffSlots(parseInt(staff_id), salon_id, date, duration, tz);
     res.json(slots);
   } catch (err) {
     console.error('[ERROR]', err.message);

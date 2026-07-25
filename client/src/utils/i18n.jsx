@@ -42,6 +42,9 @@ const en = {
   loyaltyPoints: 'Loyalty Points', myDashboard: 'My Dashboard', mySchedule: 'My Schedule',
   language: 'Language',
   shopStats: 'Shop Stats',
+  anyStaff: 'Any Staff',
+  availableSlots: 'available',
+  selectDateTime: 'Date & Time',
 
   // Booking page keys
   selectServices: 'Select 1-3 services',
@@ -607,6 +610,9 @@ const vi = {
   loyaltyPoints: 'Điểm tích lũy', myDashboard: 'Bảng điều khiển', mySchedule: 'Lịch của tôi',
   language: 'Ngôn ngữ',
   shopStats: 'Thống kê shop',
+  anyStaff: 'Bất kỳ nhân viên',
+  availableSlots: 'có sẵn',
+  selectDateTime: 'Ngày & Giờ',
 
   // Booking page keys
   selectServices: 'Chọn 1-3 dịch vụ',
