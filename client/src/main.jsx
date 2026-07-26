@@ -126,6 +126,7 @@ function AdminLayout({ salon, user, onLogout }) {
             )}
             {!isSuperAdmin && isOwner && (
               <>
+                {salon?.slug && <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer" className="text-gray-600 hover:text-pink-600">🔗 {t('bookingPage')}</a>}
                 <Link to="/admin/calendar" className="text-gray-600 hover:text-pink-600">📅 {t('calendar')}</Link>
                 <NavDropdown label={t('team')}>
                   <NavDropdownItem to="/admin/staff">👥 {t('staff')}</NavDropdownItem>
@@ -133,7 +134,6 @@ function AdminLayout({ salon, user, onLogout }) {
                   <NavDropdownItem to="/admin/overrides">🗓 {t('daysOff')}</NavDropdownItem>
                 </NavDropdown>
                 <NavDropdown label={t('more')}>
-                  {salon?.slug && <NavDropdownItem to={`/${salon.slug}/book`}>🔗 {t('bookingPage')}</NavDropdownItem>}
                   {salon?.slug && <NavDropdownItem to={`/kiosk/${salon.slug}`}>📱 {t('kioskCheckin')}</NavDropdownItem>}
                   <NavDropdownItem to="/kiosk-guide">📖 {t('kioskGuide')}</NavDropdownItem>
                   <NavDropdownItem to="/admin/services">💅 {t('services')}</NavDropdownItem>
@@ -176,14 +176,10 @@ function AdminLayout({ salon, user, onLogout }) {
               <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📊 {t('dashboard')}</Link>
               {!isSuperAdmin && isOwner && (
                 <>
-                  <Link to="/admin/calendar" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 {t('calendar')}</Link>
                   {salon?.slug && (
                     <a href={`/${salon.slug}/book`} target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-pink-600 hover:bg-pink-50 rounded-lg font-medium">🔗 {t('bookingPage')} ↗</a>
                   )}
-                  {salon?.slug && (
-                    <Link to={`/kiosk/${salon.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📱 {t('kioskCheckin')}</Link>
-                  )}
-                  <Link to="/kiosk-guide" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📖 {t('kioskGuide')}</Link>
+                  <Link to="/admin/calendar" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 {t('calendar')}</Link>
                   <Link to="/admin/staff" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 {t('staff')}</Link>
                   <Link to="/admin/schedule" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📅 {t('schedule')}</Link>
                   <Link to="/admin/services" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">💅 {t('services')}</Link>
@@ -192,6 +188,10 @@ function AdminLayout({ salon, user, onLogout }) {
                   <Link to="/admin/reports" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📊 {t('reports')}</Link>
                   <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">👥 {t('users')}</Link>
                   <Link to="/admin/overrides" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">🗓 {t('daysOff')}</Link>
+                  {salon?.slug && (
+                    <Link to={`/kiosk/${salon.slug}`} onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📱 {t('kioskCheckin')}</Link>
+                  )}
+                  <Link to="/kiosk-guide" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📖 {t('kioskGuide')}</Link>
                   <Link to="/admin/loyalty" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">⭐ {t('loyaltyPoints')}</Link>
                   <Link to="/admin/plan" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">📦 {t('plan')}</Link>
                   <Link to="/admin/settings" onClick={() => setMobileMenuOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-lg">⚙️ {t('settings')}</Link>
