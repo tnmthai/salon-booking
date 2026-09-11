@@ -6,9 +6,27 @@ const path = require('path');
 const pool = require('./db');
 const { seedAdmin, addTimezoneColumn, addStaffActiveColumn, addServiceNameColumn, addUserActiveColumn, addWebsiteColumn, addGiftCardsTable } = require('./initdb');
 const { authMiddleware, isSuperAdmin } = require('./middleware/auth');
+const { renderPage } = require('./seo/render');
+const seoPages = require('./seo/pages');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Path to the built client. Declared here because several route handlers below
+// need it before the static middleware is registered.
+const clientPath = path.join(__dirname, '..', 'client', 'dist');
+
+// Canonical host. Everything (including the sitemap) points at www.timia.nz, so
+// requests to the bare domain are redirected instead of serving duplicates.
+const CANONICAL_HOST = process.env.CANONICAL_HOST || 'www.timia.nz';
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  // Only redirect hosts we actually own; leave *.railway.app and localhost be.
+  if (host === 'timia.nz') {
+    return res.redirect(301, `https://${CANONICAL_HOST}${req.originalUrl}`);
+  }
+  next();
+});
 
 // Seed admin user and add columns on startup
 seedAdmin(pool);
@@ -807,6 +825,8 @@ Disallow: /admin
 Disallow: /api
 Disallow: /lookup
 Disallow: /login
+Disallow: /kiosk/
+Disallow: /*/gift-card
 
 Sitemap: https://www.timia.nz/sitemap.xml`);
 });
@@ -935,55 +955,141 @@ ${salonUrls}
   }
 });
 
-// Dynamic meta tags for salon booking pages (SEO for SPA routes)
-app.get('/:slug/book', async (req, res) => {
-  const { slug } = req.params;
-  // Skip non-salon routes
-  if (['api', 'admin', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(slug)) {
-    return res.sendFile(path.join(clientPath, 'index.html'));
-  }
-  try {
-    const { rows } = await pool.query('SELECT name, description, address FROM salons WHERE slug = $1', [slug]);
-    if (rows.length) {
-      const salon = rows[0];
-      const metaTitle = `Book ${salon.name} — Online Booking | Timia`;
-      const metaDesc = salon.description
-        ? salon.description.substring(0, 155)
-        : `Book an appointment at ${salon.name} in ${salon.address || 'New Zealand'}. Online booking 24/7.`;
-      const html = buildSPAWithMeta({
-        title: metaTitle,
-        description: metaDesc,
-        url: `https://www.timia.nz/${slug}/book`,
-        type: 'website',
-      });
-      res.set('Content-Type', 'text/html');
-      return res.send(html);
-    }
-  } catch (e) { /* fall through to SPA */ }
-  res.sendFile(path.join(clientPath, 'index.html'));
-});
+// --- SEO: server-rendered meta + crawlable content for public SPA routes ---
+//
+// Timia renders in the browser, so without this every URL returned the same
+// empty shell, the same <title> and a canonical pointing at the homepage.
+// Each public route now gets its own metadata, structured data and a plain-HTML
+// copy of its content (React replaces it on mount).
 
-// Build SPA HTML with custom meta tags
-function buildSPAWithMeta({ title, description, url, type = 'website' }) {
-  const fs = require('fs');
-  let html = fs.readFileSync(path.join(clientPath, 'index.html'), 'utf8');
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
-  html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${description}$2`);
-  html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${title}$2`);
-  html = html.replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${description}$2`);
-  html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${url}$2`);
-  html = html.replace(/(<meta property="og:type" content=")[^"]*(")/, `$1${type}$2`);
-  html = html.replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${title}$2`);
-  html = html.replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${description}$2`);
-  html = html.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${url}$2`);
-  return html;
+const sendRendered = (res, html, status = 200) => {
+  res.status(status).set('Content-Type', 'text/html; charset=utf-8').send(html);
+};
+
+const sendShell = (res, status = 200) => {
+  res.status(status).sendFile(path.join(clientPath, 'index.html'));
+};
+
+// Static public pages (home, features, pricing, blog posts, legal, ...)
+// /explore is handled separately below because it needs live data.
+for (const route of Object.keys(seoPages.PAGES)) {
+  if (route === '/explore') continue;
+  app.get(route, (req, res, next) => {
+    const html = renderPage(clientPath, route);
+    if (!html) return next();
+    sendRendered(res, html);
+  });
 }
 
+// /explore also lists live salons, so its crawlable content is built per request
+app.get('/explore', async (req, res, next) => {
+  let salonList = '';
+  try {
+    const { rows } = await pool.query(
+      "SELECT name, slug, address FROM salons WHERE show_in_explore = true ORDER BY created_at DESC LIMIT 100"
+    );
+    salonList = rows.map(s => {
+      const name = seoPages.escapeHtml(s.name);
+      const where = s.address ? ` — ${seoPages.escapeHtml(s.address)}` : '';
+      return `<li><a href="${seoPages.SITE}/${encodeURIComponent(s.slug)}/book">${name}</a>${where}</li>`;
+    }).join('');
+  } catch (e) { /* fall back to the static copy */ }
+
+  const page = seoPages.PAGES['/explore'];
+  const content = salonList
+    ? `${page.content()}<ul>${salonList}</ul>`
+    : undefined;
+  const html = renderPage(clientPath, '/explore', content ? { content } : {});
+  if (!html) return next();
+  sendRendered(res, html);
+});
+
+// Salon booking pages: per-salon meta + LocalBusiness structured data.
+// An unknown slug is a genuine 404, not a copy of the homepage.
+app.get('/:slug/book', async (req, res, next) => {
+  const { slug } = req.params;
+  if (['api', 'admin', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(slug)) {
+    return next();
+  }
+  try {
+    const { rows } = await pool.query(
+      'SELECT name, description, address, phone, logo_url FROM salons WHERE slug = $1',
+      [slug]
+    );
+    if (!rows.length) return sendNotFound(res, req.path);
+
+    const salon = rows[0];
+    const url = `${seoPages.SITE}/${slug}/book`;
+    const title = `Book ${salon.name} — Online Booking | Timia`;
+    const description = salon.description
+      ? salon.description.substring(0, 155)
+      : `Book an appointment at ${salon.name} in ${salon.address || 'New Zealand'}. Online booking, 24/7.`;
+
+    const html = renderPage(clientPath, req.path, {
+      title,
+      description,
+      canonical: url,
+      type: 'website',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'HealthAndBeautyBusiness',
+          name: salon.name,
+          url,
+          description,
+          ...(salon.logo_url ? { image: salon.logo_url } : {}),
+          ...(salon.phone ? { telephone: salon.phone } : {}),
+          ...(salon.address
+            ? { address: { '@type': 'PostalAddress', streetAddress: salon.address, addressCountry: 'NZ' } }
+            : {}),
+          potentialAction: {
+            '@type': 'ReserveAction',
+            target: { '@type': 'EntryPoint', urlTemplate: url, actionPlatform: 'https://schema.org/DesktopWebPlatform' },
+          },
+        },
+        seoPages.breadcrumbLd([
+          { name: 'Home', path: '/' },
+          { name: 'Explore', path: '/explore' },
+          { name: salon.name, path: `/${slug}/book` },
+        ]),
+      ],
+      content: `<h1>Book ${seoPages.escapeHtml(salon.name)}</h1>
+<p>${seoPages.escapeHtml(description)}</p>
+${salon.address ? `<p>${seoPages.escapeHtml(salon.address)}</p>` : ''}
+${seoPages.siteNav()}`,
+    });
+
+    if (!html) return next();
+    return sendRendered(res, html);
+  } catch (e) {
+    return next();
+  }
+});
+
 // Serve static client build in production
-const clientPath = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientPath));
+
+/** Render a real 404: correct status code, noindex, and a way back. */
+function sendNotFound(res, pathname) {
+  const html = renderPage(clientPath, pathname, {
+    title: 'Page not found | Timia',
+    description: 'This page does not exist. Browse salons or head back to the Timia homepage.',
+    canonical: `${seoPages.SITE}${pathname}`,
+    robots: 'noindex, follow',
+    jsonLd: [],
+    content: `<h1>Page not found</h1>
+<p>The page you were looking for does not exist or has moved.</p>
+${seoPages.siteNav()}`,
+  });
+  if (html) return sendRendered(res, html, 404);
+  return sendShell(res, 404);
+}
+
+// SPA fallback. Known client routes get the shell with a 200; anything else is
+// a real 404 instead of a soft-404 copy of the homepage.
 app.get('{*path}', (req, res) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
+  if (seoPages.isKnownRoute(req.path)) return sendShell(res, 200);
+  return sendNotFound(res, req.path);
 });
 
 // Auto-init on startup
