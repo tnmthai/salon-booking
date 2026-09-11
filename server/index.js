@@ -1194,6 +1194,9 @@ async function run(sql) {
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS show_in_explore BOOLEAN DEFAULT true`);
 
   // Trial, billing, referral, boost columns
+  // Date the demo schedule is currently built around. Lets "Try Demo" shift
+  // the existing appointments instead of regenerating them on every click.
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS demo_anchor DATE`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_plan VARCHAR(20)`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(10) DEFAULT 'monthly'`);
