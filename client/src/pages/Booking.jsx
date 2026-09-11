@@ -277,7 +277,7 @@ export default function Booking() {
 
             {/* Category filter — 16 services in one flat list was unreadable. */}
             {categories.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1">
+              <div className="flex gap-2 overflow-x-auto md:overflow-visible md:flex-wrap pb-2 mb-4 -mx-1 px-1">
                 <button onClick={() => setActiveCategory('')}
                   className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm border transition ${
                     activeCategory === '' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-600 border-gray-200 hover:border-pink-300'

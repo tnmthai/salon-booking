@@ -47,7 +47,7 @@ const en = {
   selectDateTime: 'Date & Time',
 
   // Booking page keys
-  selectServices: 'Select 1-3 services',
+  selectServices: 'Choose the services you want',
   servicesSelected: 'service(s) selected',
   total: 'Total',
   home: 'Home',
@@ -657,7 +657,7 @@ const vi = {
   selectDateTime: 'Ngày & Giờ',
 
   // Booking page keys
-  selectServices: 'Chọn 1-3 dịch vụ',
+  selectServices: 'Chọn dịch vụ bạn muốn',
   servicesSelected: 'dịch vụ đã chọn',
   total: 'Tổng cộng',
   home: 'Trang chủ',
@@ -1262,7 +1262,7 @@ const mi = {
   language: 'Reo',
 
   // Booking page keys
-  selectServices: 'Tīpakohia 1-3 ratonga',
+  selectServices: 'Tīpakohia ngā ratonga e hiahia ana koe',
   servicesSelected: 'ngā ratonga kua tīpakohia',
   total: 'Tapeke',
   home: 'Kāinga',
@@ -1825,7 +1825,7 @@ const zh = {
   language: '语言',
 
   // Booking page keys
-  selectServices: '选择1-3项服务',
+  selectServices: '选择你需要的服务',
   servicesSelected: '项服务已选择',
   total: '合计',
   home: '首页',
@@ -2389,7 +2389,7 @@ const hi = {
   language: 'भाषा',
 
   // Booking page keys
-  selectServices: '1-3 सेवाएं चुनें',
+  selectServices: 'अपनी सेवाएं चुनें',
   servicesSelected: 'सेवाएं चुनी गईं',
   total: 'कुल',
   home: 'होम',
