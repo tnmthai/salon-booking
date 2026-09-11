@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, getSalonTimezone } from '../utils/api'
 import { useI18n } from '../utils/i18n'
+import { toast, confirmDialog } from '../utils/notify'
 
 const TZ = getSalonTimezone()
 
@@ -72,7 +73,7 @@ export default function Lookup() {
   }
 
   const handleCancel = async (appt) => {
-    if (!confirm(`Cancel your ${appt.service_name} appointment on ${formatDate(appt.start_time)}?`)) return
+    if (!await confirmDialog({ title: 'Cancel appointment', message: `Cancel your ${appt.service_name} appointment on ${formatDate(appt.start_time)}?`, confirmLabel: 'Yes, cancel it', cancelLabel: 'Keep it', danger: true })) return
 
     try {
       const isCode = /^[A-Z0-9]{8}$/i.test(query.trim())
@@ -84,13 +85,13 @@ export default function Lookup() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to cancel')
+        toast(data.error || 'Failed to cancel', 'error')
         return
       }
       // Refresh results
       handleSearch()
     } catch (err) {
-      alert('Failed to cancel. Please try again.')
+      toast('Failed to cancel. Please try again.', 'error')
     }
   }
 
@@ -138,13 +139,13 @@ export default function Lookup() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to reschedule')
+        toast(data.error || 'Failed to reschedule', 'error')
         return
       }
       setRescheduleId(null)
       handleSearch()
     } catch (err) {
-      alert('Failed to reschedule. Please try again.')
+      toast('Failed to reschedule. Please try again.', 'error')
     }
     setRescheduleLoading(false)
   }
@@ -166,14 +167,14 @@ export default function Lookup() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to submit review')
+        toast(data.error || 'Failed to submit review', 'error')
       } else {
         setReviewSuccess('Thank you for your review! ⭐')
         setReviewId(null)
         setTimeout(() => setReviewSuccess(''), 5000)
       }
     } catch (err) {
-      alert('Failed to submit review. Please try again.')
+      toast('Failed to submit review. Please try again.', 'error')
     }
     setReviewSubmitting(false)
   }

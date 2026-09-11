@@ -446,21 +446,21 @@ export default function Booking() {
                         <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">{t('anyStaff') || 'All staff'}</span>
                       )}
                     </div>
-                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {slots.map((slot, i) => {
                         const staffName = slot.staff_name
                         return (
                           <button key={i} onClick={() => setSelectedSlot(slot)}
-                            className={`p-3 rounded-xl border-2 text-center transition ${
+                            className={`p-4 rounded-xl border-2 text-center transition ${
                               selectedSlot?.start === slot.start && selectedSlot?.staff_id === slot.staff_id
                                 ? 'border-green-600 bg-green-50 ring-2 ring-green-200'
                                 : 'border-gray-200 hover:border-green-300 bg-white'
                             }`}>
-                            <div className="font-medium">
+                            <div className="font-semibold text-base">
                               {new Date(slot.start).toLocaleTimeString('en-NZ', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })}
                             </div>
                             {selectedStaff === 0 && staffName && (
-                              <div className="text-[10px] text-gray-400 mt-0.5 truncate">{staffName}</div>
+                              <div className="text-xs text-gray-400 mt-0.5 truncate">{staffName}</div>
                             )}
                           </button>
                         )

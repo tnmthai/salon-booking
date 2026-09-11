@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api, getSalonTimezone } from '../utils/api'
+import { toast } from '../utils/notify'
 
 const TZ = getSalonTimezone()
 
@@ -58,7 +59,7 @@ export default function StaffDashboard() {
       await api.completeAppointment(id)
       loadData()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api, getSalonTimezone, setSalonTimezone } from '../utils/api'
 import { useI18n } from '../utils/i18n'
+import { toast } from '../utils/notify'
 
 
 export default function Dashboard() {
@@ -405,8 +406,8 @@ export default function Dashboard() {
                     body: JSON.stringify({ timezone: salonSettings.timezone, show_on_landing: salonSettings.show_on_landing, show_in_explore: salonSettings.show_in_explore })
                   })
                   setSalonTimezone(salonSettings.timezone)
-                  alert('Settings saved!')
-                } catch (e) { alert(e.message) }
+                  toast('Settings saved!', 'success')
+                } catch (e) { toast(e.message, 'error') }
                 setSavingSettings(false)
               }}
               disabled={savingSettings}

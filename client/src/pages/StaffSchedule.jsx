@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast } from '../utils/notify'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -168,9 +169,9 @@ export default function StaffSchedule() {
     try {
       const flat = flattenSchedule(schedule)
       await api.setWorkingHours(selectedStaff.id, flat)
-      alert('Schedule saved!')
+      toast('Schedule saved!', 'success')
     } catch (err) {
-      alert('Error: ' + err.message)
+      toast('Error: ' + err.message, 'error')
     }
     setSaving(false)
   }

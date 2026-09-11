@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { sanitizeName } from '../utils/validation'
 import { useI18n } from '../utils/i18n'
+import { toast, confirmDialog } from '../utils/notify'
 
 
 export default function Services() {
@@ -18,15 +19,15 @@ export default function Services() {
     e.preventDefault()
     // Validate
     if (!form.name || form.name.trim().length < 2) {
-      alert('Service name must be at least 2 characters')
+      toast('Service name must be at least 2 characters', 'error')
       return
     }
     if (!form.duration_min || form.duration_min < 5) {
-      alert('Duration must be at least 5 minutes')
+      toast('Duration must be at least 5 minutes', 'error')
       return
     }
     if (!form.price || form.price <= 0) {
-      alert('Price must be greater than 0')
+      toast('Price must be greater than 0', 'error')
       return
     }
     try {
@@ -38,7 +39,7 @@ export default function Services() {
       }
       setForm({ name: '', description: '', duration_min: 30, price: '', category: '' })
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const handleEdit = (s) => {
@@ -47,7 +48,7 @@ export default function Services() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this service?')) return
+    if (!await confirmDialog({ message: 'Delete this service?', confirmLabel: 'Delete', danger: true })) return
     await api.deleteService(id)
     load()
   }
@@ -63,18 +64,44 @@ export default function Services() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">{editing ? t('editService') : t('addService')}</h2>
+        {/* Labels, not placeholders. This is the first screen a new salon has
+            to fill in, and once a field had a value there was nothing left to
+            say what it was. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder={t('serviceName')} value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-            className="border rounded-lg px-3 py-2" required minLength={2} />
-          <input placeholder={t('category')} value={form.category} onChange={e => setForm({...form, category: e.target.value})}
-            className="border rounded-lg px-3 py-2" list="categories" />
-          <datalist id="categories">{categories.map(c => <option key={c} value={c} />)}</datalist>
-          <input type="number" placeholder={t('duration')} value={form.duration_min} onChange={e => setForm({...form, duration_min: +e.target.value})}
-            className="border rounded-lg px-3 py-2" required />
-          <input type="number" placeholder={t('priceLabel')} value={form.price} onChange={e => setForm({...form, price: +e.target.value})}
-            className="border rounded-lg px-3 py-2" required step="0.01" />
-          <textarea placeholder={t('description')} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-            className="border rounded-lg px-3 py-2 md:col-span-2" rows={2} />
+          <div>
+            <label htmlFor="svc-name" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('serviceName')} <span className="text-pink-600">*</span>
+            </label>
+            <input id="svc-name" placeholder={t('svcNamePlaceholder')} value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" required minLength={2} />
+          </div>
+          <div>
+            <label htmlFor="svc-category" className="block text-sm font-medium text-gray-700 mb-1">{t('category')}</label>
+            <input id="svc-category" placeholder={t('svcCategoryPlaceholder')} value={form.category} onChange={e => setForm({...form, category: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" list="categories" />
+            <datalist id="categories">{categories.map(c => <option key={c} value={c} />)}</datalist>
+            <p className="text-xs text-gray-400 mt-1">{t('svcCategoryHint')}</p>
+          </div>
+          <div>
+            <label htmlFor="svc-duration" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('duration')} <span className="text-pink-600">*</span>
+            </label>
+            <input id="svc-duration" type="number" min="5" step="5" value={form.duration_min} onChange={e => setForm({...form, duration_min: +e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" required />
+            <p className="text-xs text-gray-400 mt-1">{t('svcDurationHint')}</p>
+          </div>
+          <div>
+            <label htmlFor="svc-price" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('priceLabel')} <span className="text-pink-600">*</span>
+            </label>
+            <input id="svc-price" type="number" min="0" value={form.price} onChange={e => setForm({...form, price: +e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" required step="0.01" />
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="svc-description" className="block text-sm font-medium text-gray-700 mb-1">{t('description')}</label>
+            <textarea id="svc-description" placeholder={t('svcDescPlaceholder')} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" rows={2} />
+          </div>
         </div>
         <div className="mt-4 flex gap-2">
           <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700">
@@ -113,6 +140,15 @@ export default function Services() {
               </button>
             )
           })}
+        </div>
+      )}
+
+      {/* A brand-new salon used to land here on a blank page that said nothing
+          about what to do next. */}
+      {services.length === 0 && (
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          <h2 className="font-semibold text-gray-900 mb-1">{t('svcEmptyTitle')}</h2>
+          <p className="text-sm text-gray-500 max-w-md mx-auto">{t('svcEmptyBody')}</p>
         </div>
       )}
 

@@ -609,6 +609,19 @@ const en = {
 
   // --- Calendar ---
   lunchBreak: 'Break',
+  addBreak: 'Add a break — customers cannot book during it',
+  breakShort: 'break',
+  breakHint: 'Drag to move. Double-click to remove. Customers cannot book during a break.',
+  svcNamePlaceholder: 'e.g. Gel Manicure',
+  svcCategoryPlaceholder: 'e.g. Nails',
+  svcCategoryHint: 'Groups services on your booking page. Leave blank if you only offer a few.',
+  svcDurationHint: 'How long you block out for this service, including clean-up.',
+  svcDescPlaceholder: 'Anything the customer should know before booking',
+  svcEmptyTitle: 'No services yet',
+  svcEmptyBody: 'Add your first service above — a name, how long it takes and what it costs. Customers cannot book until at least one service exists.',
+  stfNameHint: 'Shown to customers when they pick who they want.',
+  stfEmptyTitle: 'No team members yet',
+  stfEmptyBody: 'Add yourself first, even if you work alone — bookings are always assigned to a person, and working hours are set per person.',
 }
 
 const vi = {
@@ -1219,6 +1232,19 @@ const vi = {
 
   // --- Lịch ---
   lunchBreak: 'Nghỉ',
+  addBreak: 'Thêm giờ nghỉ — khách không đặt được trong khoảng này',
+  breakShort: 'giờ nghỉ',
+  breakHint: 'Kéo để đổi giờ. Nhấp đúp để xoá. Khách không đặt được trong giờ nghỉ.',
+  svcNamePlaceholder: 'ví dụ: Sơn gel',
+  svcCategoryPlaceholder: 'ví dụ: Móng',
+  svcCategoryHint: 'Dùng để gom nhóm dịch vụ trên trang đặt lịch. Ít dịch vụ thì để trống cũng được.',
+  svcDurationHint: 'Thời gian bạn chặn lịch cho dịch vụ này, tính cả dọn dẹp.',
+  svcDescPlaceholder: 'Điều khách nên biết trước khi đặt',
+  svcEmptyTitle: 'Chưa có dịch vụ nào',
+  svcEmptyBody: 'Thêm dịch vụ đầu tiên ở trên — tên, thời lượng và giá. Chưa có dịch vụ nào thì khách không đặt lịch được.',
+  stfNameHint: 'Tên này hiện cho khách khi họ chọn người làm.',
+  stfEmptyTitle: 'Chưa có nhân viên nào',
+  stfEmptyBody: 'Thêm chính bạn trước, kể cả khi làm một mình — mọi lịch hẹn đều gắn với một người, và giờ làm cũng đặt theo từng người.',
 }
 
 const mi = {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 const PLAN_COLORS = {
   free: { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-700', badge: 'bg-gray-200 text-gray-700' },
@@ -40,10 +41,10 @@ export default function PlanSettings() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert(data.error || 'Failed to create checkout')
+        toast(data.error || 'Failed to create checkout', 'error')
       }
     } catch (e) {
-      alert('Network error: ' + e.message)
+      toast('Network error: ' + e.message, 'error')
     } finally {
       setCheckoutLoading(null)
     }
@@ -64,37 +65,37 @@ export default function PlanSettings() {
   }, [])
 
   const handleTrial = async (targetPlan) => {
-    if (!confirm(`Start ${targetPlan} trial?`)) return
+    if (!await confirmDialog({ message: `Start your ${targetPlan} trial?`, confirmLabel: 'Start trial' })) return
     try {
       const res = await api.startTrial(targetPlan)
-      alert(res.message)
+      toast(res.message, 'error')
       loadPlan()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
   }
 
   const handleBillingCycle = async (cycle) => {
     try {
       const res = await api.switchBillingCycle(cycle)
-      alert(res.message)
+      toast(res.message, 'error')
       loadPlan()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
   }
 
   const handleEarlyBird = async () => {
-    if (!confirm('Claim Early Bird? Plus at $7/mo forever!')) return
+    if (!await confirmDialog({ title: 'Early Bird', message: 'Claim Early Bird — Plus at $7/mo, locked in forever?', confirmLabel: 'Claim it' })) return
     try {
       const res = await api.claimEarlyBird()
-      alert(res.message)
+      toast(res.message, 'error')
       loadPlan()
       api.getEarlyBirdStatus().then(setEarlyBird)
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
   }
 
   const handleGetReferralCode = async () => {
     try {
       const res = await api.getReferralCode()
       setReferralCode(res.code)
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
   }
 
   const handleApplyReferral = async () => {
@@ -298,11 +299,11 @@ export default function PlanSettings() {
                 </button>
               ) : !isActive ? (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (p.price === 0) {
                       // Downgrade to free
-                      if (!confirm(`Downgrade to Starter?`)) return
-                      api.me().then(me => api.updatePlan(me.salon.id, 'free', 'monthly')).then(loadPlan).catch(e => alert(e.message))
+                      if (!await confirmDialog({ message: 'Downgrade to Starter?', confirmLabel: 'Downgrade', danger: true })) return
+                      api.me().then(me => api.updatePlan(me.salon.id, 'free', 'monthly')).then(loadPlan).catch(e => toast(e.message, 'error'))
                     } else {
                       // Paid plan — go through Stripe
                       handleStripeCheckout(p.id)

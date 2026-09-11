@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from 'react-router-dom'
+import { toast } from '../utils/notify'
 
 const RESET_TIMEOUT = 60000 // 60 seconds
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Pacific/Auckland'
@@ -123,7 +124,7 @@ export default function Kiosk() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Check-in failed')
+        toast(data.error || 'Check-in failed', 'error')
         setLoading(false)
         return
       }
@@ -133,7 +134,7 @@ export default function Kiosk() {
       )
       setCheckedInAppts(prev => [...prev, { ...appt, status: 'checked_in' }])
     } catch (err) {
-      alert('Check-in failed. Please try again.')
+      toast('Check-in failed. Please try again.', 'error')
     }
     setLoading(false)
   }

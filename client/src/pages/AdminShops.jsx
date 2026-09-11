@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { sanitizeName, sanitizePhone } from '../utils/validation'
+import { toast, confirmDialog } from '../utils/notify'
 
 export default function AdminShops() {
   const [salons, setSalons] = useState([])
@@ -52,14 +53,14 @@ export default function AdminShops() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert(err.error)
+        toast(err.error, 'error')
         return
       }
       setShowCreateForm(null)
       setForm({ name: '', email: '', password: '' })
       load()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 
@@ -69,17 +70,17 @@ export default function AdminShops() {
     setResetting(true)
     try {
       await api.resetPassword(resetUser.id, newPassword)
-      alert(`Password reset for ${resetUser.name} (${resetUser.email})`)
+      toast(`Password reset for ${resetUser.name} (${resetUser.email})`, 'error')
       setResetUser(null)
       setNewPassword('')
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
     setResetting(false)
   }
 
   const handleDeleteSalon = async (salon) => {
-    if (!confirm(`Delete "${salon.name}"? This will remove ALL data (services, staff, appointments, customers) for this shop. This cannot be undone.`)) return
+    if (!await confirmDialog({ title: 'Delete shop', message: `Delete "${salon.name}"? This removes every service, staff member, appointment and customer for this shop. It cannot be undone.`, confirmLabel: 'Delete shop', danger: true })) return
     setDeleting(salon.id)
     try {
       const token = localStorage.getItem('salon_token')
@@ -89,12 +90,12 @@ export default function AdminShops() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert(err.error)
+        toast(err.error, 'error')
         return
       }
       load()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
     setDeleting(null)
   }
@@ -115,13 +116,13 @@ export default function AdminShops() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert(err.error)
+        toast(err.error, 'error')
         return
       }
       setEditSalon(null)
       load()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 
@@ -170,7 +171,7 @@ export default function AdminShops() {
                       try {
                         await api.updatePlan(s.id, e.target.value)
                         load()
-                      } catch (err) { alert(err.message) }
+                      } catch (err) { toast(err.message, 'error') }
                       setUpdatingPlan(null)
                     }}
                     disabled={updatingPlan === s.id}

@@ -141,7 +141,7 @@ export default function Reports() {
                     <div className="bg-blue-400 w-full rounded-b-sm" style={{ height: `${(Number(d.confirmed) / maxDaily) * 160}px` }} title={`Confirmed: ${d.confirmed}`} />
                   )}
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1 -rotate-45 origin-top-left whitespace-nowrap">
+                <div className="text-xs text-gray-400 mt-1 -rotate-45 origin-top-left whitespace-nowrap">
                   {new Date(d.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}
                 </div>
               </div>
@@ -165,9 +165,9 @@ export default function Reports() {
               const count = entry ? Number(entry.booking_count) : 0
               return (
                 <div key={hour} className="flex-1 flex flex-col items-center">
-                  <div className="text-[10px] text-gray-400 mb-1">{count > 0 ? count : ''}</div>
+                  <div className="text-xs text-gray-400 mb-1">{count > 0 ? count : ''}</div>
                   <div className="w-full bg-pink-400 rounded-t" style={{ height: `${(count / maxHourly) * 100}px`, minHeight: count > 0 ? '4px' : '0' }} />
-                  <div className="text-[10px] text-gray-500 mt-1">{hour}:00</div>
+                  <div className="text-xs text-gray-500 mt-1">{hour}:00</div>
                 </div>
               )
             })}

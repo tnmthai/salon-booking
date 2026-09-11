@@ -172,7 +172,7 @@ export default function ShopStats() {
                       {/* Cancelled */}
                       <div className="bg-red-300 h-5 transition-all" style={{ width: `${(s.cancelled / maxTotal) * 100}%` }} title={`Cancelled: ${s.cancelled}`} />
                     </div>
-                    <div className="flex gap-3 text-[10px] text-gray-400 mt-0.5">
+                    <div className="flex gap-3 text-xs text-gray-400 mt-0.5">
                       <span>✅ {s.confirmed} confirmed</span>
                       <span>✅ {s.completed} completed</span>
                       <span>❌ {s.cancelled} cancelled</span>

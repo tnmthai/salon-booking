@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { sanitizeName, sanitizePhone } from '../utils/validation'
 import { useI18n } from '../utils/i18n'
+import { toast, confirmDialog } from '../utils/notify'
 
 export default function Staff() {
   const { t } = useI18n()
@@ -17,15 +18,15 @@ export default function Staff() {
     e.preventDefault()
     // Validate
     if (!form.name || form.name.trim().length < 2) {
-      alert('Staff name must be at least 2 characters')
+      toast('Staff name must be at least 2 characters', 'error')
       return
     }
     if (form.phone && form.phone.replace(/\D/g, '').length < 7) {
-      alert('Please enter a valid phone number (at least 7 digits)')
+      toast('Please enter a valid phone number (at least 7 digits)', 'error')
       return
     }
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      alert('Please enter a valid email address')
+      toast('Please enter a valid email address', 'error')
       return
     }
     try {
@@ -37,7 +38,7 @@ export default function Staff() {
       }
       setForm({ name: '', role: '', phone: '', email: '' })
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const handleEdit = (s) => {
@@ -47,19 +48,19 @@ export default function Staff() {
 
   const toggleActive = async (s) => {
     const newActive = !s.is_active
-    if (!confirm(newActive ? `Activate ${s.name}?` : `Deactivate ${s.name}? They won't appear in current schedules.`)) return
+    if (!await confirmDialog(newActive ? { message: `Activate ${s.name}?`, confirmLabel: 'Activate' } : { message: `Deactivate ${s.name}? They will not appear in current schedules.`, confirmLabel: 'Deactivate', danger: true })) return
     try {
       await api.updateStaff(s.id, { ...s, is_active: newActive, active: newActive })
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const handleDelete = async (s) => {
-    if (!confirm(`Delete ${s.name}? This will permanently remove them.`)) return
+    if (!await confirmDialog({ title: 'Delete staff member', message: `Delete ${s.name}? This permanently removes them.`, confirmLabel: 'Delete', danger: true })) return
     try {
       await api.deleteStaff(s.id)
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const activeStaff = staff.filter(s => s.is_active !== false)
@@ -74,17 +75,32 @@ export default function Staff() {
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 mb-8">
         <h2 className="text-lg font-semibold mb-4">{editing ? t('editStaff') : t('addStaff')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder={t('staffName')} value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-            className="border rounded-lg px-3 py-2" required minLength={2} />
-          <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
-            className="border rounded-lg px-3 py-2">
-            <option value="">{t('selectRole')}</option>
-            {roles.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <input placeholder={t('phone')} type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-            className="border rounded-lg px-3 py-2" />
-          <input placeholder={t('email')} value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-            className="border rounded-lg px-3 py-2" />
+          <div>
+            <label htmlFor="stf-name" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('staffName')} <span className="text-purple-600">*</span>
+            </label>
+            <input id="stf-name" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" required minLength={2} />
+            <p className="text-xs text-gray-400 mt-1">{t('stfNameHint')}</p>
+          </div>
+          <div>
+            <label htmlFor="stf-role" className="block text-sm font-medium text-gray-700 mb-1">{t('role')}</label>
+            <select id="stf-role" value={form.role} onChange={e => setForm({...form, role: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2">
+              <option value="">{t('selectRole')}</option>
+              {roles.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="stf-phone" className="block text-sm font-medium text-gray-700 mb-1">{t('phone')}</label>
+            <input id="stf-phone" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label htmlFor="stf-email" className="block text-sm font-medium text-gray-700 mb-1">{t('email')}</label>
+            <input id="stf-email" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+              className="w-full border rounded-lg px-3 py-2" />
+          </div>
         </div>
         <div className="mt-4 flex gap-2">
           <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
@@ -94,6 +110,13 @@ export default function Staff() {
             className="border px-4 py-2 rounded-lg hover:bg-gray-50">{t('cancelBtn')}</button>}
         </div>
       </form>
+
+      {staff.length === 0 && (
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          <h2 className="font-semibold text-gray-900 mb-1">{t('stfEmptyTitle')}</h2>
+          <p className="text-sm text-gray-500 max-w-md mx-auto">{t('stfEmptyBody')}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {activeStaff.map(s => (

@@ -2,6 +2,12 @@ const fetch = require('node-fetch');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@timia.nz';
 
+// Where our own notifications land: new shop registrations and contact-form
+// messages. It was hardcoded as 'support@timia.nz' in three separate places,
+// so changing the inbox meant editing code and redeploying. Set NOTIFY_EMAIL
+// on the host to redirect it; the default keeps today's behaviour.
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'support@timia.nz';
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -428,4 +434,4 @@ function verificationCodeEmail({ code, email }) {
   `;
 }
 
-module.exports = { sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail, completionEmail, loyaltyReminderEmail, verificationCodeEmail };
+module.exports = { NOTIFY_EMAIL, sendEmail, bookingConfirmationEmail, shopOwnerNotificationEmail, cancellationEmail, cancellationOwnerEmail, rescheduleEmail, reminderEmail, reviewRequestEmail, newShopNotificationEmail, completionEmail, loyaltyReminderEmail, verificationCodeEmail };

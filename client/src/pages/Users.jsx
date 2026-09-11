@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 export default function Users() {
   const [users, setUsers] = useState([])
@@ -27,22 +28,22 @@ export default function Users() {
     e.preventDefault()
     // Validate
     if (!form.name || form.name.trim().length < 2) {
-      alert('Name must be at least 2 characters')
+      toast('Name must be at least 2 characters', 'error')
       return
     }
     if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      alert('Please enter a valid email address')
+      toast('Please enter a valid email address', 'error')
       return
     }
     try {
       await api.updateUser(editing, { ...form, name: form.name.trim(), email: form.email.trim().toLowerCase() })
       setEditing(null)
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this user?')) return
+    if (!await confirmDialog({ message: 'Delete this user?', confirmLabel: 'Delete', danger: true })) return
     await api.deleteUser(id)
     load()
   }
@@ -53,11 +54,11 @@ export default function Users() {
     setResetting(true)
     try {
       await api.resetPassword(resetUser.id, newPassword)
-      alert(`Password reset for ${resetUser.name}`)
+      toast(`Password reset for ${resetUser.name}`, 'error')
       setResetUser(null)
       setNewPassword('')
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
     setResetting(false)
   }
@@ -69,11 +70,11 @@ export default function Users() {
 
   const toggleStaffActive = async (s) => {
     const newActive = !s.is_active
-    if (!confirm(newActive ? `Activate ${s.name}?` : `Deactivate ${s.name}? They won't appear in schedules.`)) return
+    if (!await confirmDialog(newActive ? { message: `Activate ${s.name}?`, confirmLabel: 'Activate' } : { message: `Deactivate ${s.name}? They will not appear in schedules.`, confirmLabel: 'Deactivate', danger: true })) return
     try {
       await api.updateStaff(s.id, { ...s, is_active: newActive, active: newActive })
       load()
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const activeStaff = staff.filter(s => s.is_active !== false)

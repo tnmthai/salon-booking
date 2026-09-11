@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../utils/api'
+import { toast } from '../utils/notify'
 
 const PRESET_AMOUNTS = [25, 50, 75, 100, 150, 200]
 
@@ -38,11 +39,11 @@ export default function GiftCard() {
 
   const handlePurchase = async () => {
     if (selectedAmount < 5 || selectedAmount > 500) {
-      alert('Amount must be between $5 and $500')
+      toast('Amount must be between $5 and $500', 'error')
       return
     }
     if (!form.purchaser_name || !form.purchaser_email) {
-      alert('Your name and email are required')
+      toast('Your name and email are required', 'error')
       return
     }
     setLoading(true)
@@ -55,7 +56,7 @@ export default function GiftCard() {
       // Redirect to Stripe checkout
       window.location.href = res.url
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
     setLoading(false)
   }

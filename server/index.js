@@ -145,6 +145,7 @@ app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/overrides', require('./routes/overrides'));
 app.use('/api/visits', require('./routes/visits'));
 app.use('/api/gift-cards', require('./routes/gift-cards'));
+app.use('/api/breaks', require('./routes/breaks'));
 const { router: plansRouter } = require('./routes/plans');
 app.use('/api', plansRouter);
 app.use('/api/demo', require('./routes/demo'));
@@ -176,9 +177,9 @@ app.post('/api/contact', async (req, res) => {
     const safeName = escapeHtml(name);
     const safeEmail = escapeHtml(email);
     const safeMessage = escapeHtml(message);
-    const { sendEmail } = require('./utils/email');
+    const { sendEmail, NOTIFY_EMAIL } = require('./utils/email');
     await sendEmail(
-      'support@timia.nz',
+      NOTIFY_EMAIL,
       `Contact from ${safeName} (${safeEmail})`,
       `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
         <h2 style="color:#ec4899">New Contact Message</h2>
@@ -1197,6 +1198,20 @@ async function run(sql) {
   // Date the demo schedule is currently built around. Lets "Try Demo" shift
   // the existing appointments instead of regenerating them on every click.
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS demo_anchor DATE`);
+  // Staff breaks used to live in the browser's localStorage, so the booking
+  // page never knew about them and customers could book straight over the
+  // owner's lunch.
+  await run(`CREATE TABLE IF NOT EXISTS staff_breaks (
+    id SERIAL PRIMARY KEY,
+    salon_id INTEGER REFERENCES salons(id) ON DELETE CASCADE,
+    staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    start_min INTEGER NOT NULL,
+    end_min INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT staff_breaks_staff_date_key UNIQUE (staff_id, date)
+  )`);
+  await run(`CREATE INDEX IF NOT EXISTS staff_breaks_salon_date_idx ON staff_breaks (salon_id, date)`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS trial_plan VARCHAR(20)`);
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(10) DEFAULT 'monthly'`);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 const TZ = 'Pacific/Auckland'
 
@@ -19,12 +20,12 @@ export default function Reviews() {
   }
 
   const deleteReview = async (id) => {
-    if (!confirm('Delete this review?')) return
+    if (!await confirmDialog({ message: 'Delete this review?', confirmLabel: 'Delete', danger: true })) return
     try {
       await api.deleteReview(id)
       loadReviews()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 

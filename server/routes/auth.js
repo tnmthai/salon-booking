@@ -57,9 +57,9 @@ router.post('/register', async (req, res) => {
 
     // Notify support about new shop registration
     try {
-      const { sendEmail, newShopNotificationEmail } = require('../utils/email');
+      const { sendEmail, newShopNotificationEmail, NOTIFY_EMAIL } = require('../utils/email');
       await sendEmail(
-        'support@timia.nz',
+        NOTIFY_EMAIL,
         `🏪 New Shop: ${salon_name}`,
         newShopNotificationEmail({
           salonName: salon_name,
@@ -357,9 +357,9 @@ router.post('/verify-code', async (req, res) => {
 
       // Notify support about new shop
       try {
-        const { sendEmail, newShopNotificationEmail } = require('../utils/email');
+        const { sendEmail, newShopNotificationEmail, NOTIFY_EMAIL } = require('../utils/email');
         await sendEmail(
-          'support@timia.nz',
+          NOTIFY_EMAIL,
           `🏪 New Shop (code login): ${salonName}`,
           newShopNotificationEmail({
             salonName,

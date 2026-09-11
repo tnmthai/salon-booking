@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../utils/i18n'
+import { toast } from '../utils/notify'
 
 function Navbar() {
   const [open, setOpen] = useState(false)
@@ -69,8 +70,8 @@ export default function ContactPage() {
         body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), subject: fd.get('subject'), message: fd.get('message') }),
       })
       if (res.ok) { setSubmitted(true); e.target.reset() }
-      else alert(t('contact_failed_send'))
-    } catch { alert(t('contact_failed_send')) }
+      else toast(t('contact_failed_send'), 'error')
+    } catch { toast(t('contact_failed_send'), 'error') }
     setSending(false)
   }
 

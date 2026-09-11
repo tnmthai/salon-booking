@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { api, getSalonTimezone } from '../utils/api'
 import { useI18n } from '../utils/i18n'
+import { toast, confirmDialog } from '../utils/notify'
 
 const STAFF_COLORS = [
   { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', dot: 'bg-blue-500' },
@@ -33,25 +34,23 @@ function todayNZ() { return new Date().toLocaleDateString('en-CA', { timeZone: T
 function shiftDateNZ(d, off) { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + off); return dt.toLocaleDateString('en-CA', { timeZone: TZ }) }
 function fmtDateLabel(d) { return new Date(d + 'T12:00:00').toLocaleDateString('en-NZ', { timeZone: TZ, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }
 
-// Lunch break helpers
-const DEFAULT_LUNCH_START = 12 * 60 + 30 // 12:30 in minutes
-const DEFAULT_LUNCH_END = 13 * 60 // 13:00 in minutes
-const LUNCH_KEY = 'timia_lunch_breaks'
+// Breaks.
+//
+// These were kept in localStorage, which meant the server never saw them:
+// the calendar drew a lunch block while the booking page sold those very
+// slots to customers, and the block disappeared on any other device. They are
+// rows now, and the slot generator excludes them.
+//
+// A break also no longer appears by default. Showing one that nothing enforces
+// was worse than showing none — the owner has to add it, and what is on the
+// screen is now exactly what customers cannot book.
+const DEFAULT_LUNCH_START = 12 * 60 + 30 // 12:30, used when adding a new break
+const DEFAULT_LUNCH_END = 13 * 60        // 13:00
 
-function loadLunchBreaks() {
-  try {
-    return JSON.parse(localStorage.getItem(LUNCH_KEY)) || {}
-  } catch { return {} }
-}
+function breakKey(staffId, date) { return `${staffId}_${date}` }
 
-function saveLunchBreaks(data) {
-  localStorage.setItem(LUNCH_KEY, JSON.stringify(data))
-}
-
-function getLunchBreak(lunchBreaks, staffId, date) {
-  const key = `${staffId}_${date}`
-  if (lunchBreaks[key]) return lunchBreaks[key]
-  return { start: DEFAULT_LUNCH_START, end: DEFAULT_LUNCH_END }
+function getLunchBreak(breaks, staffId, date) {
+  return breaks[breakKey(staffId, date)] || null
 }
 
 function BookingModal({ appt, onClose, onUpdate, services }) {
@@ -65,7 +64,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
 
   const handleStatus = async (s) => {
     setSaving(true)
-    try { await api.updateAppointment(appt.id, { status: s }); setStatus(s); onUpdate() } catch (e) { alert(e.message) }
+    try { await api.updateAppointment(appt.id, { status: s }); setStatus(s); onUpdate() } catch (e) { toast(e.message, 'error') }
     setSaving(false)
   }
 
@@ -75,7 +74,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
       await api.updateAppointment(appt.id, { status: 'checked_in' })
       setCheckIn(true)
       onUpdate()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
     setSaving(false)
   }
 
@@ -91,7 +90,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
       const dur = (new Date(appt.end_time) - new Date(appt.start_time))
       await api.updateAppointment(appt.id, { start_time: utcStart.toISOString(), end_time: new Date(utcStart.getTime() + dur).toISOString() })
       onUpdate(); onClose()
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
     setSaving(false)
   }
 
@@ -109,7 +108,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
         service_name: newName,
       })
       onUpdate(); setShowAddService(false)
-    } catch (e) { alert(e.message) }
+    } catch (e) { toast(e.message, 'error') }
     setSaving(false)
   }
 
@@ -192,7 +191,7 @@ function BookingModal({ appt, onClose, onUpdate, services }) {
                 className="flex-1 border py-2 rounded-lg text-xs font-medium hover:bg-gray-50">📅 Reschedule</button>
               <button onClick={() => handleStatus('completed')} disabled={saving}
                 className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50">✅ Complete</button>
-              <button onClick={() => { if (confirm('Cancel this booking?')) handleStatus('cancelled') }} disabled={saving}
+              <button onClick={async () => { if (await confirmDialog({ message: 'Cancel this booking?', confirmLabel: 'Yes, cancel it', cancelLabel: 'Keep it', danger: true })) handleStatus('cancelled') }} disabled={saving}
                 className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50">❌ Cancel</button>
             </div>
           )}
@@ -224,7 +223,7 @@ export default function Calendar() {
   const [dragAppt, setDragAppt] = useState(null)
   const [dragLunch, setDragLunch] = useState(null)
   const [dragOver, setDragOver] = useState(null)
-  const [lunchBreaks, setLunchBreaks] = useState(loadLunchBreaks)
+  const [lunchBreaks, setLunchBreaks] = useState({})
   const [now, setNow] = useState(new Date())
   const scrollRef = useRef(null)
   const calendarRef = useRef(null)
@@ -248,8 +247,47 @@ export default function Calendar() {
     }).catch(console.error)
   }, [])
 
-  // Save lunch breaks when changed
-  useEffect(() => { saveLunchBreaks(lunchBreaks) }, [lunchBreaks])
+  // Breaks come from the server now, so they survive a device change and the
+  // booking page actually honours them.
+  const loadBreaks = useCallback(() => {
+    const from = showAllDates ? undefined : date
+    const to = showAllDates ? undefined : date
+    api.getBreaks(from, to).then(rows => {
+      const map = {}
+      for (const b of rows) map[breakKey(b.staff_id, b.date)] = { start: b.start_min, end: b.end_min }
+      setLunchBreaks(map)
+    }).catch(console.error)
+  }, [date, showAllDates])
+
+  useEffect(() => { loadBreaks() }, [loadBreaks])
+
+  const saveBreak = async (staffId, dateStr, start, end) => {
+    const key = breakKey(staffId, dateStr)
+    const previous = lunchBreaks[key]
+    setLunchBreaks(prev => ({ ...prev, [key]: { start, end } }))  // optimistic
+    try {
+      await api.setBreak({ staff_id: staffId, date: dateStr, start_min: start, end_min: end })
+    } catch (err) {
+      setLunchBreaks(prev => {
+        const next = { ...prev }
+        if (previous) next[key] = previous; else delete next[key]
+        return next
+      })
+      toast(err.message || 'Could not save the break', 'error')
+    }
+  }
+
+  const removeBreak = async (staffId, dateStr) => {
+    const key = breakKey(staffId, dateStr)
+    const previous = lunchBreaks[key]
+    setLunchBreaks(prev => { const next = { ...prev }; delete next[key]; return next })
+    try {
+      await api.deleteBreak(staffId, dateStr)
+    } catch (err) {
+      if (previous) setLunchBreaks(prev => ({ ...prev, [key]: previous }))
+      toast(err.message || 'Could not remove the break', 'error')
+    }
+  }
 
   const loadAppts = useCallback(() => {
     setLoading(true)
@@ -324,6 +362,7 @@ export default function Calendar() {
   }
 
   const lunchStyle = (lunch) => {
+    if (!lunch) return null
     const top = (lunch.start - START_HOUR * 60) / SLOT_MIN * SLOT_H
     const h = Math.max((lunch.end - lunch.start) / SLOT_MIN * SLOT_H, SLOT_H)
     return { top: `${top}px`, height: `${h}px` }
@@ -377,10 +416,13 @@ export default function Calendar() {
     // Handle lunch break drop
     if (dragLunch) {
       const lunch = getLunchBreak(lunchBreaks, dragLunch.staffId, dragLunch.date)
+      if (!lunch) { setDragLunch(null); return }
       const duration = lunch.end - lunch.start
-      const newLunch = { start: minutes, end: minutes + duration }
-      const key = `${targetStaffId}_${targetDate}`
-      setLunchBreaks(prev => ({ ...prev, [key]: newLunch }))
+      // Moving a break to another person or day removes the old one first.
+      if (dragLunch.staffId !== targetStaffId || dragLunch.date !== targetDate) {
+        removeBreak(dragLunch.staffId, dragLunch.date)
+      }
+      saveBreak(targetStaffId, targetDate, minutes, minutes + duration)
       setDragLunch(null)
       return
     }
@@ -410,7 +452,7 @@ export default function Calendar() {
       })
       loadAppts()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
     setDragAppt(null)
   }
@@ -425,7 +467,7 @@ export default function Calendar() {
             <button onClick={() => setDate(shiftDateNZ(date, -1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">←</button>
             <button onClick={() => setDate(todayNZ())} className="text-center">
               <div className="font-bold text-sm text-gray-800">{fmtDateLabel(date)}</div>
-              <div className="text-[10px] text-pink-500 font-medium">Today</div>
+              <div className="text-xs text-pink-500 font-medium">Today</div>
             </button>
             <button onClick={() => setDate(shiftDateNZ(date, 1))} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-lg">→</button>
           </div>
@@ -531,10 +573,18 @@ export default function Calendar() {
                         <div className={`w-10 h-10 rounded-full ${c.dot} flex items-center justify-center text-white font-bold text-lg`}>
                           {s.name.charAt(0).toUpperCase()}
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <div className={`font-bold text-base ${c.text}`}>{s.name}</div>
                           <div className="text-xs text-gray-500">{appts.length} booking{appts.length !== 1 ? 's' : ''} today</div>
                         </div>
+                        {!getLunchBreak(lunchBreaks, s.id, d) && (
+                          <button
+                            onClick={() => saveBreak(s.id, d, DEFAULT_LUNCH_START, DEFAULT_LUNCH_END)}
+                            className="text-xs text-gray-500 border border-gray-200 bg-white rounded-full px-3 py-1.5 shrink-0"
+                          >
+                            + {t('breakShort')}
+                          </button>
+                        )}
                       </div>
 
                       {/* Time grid */}
@@ -544,7 +594,7 @@ export default function Calendar() {
                           <div className="w-[48px] shrink-0 relative">
                             {timeLabels.map((label, i) => (
                               <div key={i} className="absolute w-full flex items-start justify-end pr-1" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }}>
-                                {label && <span className="text-[10px] text-gray-400 -mt-2">{label}</span>}
+                                {label && <span className="text-xs text-gray-400 -mt-2">{label}</span>}
                               </div>
                             ))}
                           </div>
@@ -561,17 +611,19 @@ export default function Calendar() {
                             ))}
 
                             {/* Lunch break */}
-                            {!dragAppt && (
+                            {!dragAppt && lunch && ls && (
                               <div
                                 draggable
                                 onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                                 onDragEnd={handleLunchDragEnd}
+                                onDoubleClick={() => removeBreak(s.id, d)}
+                                title={t('breakHint')}
                                 className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-100 border-dashed border-gray-400 text-gray-500 z-10"
                                 style={ls}
                               >
                                 <div className="font-medium truncate text-xs">🍽️ {t('lunchBreak')}</div>
                                 {parseInt(ls.height) > 38 && (
-                                  <div className="truncate opacity-70 text-[11px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                  <div className="truncate opacity-70 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
                                 )}
                               </div>
                             )}
@@ -641,6 +693,15 @@ export default function Calendar() {
                         <div key={s.id} className="flex-1 border-l flex items-center justify-center gap-1" style={{ height: `${HEADER_H}px` }}>
                           <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
                           <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
+                          {!showAllDates && !getLunchBreak(lunchBreaks, s.id, date) && (
+                            <button
+                              onClick={() => saveBreak(s.id, date, DEFAULT_LUNCH_START, DEFAULT_LUNCH_END)}
+                              title={t('addBreak')}
+                              className="text-xs text-gray-400 hover:text-pink-600 px-1 rounded"
+                            >
+                              + {t('breakShort')}
+                            </button>
+                          )}
                         </div>
                       )
                     })}
@@ -684,18 +745,19 @@ export default function Calendar() {
                               <div key={i} className="absolute w-full border-b border-gray-100" style={{ top: `${i * SLOT_H}px`, height: `${SLOT_H}px` }} />
                             ))}
 
-                            {!dragAppt && (
+                            {!dragAppt && lunch && ls && (
                               <div
                                 draggable
                                 onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                                 onDragEnd={handleLunchDragEnd}
+                                onDoubleClick={() => removeBreak(s.id, d)}
+                                title={t('breakHint')}
                                 className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-100 border-dashed border-gray-400 text-gray-500 z-10"
                                 style={ls}
-                                title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
                               >
                                 <div className="font-medium truncate text-xs">🍽️ {t('lunchBreak')}</div>
                                 {parseInt(ls.height) > 38 && (
-                                  <div className="truncate opacity-70 text-[11px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                  <div className="truncate opacity-70 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
                                 )}
                               </div>
                             )}

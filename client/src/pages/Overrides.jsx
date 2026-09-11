@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api, getSalonTimezone } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 const TZ = getSalonTimezone()
 
@@ -38,7 +39,7 @@ export default function Overrides() {
   }
 
   const handleAdd = async () => {
-    if (!form.staff_id || !form.date) return alert('Select staff and date')
+    if (!form.staff_id || !form.date) return toast('Select staff and date', 'error')
     try {
       await api.createOverride({
         staff_id: parseInt(form.staff_id),
@@ -52,17 +53,17 @@ export default function Overrides() {
       setForm({ staff_id: '', date: '', is_active: false, start_time: '09:00', end_time: '21:00', reason: '' })
       loadData()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this override?')) return
+    if (!await confirmDialog({ message: 'Remove this override?', confirmLabel: 'Remove', danger: true })) return
     try {
       await api.deleteOverride(id)
       loadData()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 

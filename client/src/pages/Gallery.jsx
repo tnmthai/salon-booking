@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 export default function Gallery() {
   const [images, setImages] = useState([])
@@ -40,17 +41,17 @@ export default function Gallery() {
       setNewImage({ image_url: '', caption: '' })
       loadImages()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this image?')) return
+    if (!await confirmDialog({ message: 'Delete this image?', confirmLabel: 'Delete', danger: true })) return
     try {
       await api.deleteGalleryImage(id)
       loadImages()
     } catch (err) {
-      alert(err.message)
+      toast(err.message, 'error')
     }
   }
 

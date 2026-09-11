@@ -83,6 +83,16 @@ export const api = {
   resetPassword: (id, password) => request(`/users/${id}/reset-password`, { method: 'PUT', body: JSON.stringify({ password }) }),
 
   // Working Hours
+  // Staff breaks (lunch etc). Stored server-side so the booking page honours them.
+  getBreaks: (from, to) => {
+    const qs = new URLSearchParams()
+    if (from) qs.set('from', from)
+    if (to) qs.set('to', to)
+    const q = qs.toString()
+    return request(`/breaks${q ? `?${q}` : ''}`)
+  },
+  setBreak: (data) => request('/breaks', { method: 'PUT', body: JSON.stringify(data) }),
+  deleteBreak: (staffId, date) => request(`/breaks?staff_id=${staffId}&date=${encodeURIComponent(date)}`, { method: 'DELETE' }),
   getWorkingHours: (staffId) => request(`/working-hours/staff/${staffId}`),
   getSalonWorkingHours: (salonId) => request(`/working-hours/salon/${salonId}`),
   setWorkingHours: (staffId, schedule) => request(`/working-hours/staff/${staffId}`, { method: 'POST', body: JSON.stringify({ schedule }) }),

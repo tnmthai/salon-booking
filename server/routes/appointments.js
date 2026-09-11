@@ -134,6 +134,21 @@ async function generateStaffSlots(staffId, salonId, date, duration, tz) {
     [staffId, utcStart.toISOString(), utcEnd.toISOString()]
   );
 
+  // Breaks the owner blocked out on the calendar. Until these were stored
+  // server-side the calendar drew a lunch break that the booking page happily
+  // sold to customers.
+  let breaks = [];
+  try {
+    const { rows } = await db.query(
+      'SELECT start_min, end_min FROM staff_breaks WHERE staff_id = $1 AND date = $2',
+      [staffId, date]
+    );
+    breaks = rows.map(b => ({
+      start: localToUtc(date, Math.floor(b.start_min / 60), b.start_min % 60, tz),
+      end: localToUtc(date, Math.floor(b.end_min / 60), b.end_min % 60, tz),
+    }));
+  } catch (e) { /* table may not exist yet on an old deploy — fail open */ }
+
   const slots = [];
   const now = new Date();
 
@@ -152,7 +167,7 @@ async function generateStaffSlots(staffId, salonId, date, duration, tz) {
           const aStart = new Date(a.start_time);
           const aEnd = new Date(a.end_time);
           return slotStart < aEnd && slotEnd > aStart;
-        });
+        }) || breaks.some(b => slotStart < b.end && slotEnd > b.start);
 
         if (!overlaps) {
           slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });

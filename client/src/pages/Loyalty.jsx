@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { toast, confirmDialog } from '../utils/notify'
 
 export default function Loyalty() {
   const [settings, setSettings] = useState({ points_per_dollar: 0.1, stamp_goal: 10, stamp_reward: 'Free service' })
@@ -46,22 +47,22 @@ export default function Loyalty() {
       setRewards([...rewards, reward])
       setNewReward({ name: '', description: '', points_cost: '' })
       setShowAddReward(false)
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const toggleReward = async (id, active) => {
     try {
       await api.updateLoyaltyReward(id, { active: !active })
       setRewards(rewards.map(r => r.id === id ? { ...r, active: !active } : r))
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const deleteReward = async (id) => {
-    if (!confirm('Delete this reward?')) return
+    if (!await confirmDialog({ message: 'Delete this reward?', confirmLabel: 'Delete', danger: true })) return
     try {
       await api.deleteLoyaltyReward(id)
       setRewards(rewards.filter(r => r.id !== id))
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const searchCustomer = async () => {
@@ -71,7 +72,7 @@ export default function Loyalty() {
     try {
       const data = await api.getLoyaltyByPhone(searchQuery.trim())
       setCustomerData(data)
-    } catch (err) { alert(err.message) }
+    } catch (err) { toast(err.message, 'error') }
     setSearching(false)
   }
 
@@ -79,17 +80,17 @@ export default function Loyalty() {
     try {
       const result = await api.redeemLoyaltyReward({ customer_id: customerId, reward_id: rewardId })
       setCustomerData(prev => ({ ...prev, customer: { ...prev.customer, loyalty_points: result.remaining_points } }))
-      alert('✅ Reward redeemed!')
-    } catch (err) { alert(err.message) }
+      toast('✅ Reward redeemed!', 'success')
+    } catch (err) { toast(err.message, 'error') }
   }
 
   const sendPointsEmail = async (customerId, customerName) => {
     setEmailSending({ ...emailSending, [customerId]: true })
     try {
       await api.sendLoyaltyPointsEmail(customerId)
-      alert(`✅ Points email sent to ${customerName}!`)
+      toast(`✅ Points email sent to ${customerName}!`, 'success')
     } catch (err) {
-      alert('❌ ' + err.message)
+      toast('❌ ' + err.message, 'error')
     }
     setEmailSending({ ...emailSending, [customerId]: false })
   }

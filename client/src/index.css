@@ -2,8 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Mobile-first sizing.
+ *
+ * Salon owners use this on a phone, often in a hurry, and plenty of them are
+ * not twenty-five. Tailwind's spacing and type are both rem-based, so raising
+ * the root size on small screens scales text AND padding together — the layout
+ * gets bigger and airier at once, rather than just bigger text crammed into the
+ * same boxes.
+ */
+html {
+  font-size: 17px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+}
+
+/*
+ * iOS zooms the whole page in when you focus an input whose font is under
+ * 16px. Every form in the app used 14px, so tapping any field yanked the
+ * layout sideways. 16px is the threshold, not a preference.
+ */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: inherit;
+  }
+}
+
+/*
+ * Touch targets. On a touch screen a control needs roughly 44px before it can
+ * be hit reliably — several buttons here were 28-32px tall. Scoped to coarse
+ * pointers so the desktop layout keeps its tighter rhythm.
+ */
+@media (pointer: coarse) {
+  button,
+  select,
+  [role='button'],
+  a.block,
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-height: 44px;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-width: 22px;
+    width: 22px;
+    height: 22px;
+    min-height: 22px;
+  }
 }
 
 /* Hide scrollbar for swipeable cards */
