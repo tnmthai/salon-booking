@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { useI18n } from '../utils/i18n'
 import Footer from '../components/Footer'
@@ -8,7 +8,7 @@ function Navbar() {
   const [open, setOpen] = useState(false)
   const { t, lang, switchLang } = useI18n()
   return (
-    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+    <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold">
           <img src="/logo.png" alt="Timia" className="w-8 h-8 rounded-full" />
@@ -55,19 +55,17 @@ export default function Landing() {
   const [salons, setSalons] = useState([])
   const [ratings, setRatings] = useState({})
 
-  const [lookupCode, setLookupCode] = useState('')
-  const [bookedToday, setBookedToday] = useState(() => {
-    const now = new Date()
-    const minutesToday = now.getHours() * 60 + now.getMinutes()
-    return Math.floor(minutesToday / 10) + 10
-  })
-  useEffect(() => {
-    const interval = setInterval(() => setBookedToday(c => c + 1), 600000)
-    return () => clearInterval(interval)
-  }, [])
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoError, setDemoError] = useState('')
+  const [contactSending, setContactSending] = useState(false)
+  const [contactSent, setContactSent] = useState(false)
+  const [contactError, setContactError] = useState('')
+  const [showShot, setShowShot] = useState(true)
+  // Removed: a `bookedToday` counter seeded from the clock and incremented
+  // every ten minutes — an invented "bookings today" figure. It was already
+  // dead code (nothing rendered it), and it should stay that way.
 
 
-  const navigate = useNavigate()
 
   useEffect(() => {
     api.getSalons().then(async (data) => {
@@ -83,10 +81,29 @@ export default function Landing() {
     }).catch(console.error)
   }, [])
 
+  // Line icons in the brand colour, instead of 📅👥📊 in blue/purple/orange
+  // tiles — three system emoji rendered differently on every OS, in colours
+  // that belong to no part of the brand.
+  const Icon = ({ path }) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+      strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6" aria-hidden="true">
+      {path}
+    </svg>
+  )
+
   const landingFeatures = [
-    { icon: '📅', title: t('landing_f1_title'), desc: t('landing_f1_desc'), color: 'from-blue-500 to-cyan-500' },
-    { icon: '👥', title: t('landing_f2_title'), desc: t('landing_f2_desc'), color: 'from-purple-500 to-pink-500' },
-    { icon: '📊', title: t('landing_f3_title'), desc: t('landing_f3_desc'), color: 'from-orange-500 to-red-500' },
+    {
+      icon: <Icon path={<><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4M8.5 14h3M8.5 17.5h7" /></>} />,
+      title: t('landing_f1_title'), desc: t('landing_f1_desc'),
+    },
+    {
+      icon: <Icon path={<><circle cx="9" cy="8" r="3.2" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16.5 5.2a3.2 3.2 0 0 1 0 5.6M18 14.2a6.5 6.5 0 0 1 3.5 5.8" /></>} />,
+      title: t('landing_f2_title'), desc: t('landing_f2_desc'),
+    },
+    {
+      icon: <Icon path={<><path d="M3 20.5h18M6.5 20.5v-6M11 20.5v-11M15.5 20.5v-7M20 20.5v-13" /></>} />,
+      title: t('landing_f3_title'), desc: t('landing_f3_desc'),
+    },
   ]
 
   const steps = [
@@ -130,46 +147,36 @@ export default function Landing() {
             <p className="text-base md:text-lg text-gray-500 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
               {t('landing_hero_subtitle')}
             </p>
+            {/* One primary action. The hero used to carry three buttons of
+                similar weight plus a bright pink "Find booking" box — an action
+                for the salon's *customers*, on the page whose only job is to
+                sign up salon *owners*. It out-shouted the signup button.
+                Finding a booking now lives in the nav and footer, where the
+                handful of people who need it will look. */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <Link to="/register" className="bg-gray-900 text-white px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-800 font-medium transition shadow-lg shadow-gray-900/10 text-sm md:text-base w-full sm:w-auto text-center">
+              <Link to="/register" className="bg-pink-600 text-white px-8 md:px-10 py-3.5 md:py-4 rounded-full hover:bg-pink-700 font-semibold transition shadow-lg shadow-pink-600/20 text-base w-full sm:w-auto text-center">
                 {t('landing_start_free')}
               </Link>
               <button
                 onClick={async () => {
+                  setDemoError('')
+                  setDemoLoading(true)
                   try {
                     const data = await api.demoStart()
                     localStorage.setItem('salon_token', data.token)
                     window.location.href = '/admin'
-                  } catch (e) { alert('Failed to start demo: ' + e.message) }
+                  } catch (e) {
+                    setDemoError(e.message || 'Please try again.')
+                    setDemoLoading(false)
+                  }
                 }}
-                className="border-2 border-pink-200 text-pink-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-pink-50 font-medium transition text-sm md:text-base w-full sm:w-auto text-center"
+                disabled={demoLoading}
+                className="text-gray-600 hover:text-pink-600 px-6 py-3 font-medium transition text-sm md:text-base underline-offset-4 hover:underline disabled:opacity-60"
               >
-                {t('landing_try_demo')}
+                {demoLoading ? t('landing_demo_loading') : t('landing_try_demo')}
               </button>
-              <Link to="/login" className="border border-gray-200 text-gray-700 px-6 md:px-8 py-3 md:py-3.5 rounded-full hover:bg-gray-50 font-medium transition text-sm md:text-base w-full sm:w-auto text-center">
-                {t('signIn')}
-              </Link>
             </div>
-            <div className="mt-4 text-xs text-gray-400">
-              {t('landing_accept_bookings')}
-            </div>
-
-            {/* Booking Lookup */}
-            <div className="mt-8 md:mt-10 max-w-md mx-auto">
-              <form onSubmit={(e) => { e.preventDefault(); if (lookupCode.trim()) navigate(`/lookup?code=${lookupCode.trim()}`); }} className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  value={lookupCode}
-                  onChange={(e) => setLookupCode(e.target.value)}
-                  placeholder={t('landing_lookup_placeholder')}
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                />
-                <button type="submit" className="px-6 py-3 bg-pink-600 text-white rounded-xl text-sm font-medium hover:bg-pink-700 transition whitespace-nowrap">
-                  {t('landing_find_booking')}
-                </button>
-              </form>
-              <p className="text-xs text-gray-400 mt-2">{t('landing_lookup_hint')}</p>
-            </div>
+            {demoError && <p className="mt-3 text-sm text-red-600">{demoError}</p>}
 
             {/* Trust badges */}
             <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 mt-5 md:mt-6 text-xs md:text-sm text-gray-400">
@@ -182,6 +189,25 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Product shot.
+          Nothing on this page showed what Timia actually looks like, which for
+          a booking app is the most persuasive thing there is. Drop a real
+          screenshot at client/public/product-dashboard.png and it appears
+          here; until then the section removes itself rather than showing a
+          broken image. */}
+      {showShot && (
+        <section className="px-4 md:px-6 pb-4 md:pb-10">
+          <div className="max-w-5xl mx-auto">
+            <img
+              src="/product-dashboard.png"
+              alt={t('landing_shot_alt')}
+              onError={() => setShowShot(false)}
+              className="w-full rounded-xl md:rounded-2xl border border-gray-200 shadow-2xl shadow-gray-900/10"
+            />
+          </div>
+        </section>
+      )}
+
       {/* Features */}
       <section className="py-12 md:py-20 px-4 md:px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
@@ -192,7 +218,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {landingFeatures.map((f, i) => (
               <div key={i} className="bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border border-gray-100 hover:shadow-lg transition group">
-                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-5 group-hover:scale-110 transition`}>
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center mb-4 md:mb-5 group-hover:bg-pink-100 transition">
                   {f.icon}
                 </div>
                 <h3 className="font-semibold text-gray-900 text-base md:text-lg mb-2">{f.title}</h3>
@@ -213,7 +239,11 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
             {steps.map((s, i) => (
               <div key={i} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-gray-100 mb-3 md:mb-4">{s.step}</div>
+                {/* Was text-gray-100 on white — all but invisible, and nowhere
+                    near the 4.5:1 contrast a reader needs. */}
+                <div className="w-11 h-11 mx-auto mb-3 md:mb-4 rounded-full bg-pink-600 text-white text-base font-bold flex items-center justify-center">
+                  {s.step}
+                </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{s.title}</h3>
                 <p className="text-sm text-gray-500">{s.desc}</p>
               </div>
@@ -232,16 +262,19 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
               {salons.map(s => (
-                <Link key={s.id} to={`/${s.slug}/book`} className="bg-white rounded-xl md:rounded-2xl border border-gray-100 p-5 md:p-6 hover:shadow-lg hover:border-pink-100 transition group">
+                // Flex column with the link pushed to the bottom, so a salon
+                // with no address does not leave a ragged, half-empty card
+                // next to the ones that have one.
+                <Link key={s.id} to={`/${s.slug}/book`} className="flex flex-col bg-white rounded-xl md:rounded-2xl border border-gray-100 p-5 md:p-6 hover:shadow-lg hover:border-pink-100 transition group">
                   <div className="flex items-start justify-between mb-2 md:mb-3">
                     <h3 className="font-semibold text-gray-900 text-base md:text-lg group-hover:text-pink-600 transition">{s.name}</h3>
                     {ratings[s.id] && (
                       <span className="text-xs md:text-sm text-yellow-500 whitespace-nowrap ml-2">⭐ {ratings[s.id].average_rating} ({ratings[s.id].total_reviews})</span>
                     )}
                   </div>
-                  {s.address && <p className="text-xs md:text-sm text-gray-400 flex items-center gap-1">📍 {s.address}</p>}
+                  <p className="text-xs md:text-sm text-gray-400">{s.address ? `📍 ${s.address}` : t('landing_book_online')}</p>
                   {s.description && <p className="text-xs md:text-sm text-gray-400 mt-2 line-clamp-2">{s.description}</p>}
-                  <span className="text-pink-600 text-sm font-medium mt-3 inline-block">{t('landing_book')}</span>
+                  <span className="text-pink-600 text-sm font-medium mt-auto pt-3 inline-block">{t('landing_book')}</span>
                 </Link>
               ))}
             </div>
@@ -264,12 +297,14 @@ export default function Landing() {
             {t('landing_why_cta')}
           </Link>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 md:mt-10">
+          {/* These are product facts, not measurements — so they no longer get
+              the giant gradient-number treatment that made them read as
+              company metrics we do not actually have. */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-10 md:mt-12 pt-8 border-t border-gray-100">
             {stats.map((s, i) => (
-              <div key={i} className="text-center p-4">
-                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">{s.value}</div>
-                <p className="text-gray-500 text-xs md:text-sm mt-1">{s.label}</p>
+              <div key={i} className="text-sm text-gray-600">
+                <span className="font-semibold text-gray-900">{s.value}</span>
+                <span className="text-gray-400"> · {s.label}</span>
               </div>
             ))}
           </div>
@@ -319,33 +354,55 @@ export default function Landing() {
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">{t('landing_contact_title')}</h2>
             <p className="text-gray-500 text-sm md:text-base">{t('landing_contact_subtitle')}</p>
           </div>
+          {contactSent ? (
+            <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-8 text-center">
+              <div className="text-4xl mb-3">✅</div>
+              <p className="font-semibold text-gray-900 mb-1">{t('landing_msg_sent')}</p>
+              <p className="text-sm text-gray-500">{t('landing_msg_sent_detail')}</p>
+              <button onClick={() => setContactSent(false)} className="mt-4 text-sm text-pink-600 hover:underline">
+                {t('landing_send_another')}
+              </button>
+            </div>
+          ) : (
           <form onSubmit={async (e) => {
             e.preventDefault()
-            const fd = new FormData(e.target)
-            const btn = e.target.querySelector('button[type="submit"]')
-            btn.disabled = true
-            btn.textContent = t('landing_sending')
+            const form = e.target
+            const fd = new FormData(form)
+            setContactError('')
+            setContactSending(true)
             try {
               const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), message: fd.get('message') }),
               })
-              if (res.ok) { alert(t('landing_msg_sent')); e.target.reset() }
-              else alert(t('landing_failed_send'))
-            } catch { alert(t('landing_failed_send')) }
-            btn.disabled = false
-            btn.textContent = t('landing_send_msg')
-          }} className="bg-white rounded-xl md:rounded-2xl shadow-lg p-5 md:p-6 space-y-3 md:space-y-4">
+              if (res.ok) { form.reset(); setContactSent(true) }
+              else setContactError(t('landing_failed_send'))
+            } catch { setContactError(t('landing_failed_send')) }
+            setContactSending(false)
+          }} className="bg-white rounded-xl md:rounded-2xl shadow-lg p-5 md:p-6 space-y-4">
+            {/* Visible labels, so the fields stay identifiable once filled in. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-              <input name="name" placeholder={t('landing_your_name')} required className="border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
-              <input name="email" type="email" placeholder={t('landing_your_email')} required className="border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+              <div>
+                <label htmlFor="ct-name" className="block text-sm font-medium text-gray-700 mb-1">{t('landing_your_name')}</label>
+                <input id="ct-name" name="name" required className="w-full border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+              </div>
+              <div>
+                <label htmlFor="ct-email" className="block text-sm font-medium text-gray-700 mb-1">{t('landing_your_email')}</label>
+                <input id="ct-email" name="email" type="email" required className="w-full border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+              </div>
             </div>
-            <textarea name="message" placeholder={t('landing_your_message')} rows={4} required className="w-full border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none" />
-            <button type="submit" className="w-full bg-pink-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-pink-700 transition text-sm md:text-base">
-              {t('landing_send_msg')}
+            <div>
+              <label htmlFor="ct-message" className="block text-sm font-medium text-gray-700 mb-1">{t('landing_your_message')}</label>
+              <textarea id="ct-message" name="message" rows={4} required className="w-full border border-gray-200 rounded-lg md:rounded-xl px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none" />
+            </div>
+            {contactError && <p className="text-sm text-red-600">{contactError}</p>}
+            <button type="submit" disabled={contactSending} className="w-full bg-pink-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:bg-pink-700 transition text-sm md:text-base disabled:opacity-60">
+              {contactSending ? t('landing_sending') : t('landing_send_msg')}
             </button>
+            <p className="text-xs text-gray-400 text-center">{t('landing_contact_promise')}</p>
           </form>
+          )}
         </div>
       </section>
 

@@ -408,7 +408,7 @@ function BookingCard({ appt, highlight, onCancel, onReschedule, canCancel, canRe
             {startTime} – {endTime} · {appt.staff_name}
           </div>
           <div className="text-sm text-gray-400 mt-1">
-            💅 {appt.salon_name} {appt.salon_address && `· 📍 ${appt.salon_address}`}
+            {appt.salon_name} {appt.salon_address && `· 📍 ${appt.salon_address}`}
           </div>
           {appt.booking_code && (
             <div className="mt-2 text-xs text-gray-400">

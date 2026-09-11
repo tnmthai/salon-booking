@@ -7,7 +7,7 @@ function Navbar() {
   const [open, setOpen] = useState(false)
   const { t, lang, switchLang } = useI18n()
   return (
-    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+    <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold">
           <img src="/logo.png" alt="Timia" className="w-8 h-8 rounded-full" />

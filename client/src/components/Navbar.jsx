@@ -17,7 +17,10 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+    // left-0 right-0 rather than w-full: on a fixed element, width:100%
+    // resolves against the viewport *including* the vertical scrollbar, which
+    // made the page a scrollbar-width too wide and showed a horizontal bar.
+    <nav className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-lg font-bold">
           <img src="/logo.png" alt="Timia" className="w-8 h-8 rounded-full" />

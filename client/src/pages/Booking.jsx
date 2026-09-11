@@ -152,7 +152,12 @@ export default function Booking() {
     if (!customer.name || customer.name.trim().length < 2) errs.name = t('pleaseEnterName')
     else if (/[0-9]/.test(customer.name)) errs.name = t('nameNoNumbers')
     if (!customer.phone || customer.phone.replace(/\D/g, '').length < 7) errs.phone = t('pleaseEnterPhone')
-    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) errs.email = t('pleaseEnterEmail')
+    // Email is required, not optional. The confirmation and the 24-hour
+    // reminder are sent by email and nothing else — the reminder query skips
+    // any customer without one. Leaving the field optional meant the
+    // no-show feature we advertise silently did not run for most bookings.
+    if (!customer.email) errs.email = t('pleaseEnterEmail')
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) errs.email = t('pleaseEnterEmail')
     if (!selectedSlot) errs.slot = t('pleaseSelectSlot')
     return errs
   }
@@ -247,7 +252,15 @@ export default function Booking() {
             </select>
           </div>
           <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-lg md:text-xl font-bold text-pink-600">💅 {salon?.name || t('loading')}</h1>
+            {/* The salon's own logo, or its initial — not a nail-polish emoji.
+                This is the customer's first impression of *their* business,
+                and plenty of Timia salons are not nail bars. */}
+            {salon?.logo_url
+              ? <img src={salon.logo_url} alt={salon.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+              : <span className="w-9 h-9 rounded-full bg-pink-100 text-pink-600 font-bold flex items-center justify-center shrink-0">
+                  {(salon?.name || '?').charAt(0).toUpperCase()}
+                </span>}
+            <h1 className="text-lg md:text-xl font-bold text-pink-600">{salon?.name || t('loading')}</h1>
             {salonRating && salonRating.total_reviews > 0 && (
               <span className="text-sm text-yellow-500 ml-auto">⭐ {salonRating.average_rating} ({salonRating.total_reviews})</span>
             )}
@@ -500,14 +513,14 @@ export default function Booking() {
 
                 <div>
                   <label htmlFor="bk-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('emailLabel')}
+                    {t('emailLabel')} <span className="text-pink-600">*</span>
                   </label>
-                  <input id="bk-email" placeholder="you@example.com" type="email" inputMode="email" value={customer.email}
+                  <input id="bk-email" placeholder="you@example.com" type="email" inputMode="email" required value={customer.email}
                     onChange={e => { setCustomer({...customer, email: e.target.value}); setFieldErrors(p => ({ ...p, email: '' })) }}
                     className={`w-full border rounded-lg px-3 py-2.5 ${fieldErrors.email ? 'border-red-400' : ''}`} />
                   {fieldErrors.email
                     ? <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
-                    : !customer.email && <p className="text-xs text-amber-600 mt-1">⚠️ {t('emailNeededForReminder')}</p>}
+                    : <p className="text-xs text-gray-500 mt-1">{t('emailNeededForReminder')}</p>}
                 </div>
 
                 <div>

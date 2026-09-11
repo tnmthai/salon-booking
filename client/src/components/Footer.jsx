@@ -10,7 +10,9 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-gradient-to-br from-pink-600 to-purple-600 rounded flex items-center justify-center text-white font-bold text-xs">T</span>
+              {/* Same mark as the nav, so the brand does not change colour
+                  between the top and the bottom of the page. */}
+              <img src="/logo.png" alt="Timia" className="w-6 h-6 rounded-full" />
               <span className="text-sm text-gray-400">{t('footer_copyright')}</span>
             </div>
           </div>
