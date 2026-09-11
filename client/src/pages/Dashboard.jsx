@@ -12,16 +12,32 @@ export default function Dashboard() {
   const [visitStats, setVisitStats] = useState(null)
   const [filterDate, setFilterDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: getSalonTimezone() }))
   const [filterStatus, setFilterStatus] = useState('')
-  const [showAllDates, setShowAllDates] = useState(false)
+  // 'upcoming' is the default: a small salon has empty days all the time, and
+  // landing on an empty "today" made the product look broken.
+  const [view, setView] = useState('upcoming')
+  const [salon, setSalon] = useState(null)
+  // null = not checked yet; treated as "done" so the checklist never flashes.
+  const [hasHours, setHasHours] = useState(null)
+  const [upcomingCount, setUpcomingCount] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [showVisits, setShowVisits] = useState(false)
   const [salonSettings, setSalonSettings] = useState(null)
   const [savingSettings, setSavingSettings] = useState(false)
 
-
   const loadAppts = () => {
     const params = {}
-    if (!showAllDates) params.date = filterDate
+    if (view === 'date') params.date = filterDate
+    if (view === 'upcoming') params.from = new Date().toISOString()
     if (filterStatus) params.status = filterStatus
     api.getAppointments(params).then(setAppts).catch(console.error)
+  }
+
+  // Counted separately from the table so it never changes when the owner
+  // filters by date — the old "Confirmed" card silently meant "today".
+  const loadUpcomingCount = () => {
+    api.getAppointments({ from: new Date().toISOString(), status: 'confirmed' })
+      .then(rows => setUpcomingCount(rows.length))
+      .catch(() => setUpcomingCount(null))
   }
 
   useEffect(() => {
@@ -30,9 +46,47 @@ export default function Dashboard() {
       .catch(console.error)
     api.getCustomers().then(setCustomers).catch(console.error)
     api.getVisitStats().then(setVisitStats).catch(console.error)
+    api.me().then(d => {
+      setSalon(d.salon)
+      // Without working hours the slot generator returns nothing, so a salon
+      // can look "set up" and still be unbookable. Check it for real.
+      if (d.salon?.id) {
+        api.getSalonWorkingHours(d.salon.id)
+          .then(rows => setHasHours(rows.some(r => r.is_active)))
+          .catch(() => setHasHours(true))
+      }
+    }).catch(console.error)
+    loadUpcomingCount()
   }, [])
 
-  useEffect(() => { loadAppts() }, [filterDate, filterStatus, showAllDates])
+  useEffect(() => { loadAppts() }, [filterDate, filterStatus, view])
+
+  const bookingUrl = salon?.slug ? `${window.location.origin}/${salon.slug}/book` : ''
+
+  const copyBookingLink = async () => {
+    if (!bookingUrl) return
+    try {
+      await navigator.clipboard.writeText(bookingUrl)
+    } catch {
+      // Clipboard API needs a secure context; fall back to a manual select.
+      const el = document.createElement('textarea')
+      el.value = bookingUrl
+      document.body.appendChild(el)
+      el.select()
+      try { document.execCommand('copy') } catch { /* ignore */ }
+      document.body.removeChild(el)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Setup steps a brand-new salon still has to finish before it can take a booking.
+  const setupSteps = [
+    { done: stats.services > 0, label: t('setupAddServices'), to: '/admin/services' },
+    { done: stats.staff > 0, label: t('setupAddStaff'), to: '/admin/staff' },
+    { done: hasHours !== false, label: t('setupSetHours'), to: '/admin/schedule' },
+  ]
+  const setupDone = setupSteps.every(s => s.done)
 
   const updateStatus = async (id, status) => {
     if (status === 'completed') {
@@ -56,9 +110,43 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{t('dashboard')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h1 className="text-2xl font-bold">{t('dashboard')}</h1>
+        {bookingUrl && (
+          <button onClick={copyBookingLink}
+            className="flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-pink-700 transition">
+            {copied ? `✓ ${t('linkCopied')}` : `🔗 ${t('copyBookingLink')}`}
+          </button>
+        )}
+      </div>
 
+      {/* Setup checklist — only while the salon still cannot take a booking. */}
+      {!setupDone && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6">
+          <h2 className="font-semibold text-amber-900 mb-1">{t('setupTitle')}</h2>
+          <p className="text-sm text-amber-800 mb-4">{t('setupSubtitle')}</p>
+          <div className="space-y-2">
+            {setupSteps.map((s, i) => (
+              <a key={i} href={s.to}
+                className={`flex items-center gap-2 text-sm ${s.done ? 'text-amber-700' : 'text-amber-900 font-medium hover:underline'}`}>
+                <span>{s.done ? '✅' : '⬜'}</span>
+                <span className={s.done ? 'line-through opacity-70' : ''}>{s.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* What the owner actually opens the dashboard to find out. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow p-4">
+          <div className="text-2xl font-bold text-green-600">{upcomingCount === null ? '—' : upcomingCount}</div>
+          <div className="text-gray-500 text-sm">{t('upcomingBookings')}</div>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4">
+          <div className="text-2xl font-bold text-gray-700">{customers.length}</div>
+          <div className="text-gray-500 text-sm">{t('totalCustomers')}</div>
+        </div>
         <div className="bg-white rounded-xl shadow p-4">
           <div className="text-2xl font-bold text-pink-600">{stats.services}</div>
           <div className="text-gray-500 text-sm">{t('totalServices')}</div>
@@ -67,48 +155,38 @@ export default function Dashboard() {
           <div className="text-2xl font-bold text-purple-600">{stats.staff}</div>
           <div className="text-gray-500 text-sm">{t('totalStaff')}</div>
         </div>
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-2xl font-bold text-green-600">{appts.filter(a => a.status === 'confirmed').length}</div>
-          <div className="text-gray-500 text-sm">{t('confirmed')}</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-2xl font-bold text-gray-600">{customers.length}</div>
-          <div className="text-gray-500 text-sm">{t('totalCustomers')}</div>
-        </div>
       </div>
 
+      {/* Page-visit analytics: useful, but not what you open a booking app for.
+          Collapsed by default so it stops competing with the bookings. */}
       {visitStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow p-4">
-            <div className="text-2xl font-bold text-indigo-600">{visitStats.total}</div>
-            <div className="text-gray-500 text-sm">👁 Total Visits</div>
-          </div>
-          <div className="bg-white rounded-xl shadow p-4">
-            <div className="text-2xl font-bold text-blue-600">{visitStats.today}</div>
-            <div className="text-gray-500 text-sm">📅 Visits Today</div>
-          </div>
-          <div className="bg-white rounded-xl shadow p-4">
-            <div className="text-2xl font-bold text-cyan-600">{visitStats.week}</div>
-            <div className="text-gray-500 text-sm">📆 This Week</div>
-          </div>
-          <div className="bg-white rounded-xl shadow p-4">
-            <div className="text-2xl font-bold text-teal-600">{visitStats.month}</div>
-            <div className="text-gray-500 text-sm">📊 This Month</div>
-          </div>
-        </div>
-      )}
-
-      {visitStats?.cities?.length > 0 && (
-        <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">📍 Top Cities</h3>
-          <div className="space-y-2">
-            {visitStats.cities.map((c, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <span className="text-sm">{c.city}{c.country ? `, ${c.country}` : ''}</span>
-                <span className="text-sm font-medium text-gray-600">{c.count} visits</span>
+        <div className="bg-white rounded-xl shadow mb-6">
+          <button onClick={() => setShowVisits(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 rounded-xl">
+            <span>👁 {t('pageVisits')} — {visitStats.total} {t('visitsTotalSuffix')}</span>
+            <span className={`transition ${showVisits ? 'rotate-180' : ''}`}>▾</span>
+          </button>
+          {showVisits && (
+            <div className="px-4 pb-4 border-t pt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div><div className="text-xl font-bold text-indigo-600">{visitStats.total}</div><div className="text-gray-500 text-xs">{t('visitsTotal')}</div></div>
+                <div><div className="text-xl font-bold text-blue-600">{visitStats.today}</div><div className="text-gray-500 text-xs">{t('visitsToday')}</div></div>
+                <div><div className="text-xl font-bold text-cyan-600">{visitStats.week}</div><div className="text-gray-500 text-xs">{t('visitsWeek')}</div></div>
+                <div><div className="text-xl font-bold text-teal-600">{visitStats.month}</div><div className="text-gray-500 text-xs">{t('visitsMonth')}</div></div>
               </div>
-            ))}
-          </div>
+              {visitStats?.cities?.length > 0 && (
+                <div className="space-y-1">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">📍 {t('topCities')}</h3>
+                  {visitStats.cities.map((c, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <span className="text-sm">{c.city}{c.country ? `, ${c.country}` : ''}</span>
+                      <span className="text-sm font-medium text-gray-600">{c.count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -130,12 +208,19 @@ export default function Dashboard() {
       {tab === 'bookings' && (
         <div>
           <div className="flex gap-3 mb-4 flex-wrap items-center">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={showAllDates} onChange={e => setShowAllDates(e.target.checked)}
-                className="rounded border-gray-300" />
-              All dates
-            </label>
-            {!showAllDates && (
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              {[
+                { id: 'upcoming', label: t('viewUpcoming') },
+                { id: 'date', label: t('viewByDate') },
+                { id: 'all', label: t('viewAll') },
+              ].map(v => (
+                <button key={v.id} onClick={() => setView(v.id)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${view === v.id ? 'bg-white shadow text-pink-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+            {view === 'date' && (
               <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
                 className="border rounded-lg px-3 py-2 text-sm" />
             )}
@@ -146,7 +231,7 @@ export default function Dashboard() {
               <option value="completed">{t('completedStatus')}</option>
               <option value="cancelled">{t('cancelledStatus')}</option>
             </select>
-            {!showAllDates && (
+            {view === 'date' && (
               <div className="flex gap-1 ml-auto">
                 <button onClick={() => shiftDate(-1)} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('prev')}</button>
                 <button onClick={() => setFilterDate(new Date().toLocaleDateString('en-CA', { timeZone: getSalonTimezone() }))} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50">{t('today')}</button>
@@ -155,8 +240,8 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white rounded-xl shadow overflow-x-auto">
+            <table className="w-full min-w-[720px]">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left p-3 text-sm font-medium text-gray-500">{t('time')}</th>
@@ -171,7 +256,30 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {appts.length === 0 ? (
-                  <tr><td colSpan={8} className="p-8 text-center text-gray-400">{t('noBookings')}</td></tr>
+                  <tr>
+                    <td colSpan={8} className="p-10 text-center">
+                      <div className="text-gray-500 mb-1">
+                        {view === 'upcoming' ? t('noUpcomingBookings')
+                          : view === 'date' ? t('noBookingsThisDay')
+                          : t('noBookings')}
+                      </div>
+                      {view === 'upcoming' && setupDone && bookingUrl && (
+                        <>
+                          <p className="text-sm text-gray-400 mb-4">{t('noUpcomingHint')}</p>
+                          <button onClick={copyBookingLink}
+                            className="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-pink-700">
+                            {copied ? `✓ ${t('linkCopied')}` : `🔗 ${t('copyBookingLink')}`}
+                          </button>
+                          <div className="text-xs text-gray-400 mt-2 break-all">{bookingUrl}</div>
+                        </>
+                      )}
+                      {view === 'date' && (
+                        <p className="text-sm text-gray-400 mt-1">
+                          <button onClick={() => setView('upcoming')} className="text-pink-600 hover:underline">{t('seeUpcomingInstead')}</button>
+                        </p>
+                      )}
+                    </td>
+                  </tr>
                 ) : appts.map(a => (
                   <tr key={a.id} className="border-t hover:bg-gray-50">
                     <td className="p-3 text-sm">

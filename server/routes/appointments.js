@@ -16,7 +16,7 @@ async function getSalonTimezone(salonId) {
 // GET appointments (super admin: all shops, normal: own salon)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { date, status, staff_id } = req.query;
+    const { date, status, staff_id, from } = req.query;
     let where = [];
     let params = [];
     let idx = 1;
@@ -38,6 +38,13 @@ router.get('/', authMiddleware, async (req, res) => {
       // before comparing with the date
       where.push(`(a.start_time AT TIME ZONE 'UTC' AT TIME ZONE $${idx++})::date = $${idx++}::date`);
       params.push(tz, date);
+    }
+    // `from` = ISO timestamp; used by the dashboard's "upcoming" view so the
+    // owner lands on the bookings that are still ahead of them, not on an empty
+    // today.
+    if (from && !isNaN(Date.parse(from))) {
+      where.push(`a.start_time >= $${idx++}`);
+      params.push(new Date(from).toISOString());
     }
     if (status) {
       where.push(`a.status = $${idx++}`);

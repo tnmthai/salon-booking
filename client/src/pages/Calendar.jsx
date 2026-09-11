@@ -416,7 +416,7 @@ export default function Calendar() {
   }
 
   return (
-    <div className="w-full px-2 pt-2 pb-6">
+    <div className="w-full max-w-[1600px] mx-auto px-2 md:px-4 pt-2 md:pt-4 pb-6">
       {/* Mobile: compact date controls */}
       {isMobile && !showAllDates && (
         <div className="flex items-center gap-2 mb-3">
@@ -566,11 +566,13 @@ export default function Calendar() {
                                 draggable
                                 onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                                 onDragEnd={handleLunchDragEnd}
-                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-100 border-dashed border-gray-400 text-gray-500 z-10"
                                 style={ls}
                               >
-                                <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
-                                <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                <div className="font-medium truncate text-xs">🍽️ {t('lunchBreak')}</div>
+                                {parseInt(ls.height) > 38 && (
+                                  <div className="truncate opacity-70 text-[11px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                )}
                               </div>
                             )}
 
@@ -606,8 +608,8 @@ export default function Calendar() {
                             })}
 
                             {appts.length === 0 && !showAllDates && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span className="text-sm text-gray-300">No bookings</span>
+                              <div className="absolute inset-0 flex items-start justify-center pt-8 pointer-events-none">
+                                <span className="text-xs text-gray-400 bg-white/90 px-3 py-1 rounded-full border border-gray-100">{t('noBookings')}</span>
                               </div>
                             )}
                           </div>
@@ -624,7 +626,12 @@ export default function Calendar() {
           {!isMobile && (
             <div className="bg-white rounded-lg shadow-sm border overflow-hidden" ref={calendarRef}>
               <div className="overflow-x-auto">
-                <div style={{ minWidth: `${52 + staff.length * 150}px` }}>
+                {/* Cap the width when the salon has one or two people — a single
+                    staff column used to stretch across the whole screen. */}
+                <div style={{
+                  minWidth: `${52 + staff.length * 150}px`,
+                  maxWidth: staff.length <= 2 ? `${52 + staff.length * 460}px` : undefined,
+                }}>
                   {/* Header row */}
                   <div className="flex border-b bg-gray-50">
                     <div className="w-[52px] shrink-0" style={{ height: `${HEADER_H}px` }} />
@@ -682,12 +689,14 @@ export default function Calendar() {
                                 draggable
                                 onDragStart={(e) => handleLunchDragStart(e, s.id, d)}
                                 onDragEnd={handleLunchDragEnd}
-                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-200 border-gray-300 text-gray-600 z-10"
+                                className="absolute left-1 right-1 rounded px-1.5 py-1 overflow-hidden text-xs leading-tight border cursor-grab active:cursor-grabbing hover:brightness-95 transition bg-gray-100 border-dashed border-gray-400 text-gray-500 z-10"
                                 style={ls}
                                 title={`Lunch break\n${Math.floor(lunch.start / 60)}:${String(lunch.start % 60).padStart(2, '0')} - ${Math.floor(lunch.end / 60)}:${String(lunch.end % 60).padStart(2, '0')}`}
                               >
-                                <div className="font-semibold truncate text-sm">🍽️ Lunch</div>
-                                <div className="truncate opacity-80 text-xs">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                <div className="font-medium truncate text-xs">🍽️ {t('lunchBreak')}</div>
+                                {parseInt(ls.height) > 38 && (
+                                  <div className="truncate opacity-70 text-[11px]">{Math.floor(lunch.start / 60)}:{String(lunch.start % 60).padStart(2, '0')} - {Math.floor(lunch.end / 60)}:{String(lunch.end % 60).padStart(2, '0')}</div>
+                                )}
                               </div>
                             )}
 
@@ -722,8 +731,8 @@ export default function Calendar() {
                             })}
 
                             {appts.length === 0 && !showAllDates && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span className="text-sm text-gray-300">No bookings</span>
+                              <div className="absolute inset-0 flex items-start justify-center pt-8 pointer-events-none">
+                                <span className="text-xs text-gray-400 bg-white/90 px-3 py-1 rounded-full border border-gray-100">{t('noBookings')}</span>
                               </div>
                             )}
                           </div>
@@ -738,7 +747,7 @@ export default function Calendar() {
         </div>
       ))}
 
-      {dates.length === 0 && <div className="text-center py-12 text-gray-400">No bookings found</div>}
+      {dates.length === 0 && <div className="text-center py-12 text-gray-400">{t('noBookings')}</div>}
 
       {selectedAppt && (
         <BookingModal

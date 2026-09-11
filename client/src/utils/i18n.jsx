@@ -566,6 +566,48 @@ const en = {
   footer_privacy: 'Privacy',
   footer_cookies: 'Cookies',
   footer_copyright: '© 2026 Timia',
+
+  // --- Dashboard: upcoming-first view, setup checklist, share link ---
+  upcomingBookings: 'Upcoming bookings',
+  copyBookingLink: 'Copy booking link',
+  linkCopied: 'Link copied',
+  setupTitle: 'Finish setting up your business',
+  setupSubtitle: 'A few quick steps and customers can start booking you online.',
+  setupAddServices: 'Add your services and prices',
+  setupAddStaff: 'Add your team',
+  setupSetHours: 'Set your working hours',
+  viewUpcoming: 'Upcoming',
+  viewByDate: 'By date',
+  viewAll: 'All',
+  noUpcomingBookings: 'No upcoming bookings yet',
+  noBookingsThisDay: 'No bookings on this day',
+  noUpcomingHint: 'Share your booking link so customers can book you online.',
+  seeUpcomingInstead: 'See upcoming bookings instead',
+  pageVisits: 'Page visits',
+  visitsTotalSuffix: 'total',
+  visitsTotal: 'Total',
+  visitsToday: 'Today',
+  visitsWeek: 'This week',
+  visitsMonth: 'This month',
+  topCities: 'Top cities',
+
+  // --- Booking flow ---
+  maxServicesReached: 'You can pick up to 6 services in one booking.',
+  allCategories: 'All',
+  otherCategory: 'Other',
+  pickAtLeastOne: 'Pick at least one service',
+  withStaff: 'With',
+  pickDateHint: 'Pick a date to see available times.',
+  phoneLabel: 'Phone number',
+  emailLabel: 'Email — for your confirmation and reminder',
+  emailNeededForReminder: 'Without an email we cannot send your confirmation or the 24-hour reminder.',
+  notesPlaceholder: 'Anything we should know?',
+  confirmFinePrint: 'Need to change or cancel? Contact the salon as early as you can.',
+  confirmEmailSent: 'A confirmation is on its way to your email, and we will remind you 24 hours before.',
+  noEmailNoReminder: 'Save your booking code — no email was given, so no confirmation or reminder will be sent.',
+
+  // --- Calendar ---
+  lunchBreak: 'Break',
 }
 
 const vi = {
@@ -1133,6 +1175,48 @@ const vi = {
   footer_privacy: 'Quyền riêng tư',
   footer_cookies: 'Cookies',
   footer_copyright: '© 2026 Timia',
+
+  // --- Bảng điều khiển ---
+  upcomingBookings: 'Lịch hẹn sắp tới',
+  copyBookingLink: 'Copy link đặt lịch',
+  linkCopied: 'Đã copy',
+  setupTitle: 'Hoàn tất thiết lập cửa hàng',
+  setupSubtitle: 'Vài bước nhanh là khách có thể đặt lịch online với bạn.',
+  setupAddServices: 'Thêm dịch vụ và giá',
+  setupAddStaff: 'Thêm nhân viên',
+  setupSetHours: 'Đặt giờ làm việc',
+  viewUpcoming: 'Sắp tới',
+  viewByDate: 'Theo ngày',
+  viewAll: 'Tất cả',
+  noUpcomingBookings: 'Chưa có lịch hẹn sắp tới',
+  noBookingsThisDay: 'Không có lịch hẹn trong ngày này',
+  noUpcomingHint: 'Gửi link đặt lịch cho khách để họ đặt online.',
+  seeUpcomingInstead: 'Xem lịch hẹn sắp tới',
+  pageVisits: 'Lượt xem trang',
+  visitsTotalSuffix: 'lượt',
+  visitsTotal: 'Tổng',
+  visitsToday: 'Hôm nay',
+  visitsWeek: 'Tuần này',
+  visitsMonth: 'Tháng này',
+  topCities: 'Thành phố nhiều nhất',
+
+  // --- Đặt lịch ---
+  maxServicesReached: 'Bạn chọn được tối đa 6 dịch vụ cho một lần đặt.',
+  allCategories: 'Tất cả',
+  otherCategory: 'Khác',
+  pickAtLeastOne: 'Chọn ít nhất một dịch vụ',
+  withStaff: 'Thực hiện bởi',
+  pickDateHint: 'Chọn ngày để xem giờ trống.',
+  phoneLabel: 'Số điện thoại',
+  emailLabel: 'Email — để nhận xác nhận và nhắc lịch',
+  emailNeededForReminder: 'Không có email thì chúng tôi không gửi được xác nhận và nhắc lịch trước 24 giờ.',
+  notesPlaceholder: 'Bạn có lưu ý gì không?',
+  confirmFinePrint: 'Cần đổi hoặc huỷ lịch? Hãy báo cửa hàng sớm nhất có thể.',
+  confirmEmailSent: 'Email xác nhận đang được gửi cho bạn, và chúng tôi sẽ nhắc lại trước 24 giờ.',
+  noEmailNoReminder: 'Hãy lưu mã đặt lịch — bạn không nhập email nên sẽ không nhận được xác nhận hay nhắc lịch.',
+
+  // --- Lịch ---
+  lunchBreak: 'Nghỉ',
 }
 
 const mi = {

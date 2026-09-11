@@ -60,15 +60,39 @@
     gtag('config', 'G-E1WCW188SJ');
   </script>
 
-  <!-- Floating Messenger Chat Button -->
-  <a href="https://m.me/timia.nz" target="_blank" rel="noopener noreferrer"
-    style="position:fixed;bottom:24px;right:24px;z-index:9999;background:#ec4899;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(236,72,153,0.4);transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;"
+  <!-- Floating Messenger Chat Button — public pages only. Inside /admin it just
+       covered the UI and pointed salon owners at our own sales inbox. -->
+  <a id="timia-chat" href="https://m.me/timia.nz" target="_blank" rel="noopener noreferrer"
+    style="position:fixed;bottom:24px;right:24px;z-index:40;background:#ec4899;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(236,72,153,0.4);transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;"
     onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 16px rgba(236,72,153,0.5)'"
     onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 12px rgba(236,72,153,0.4)'">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
       <path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.885 1.433 5.465 3.676 7.142V22l3.405-1.868C10.137 20.374 11.051 20.5 12 20.5c5.523 0 10-4.145 10-9.257C22 6.145 17.523 2 12 2zm1.09 12.147l-2.81-2.987-5.46 2.987 6.01-6.384 2.92 2.987 5.35-2.987-6.01 6.384z"/>
     </svg>
   </a>
+  <script>
+    // Hide the chat bubble where it does not belong: the admin area (it just
+    // covered the UI) and a salon's own booking/kiosk pages (it sent the
+    // salon's customers to Timia's inbox, and it sat on top of the Next
+    // button on small screens). Kept in step with SPA navigation, since
+    // pushState does not fire a page load.
+    (function () {
+      var el = document.getElementById('timia-chat');
+      if (!el) return;
+      var HIDE = [/^\/admin(\/|$)/, /^\/kiosk\//, /^\/[^/]+\/book$/, /^\/[^/]+\/gift-card$/];
+      function sync() {
+        var p = location.pathname;
+        var hide = HIDE.some(function (re) { return re.test(p); });
+        el.style.display = hide ? 'none' : 'flex';
+      }
+      var push = history.pushState;
+      history.pushState = function () { push.apply(this, arguments); sync(); };
+      var replace = history.replaceState;
+      history.replaceState = function () { replace.apply(this, arguments); sync(); };
+      window.addEventListener('popstate', sync);
+      sync();
+    })();
+  </script>
 
   <!-- Microsoft Clarity -->
   <script type="text/javascript">
