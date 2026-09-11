@@ -95,15 +95,12 @@ export default function Landing() {
     { step: '03', title: t('landing_step3_title'), desc: t('landing_step3_desc') },
   ]
 
-  const testimonials = [
-    { quote: t('landing_testimonial1_quote'), name: t('landing_testimonial1_name'), role: t('landing_testimonial1_role'), stars: '⭐⭐⭐⭐⭐' },
-    { quote: t('landing_testimonial2_quote'), name: t('landing_testimonial2_name'), role: t('landing_testimonial2_role'), stars: '⭐⭐⭐⭐⭐' },
-    { quote: t('landing_testimonial3_quote'), name: t('landing_testimonial3_name'), role: t('landing_testimonial3_role'), stars: '⭐⭐⭐⭐⭐' },
-  ]
 
   const stats = [
     { value: '24/7', label: t('landing_stat_online') },
-    { value: 'Easy', label: t('landing_stat_setup') },
+    // 'Easy' was rendered in the same big-number style as the real figures —
+    // an adjective dressed up as a statistic. Replaced with an actual one.
+    { value: '5 min', label: t('landing_stat_setup') },
     { value: 'Free', label: t('landing_stat_migrate') },
     { value: '$0', label: t('landing_stat_start') },
   ]
@@ -252,30 +249,21 @@ export default function Landing() {
         </section>
       )}
 
-      {/* Social Proof */}
+      {/* Our story.
+          This section used to carry three five-star testimonials from salons
+          that do not exist. Invented reviews are a misleading representation
+          under the Fair Trading Act, and anyone who googles the names finds
+          nothing — which costs more trust than it buys. Until there are real
+          customers willing to be quoted, we say plainly who we are instead. */}
       <section className="py-12 md:py-20 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8 md:mb-14">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">{t('landing_social_title')}</h2>
-            <p className="text-gray-500 text-sm md:text-base">{t('landing_social_subtitle')}</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {testimonials.map((tv, i) => (
-              <div key={i} className="bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border border-gray-100 hover:shadow-lg transition">
-                <div className="text-sm mb-3">{tv.stars}</div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{tv.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {tv.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{tv.name}</p>
-                    <p className="text-gray-400 text-xs">{tv.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">{t('landing_why_title')}</h2>
+          <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{t('landing_why_p1')}</p>
+          <p className="text-gray-600 text-sm md:text-base leading-relaxed">{t('landing_why_p2')}</p>
+          <Link to="/about" className="inline-block mt-6 text-pink-600 font-medium hover:underline">
+            {t('landing_why_cta')}
+          </Link>
+
           {/* Stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 md:mt-10">
             {stats.map((s, i) => (
