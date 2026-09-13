@@ -110,6 +110,15 @@ router.get('/plan', async (req, res) => {
     const effective = await getEffectivePlan(salonId);
     const planDef = PLANS[effective.plan] || PLANS.free;
 
+    // A salon can be granted extra staff seats individually. Report the real
+    // allowance, or the admin screen would show a limit the server does not
+    // actually enforce.
+    const overrideRow = await db.query(
+      'SELECT staff_limit_override FROM salons WHERE id = $1', [salonId]
+    );
+    const staffOverride = overrideRow.rows[0]?.staff_limit_override;
+    const effectiveMaxStaff = Number.isInteger(staffOverride) ? staffOverride : planDef.maxStaff;
+
     // Count active staff
     const staffCount = await db.query(
       'SELECT COUNT(*) as count FROM staff WHERE salon_id = $1 AND active = true',
@@ -150,7 +159,8 @@ router.get('/plan', async (req, res) => {
         appointmentsThisMonth: parseInt(apptCount.rows[0].count),
       },
       limits: {
-        maxStaff: planDef.maxStaff,
+        maxStaff: effectiveMaxStaff,
+        staffLimitIsGranted: Number.isInteger(staffOverride),
         maxAppointmentsPerMonth: planDef.maxAppointmentsPerMonth,
       },
       referral: {

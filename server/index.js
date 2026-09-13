@@ -1198,6 +1198,10 @@ async function run(sql) {
   // Date the demo schedule is currently built around. Lets "Try Demo" shift
   // the existing appointments instead of regenerating them on every click.
   await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS demo_anchor DATE`);
+  // Per-salon staff allowance, granted case by case (an onboarding offer, a
+  // favour to an early customer). NULL means "use the plan's limit" — this is
+  // deliberately not a plan change, so the published pricing stays honest.
+  await run(`ALTER TABLE salons ADD COLUMN IF NOT EXISTS staff_limit_override INTEGER`);
   // Staff breaks used to live in the browser's localStorage, so the booking
   // page never knew about them and customers could book straight over the
   // owner's lunch.

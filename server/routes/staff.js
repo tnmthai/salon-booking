@@ -41,8 +41,9 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// Plan limits
-const PLAN_LIMITS = { free: { maxStaff: 2, maxApptsPerMonth: 40 }, starter: { maxStaff: 6, maxApptsPerMonth: -1 }, growth: { maxStaff: -1, maxApptsPerMonth: -1 } };
+// Plan limits come from the single definition in plans.js. They used to be
+// duplicated here, which is exactly how the two copies drift apart.
+const { PLANS } = require('./plans');
 
 // POST create staff
 router.post('/', authMiddleware, async (req, res) => {
@@ -60,9 +61,13 @@ router.post('/', authMiddleware, async (req, res) => {
   try {
     // Check plan limit
     if (!isSuperAdmin(req.user.email)) {
-      const salon = await db.query('SELECT plan FROM salons WHERE id = $1', [targetSalonId]);
+      const salon = await db.query(
+        'SELECT plan, staff_limit_override FROM salons WHERE id = $1', [targetSalonId]
+      );
       const plan = salon.rows[0]?.plan || 'free';
-      const limit = PLAN_LIMITS[plan]?.maxStaff ?? 2;
+      const override = salon.rows[0]?.staff_limit_override;
+      // An override is a per-salon grant; it wins over the plan's limit.
+      const limit = Number.isInteger(override) ? override : (PLANS[plan]?.maxStaff ?? PLANS.free.maxStaff);
       if (limit > 0) {
         const count = await db.query('SELECT COUNT(*) as c FROM staff WHERE salon_id = $1 AND active = true', [targetSalonId]);
         if (parseInt(count.rows[0].c) >= limit) {
@@ -88,10 +93,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
   try {
     let query, params;
     if (isSuperAdmin(req.user.email)) {
-      query = 'UPDATE staff SET name=$1, email=$2, phone=$3, color=$4, active=$5 WHERE id=$6 RETURNING *';
+      query = 'UPDATE staff SET name=$1, email=$2, phone=$3, color=$4, active=$5, is_active=$5 WHERE id=$6 RETURNING *';
       params = [name, email, phone, color, active, req.params.id];
     } else {
-      query = 'UPDATE staff SET name=$1, email=$2, phone=$3, color=$4, active=$5 WHERE id=$6 AND salon_id=$7 RETURNING *';
+      query = 'UPDATE staff SET name=$1, email=$2, phone=$3, color=$4, active=$5, is_active=$5 WHERE id=$6 AND salon_id=$7 RETURNING *';
       params = [name, email, phone, color, active, req.params.id, req.user.salon_id];
     }
     const { rows } = await db.query(query, params);
