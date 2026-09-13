@@ -1,0 +1,28 @@
+# Timia
+
+> Online booking platform for salons, nail studios, spas, and beauty businesses in New Zealand — an alternative to Timely, Fresha and Booksy.
+
+Timia lets salon owners take online bookings, payments, and loyalty rewards without the hassle of complicated software. It is built and supported in New Zealand, with a free plan to start and no credit card required.
+
+## Core pages
+
+- [Home](https://www.timia.nz/): Overview of Timia's booking, payments, and loyalty features for NZ salons.
+- [Features](https://www.timia.nz/features): Full feature list — online booking, staff scheduling, point of sale, loyalty, reporting.
+- [Pricing](https://www.timia.nz/pricing): Plans and pricing, including the free forever plan.
+- [Explore salons](https://www.timia.nz/explore): Directory of salons using Timia, bookable online.
+- [Timia vs Timely](https://www.timia.nz/compare/timely): Honest feature and price comparison with Timely for NZ salons.
+- [Sign up](https://www.timia.nz/register): Create a free Timia account.
+- [About](https://www.timia.nz/about): Why Timia was built and its values.
+- [Contact](https://www.timia.nz/contact): Support and sales contact.
+
+## Blog
+
+- [Best Booking Software for Salons in New Zealand](https://www.timia.nz/blog/best-booking-software-nz): Comparing Timely, Fresha, Booksy and Timia.
+- [How to Reduce No-Shows at Your Salon](https://www.timia.nz/blog/how-to-reduce-no-shows): Proven strategies to cut no-shows.
+- [How to Start a Salon Business in New Zealand](https://www.timia.nz/blog/start-salon-business-nz): Registration, costs, and tools for new salon owners.
+
+## Optional
+
+- [Terms of Service](https://www.timia.nz/terms)
+- [Privacy Policy](https://www.timia.nz/privacy)
+- [Sitemap](https://www.timia.nz/sitemap.xml): Full list of indexed pages, including individual salon booking pages.
