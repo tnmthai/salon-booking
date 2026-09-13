@@ -88,6 +88,7 @@ const BLOG_POSTS = [
     file: 'BestBookingSoftwareNZ.jsx',
     title: 'Best Booking Software for Salons in New Zealand (2026)',
     description: 'Compare Timely, Fresha, Booksy and Timia. Find the best free booking software for your NZ salon.',
+    keywords: 'best salon booking software nz, salon software comparison, timely vs fresha vs booksy, free salon booking software',
     datePublished: '2026-06-01',
   },
   {
@@ -95,6 +96,7 @@ const BLOG_POSTS = [
     file: 'HowToReduceNoShows.jsx',
     title: 'How to Reduce No-Shows at Your Salon (Proven Strategies)',
     description: 'No-shows cost NZ salons $3,000–$8,000 a year. Seven proven strategies to cut them by half.',
+    keywords: 'reduce no shows salon, salon no show policy, appointment reminder software, how to take deposits for appointments',
     datePublished: '2026-06-01',
   },
   {
@@ -102,6 +104,7 @@ const BLOG_POSTS = [
     file: 'StartSalonBusinessNZ.jsx',
     title: 'How to Start a Salon Business in New Zealand (2026 Guide)',
     description: 'A complete guide to starting a salon in NZ — registration, costs, tools and your first client.',
+    keywords: 'start a salon business nz, how to open a salon in new zealand, salon business registration nz, salon startup costs',
     datePublished: '2026-06-01',
   },
 ];
@@ -110,6 +113,7 @@ function blogPageDef(post) {
   return {
     title: `${post.title} | Timia`,
     description: post.description,
+    keywords: post.keywords,
     type: 'article',
     jsonLd: [
       {
@@ -143,6 +147,7 @@ const PAGES = {
   '/': {
     title: 'Timia — Online Booking Platform for NZ Salons',
     description: t('landing_hero_subtitle', 'Run your salon without the hassle. Timia handles bookings, payments, and loyalty.').slice(0, 155),
+    keywords: 'salon booking software nz, salon software new zealand, appointment booking software nz, timely alternative nz, fresha alternative, online booking system nz',
     type: 'website',
     jsonLd: [
       organizationLd,
@@ -185,6 +190,7 @@ ${siteNav()}`,
   '/features': {
     title: 'Features — Everything you need to manage your salon | Timia',
     description: t('features_subtitle', 'From online booking to team management, Timia gives you all the tools to run and grow your business.').slice(0, 155),
+    keywords: 'salon management software nz, salon software features, staff scheduling software, appointment booking software, salon point of sale nz',
     type: 'website',
     jsonLd: [breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Features', path: '/features' }])],
     content: () => `
@@ -200,6 +206,7 @@ ${siteNav()}`,
   '/pricing': {
     title: 'Pricing — Plans that grow with you | Timia',
     description: t('pricing_subtitle', 'Start for free, upgrade when you need more. No credit card required.').slice(0, 155),
+    keywords: 'salon booking software pricing, free salon booking software, salon software cost nz, booking system pricing nz',
     type: 'website',
     jsonLd: [
       breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Pricing', path: '/pricing' }]),
@@ -233,6 +240,7 @@ ${siteNav()}`,
   '/about': {
     title: 'About Timia — Booking software built in New Zealand',
     description: t('about_subtitle', 'Timia was born from a simple observation: salon owners spend too much time on admin.').slice(0, 155),
+    keywords: 'timia, nz salon software company, booking software new zealand, salon software built in nz',
     type: 'website',
     jsonLd: [organizationLd, breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }])],
     content: () => `
@@ -254,6 +262,7 @@ ${siteNav()}`,
   '/contact': {
     title: 'Contact Timia — Local support in New Zealand',
     description: t('contact_subtitle', "Have a question? Want to partner? We'd love to hear from you.").slice(0, 155),
+    keywords: 'contact timia, salon software support nz, timia customer support',
     type: 'website',
     jsonLd: [organizationLd, breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }])],
     content: () => `
@@ -270,6 +279,7 @@ ${siteNav()}`,
   '/explore': {
     title: 'Explore salons in New Zealand — book online | Timia',
     description: t('explore_subtitle', 'Find your perfect salon and book instantly.').slice(0, 155),
+    keywords: 'book a salon online nz, hair salon booking nz, nail salon booking, barber booking nz, find a salon near me',
     type: 'website',
     jsonLd: [breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Explore', path: '/explore' }])],
     // Salon cards are injected at request time (see index.js) because they come
@@ -283,6 +293,7 @@ ${siteNav()}`,
   '/compare/timely': {
     title: 'Timia vs Timely — honest comparison for NZ salons (2026)',
     description: t('compare_subtitle', "How Timia compares with Timely for small NZ salons — price, setup time and support.").slice(0, 155),
+    keywords: 'timely alternative nz, timely vs fresha, best timely alternative new zealand, timia vs timely, salon booking software comparison',
     type: 'article',
     jsonLd: [breadcrumbLd([
       { name: 'Home', path: '/' },
@@ -316,6 +327,7 @@ ${siteNav()}`;
   '/blog': {
     title: 'Timia Blog — tips and guides for NZ salon owners',
     description: 'Tips, guides and insights for salon owners in New Zealand: booking software, no-shows, and starting a salon.',
+    keywords: 'salon business tips nz, salon booking software blog, how to reduce no shows, start a salon business nz',
     type: 'website',
     jsonLd: [breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }])],
     content: () => `
@@ -328,6 +340,7 @@ ${siteNav()}`,
   '/register': {
     title: 'Sign up your salon — free forever plan | Timia',
     description: 'Create your Timia account and start taking online bookings in minutes. Free to start, no credit card.',
+    keywords: 'sign up salon booking software, free salon booking software nz, salon software free trial',
     type: 'website',
     noindexFollow: false,
     content: () => `<h1>Sign up your business</h1><p>Create an account and start receiving bookings. Free to start, no credit card required.</p>${siteNav()}`,
@@ -337,7 +350,7 @@ ${siteNav()}`,
   '/privacy': { title: 'Privacy Policy | Timia', description: 'How Timia collects, uses and protects your data.', type: 'website' },
   '/cookies': { title: 'Cookie Policy | Timia', description: 'How Timia uses cookies and similar technologies.', type: 'website' },
   '/legal': { title: 'Legal | Timia', description: 'Legal information about Timia and its services.', type: 'website' },
-  '/kiosk-guide': { title: 'Kiosk check-in guide | Timia', description: 'How to set up and use the Timia kiosk check-in screen in your salon.', type: 'website' },
+  '/kiosk-guide': { title: 'Kiosk check-in guide | Timia', description: 'How to set up and use the Timia kiosk check-in screen in your salon.', keywords: 'salon kiosk check-in, self check-in kiosk software, salon waitlist kiosk', type: 'website' },
 };
 
 for (const post of BLOG_POSTS) PAGES[post.path] = blogPageDef(post);

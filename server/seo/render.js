@@ -26,7 +26,7 @@ function upsert(html, pattern, replacement, fallbackTag) {
   return html.replace('</head>', `  ${fallbackTag}\n  </head>`);
 }
 
-function setMeta(html, { title, description, canonical, type, image, robots }) {
+function setMeta(html, { title, description, canonical, type, image, robots, keywords }) {
   let out = html;
 
   if (title) {
@@ -36,6 +36,12 @@ function setMeta(html, { title, description, canonical, type, image, robots }) {
       `<meta property="og:title" content="${safe}" />`);
     out = upsert(out, /(<meta name="twitter:title" content=")[^"]*(")/, `$1${safe}$2`,
       `<meta name="twitter:title" content="${safe}" />`);
+  }
+
+  if (keywords) {
+    const safe = escapeHtml(keywords);
+    out = upsert(out, /(<meta name="keywords" content=")[^"]*(")/, `$1${safe}$2`,
+      `<meta name="keywords" content="${safe}" />`);
   }
 
   if (description) {
@@ -127,6 +133,7 @@ function renderPage(clientPath, pathname, overrides = {}) {
       type: overrides.type || page.type || 'website',
       image: overrides.image || page.image || OG_IMAGE,
       robots: overrides.robots || page.robots || 'index, follow',
+      keywords: overrides.keywords || page.keywords,
     });
 
     html = setJsonLd(html, overrides.jsonLd || page.jsonLd);
