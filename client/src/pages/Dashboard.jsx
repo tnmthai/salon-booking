@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [showVisits, setShowVisits] = useState(false)
   const [salonSettings, setSalonSettings] = useState(null)
   const [savingSettings, setSavingSettings] = useState(false)
+  const [page, setPage] = useState(0)
+  const PAGE_SIZE = 10
 
   const loadAppts = () => {
     const params = {}
@@ -62,7 +64,11 @@ export default function Dashboard() {
     loadUpcomingCount()
   }, [])
 
-  useEffect(() => { loadAppts() }, [filterDate, filterStatus, view])
+  useEffect(() => { setPage(0); loadAppts() }, [filterDate, filterStatus, view])
+
+  const pageCount = Math.max(1, Math.ceil(appts.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount - 1)
+  const pagedAppts = appts.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
 
   const bookingUrl = salon?.slug ? `${window.location.origin}/${salon.slug}/book` : ''
 
@@ -283,7 +289,7 @@ export default function Dashboard() {
                       )}
                     </td>
                   </tr>
-                ) : appts.map(a => (
+                ) : pagedAppts.map(a => (
                   <tr key={a.id} className="border-t hover:bg-gray-50">
                     <td className="p-3 text-sm">
                       <div className="font-medium">{new Date(a.start_time).toLocaleTimeString('en-NZ', { timeZone: getSalonTimezone(), hour: '2-digit', minute: '2-digit' })}</div>
@@ -310,6 +316,18 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
+              <span>{t('page')} {currentPage + 1} / {pageCount} · {appts.length} {t('bookingsTab')}</span>
+              <div className="flex gap-1">
+                <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}
+                  className="border px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">{t('prev')}</button>
+                <button onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={currentPage >= pageCount - 1}
+                  className="border px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">{t('next')}</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
