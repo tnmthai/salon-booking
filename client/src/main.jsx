@@ -299,7 +299,14 @@ function AppInner() {
     setUser(null);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-xl">Loading...</div></div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-3">
+        <img src="/logo.png" alt="Timia" className="w-12 h-12 rounded-full animate-pulse" />
+        <div className="w-6 h-6 border-2 border-pink-200 border-t-pink-600 rounded-full animate-spin" />
+      </div>
+    </div>
+  );
 
   return (
     <BrowserRouter>
