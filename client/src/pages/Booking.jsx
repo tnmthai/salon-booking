@@ -248,7 +248,7 @@ export default function Booking() {
             <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs border rounded px-2 py-1">
               <option value="en">EN</option>
               <option value="vi">VI</option>
-              <option value="mi">MI</option>
+              <option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
             </select>
           </div>
           <div className="flex items-center gap-3 mt-1">

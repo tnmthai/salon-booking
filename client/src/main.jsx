@@ -159,7 +159,7 @@ function AdminLayout({ salon, user, onLogout }) {
               <select value={lang} onChange={e => switchLang(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5">
                 <option value="en">EN</option>
                 <option value="vi">VI</option>
-                <option value="mi">MI</option>
+                <option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
                 <option value="zh">中文</option>
                 <option value="hi">हिन्दी</option>
               </select>
@@ -215,7 +215,7 @@ function AdminLayout({ salon, user, onLogout }) {
                   <select value={lang} onChange={e => switchLang(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5">
                     <option value="en">EN</option>
                     <option value="vi">VI</option>
-                    <option value="mi">MI</option>
+                    <option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
                     <option value="zh">中文</option>
                     <option value="hi">हिन्दी</option>
                   </select>

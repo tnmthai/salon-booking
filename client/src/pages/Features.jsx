@@ -20,7 +20,7 @@ function Navbar() {
           <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('about')}</Link>
           <Link to="/contact" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('contact')}</Link>
           <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs bg-transparent border border-gray-200 rounded px-1.5 py-1 text-gray-600 cursor-pointer">
-            <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option>
+            <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
           </select>
           <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('signIn')}</Link>
           <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">{t('getStarted')}</Link>
@@ -41,7 +41,7 @@ function Navbar() {
             <Link to="/contact" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">{t('contact')}</Link>
             <div className="flex gap-2 py-2">
               <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs bg-gray-100 border border-gray-200 rounded px-2 py-1.5 text-gray-600">
-                <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option>
+                <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
               </select>
             </div>
             <Link to="/login" onClick={() => setOpen(false)} className="block py-2.5 px-3 text-sm text-gray-700 hover:text-pink-600 rounded-lg">{t('signIn')}</Link>

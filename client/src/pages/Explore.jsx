@@ -75,7 +75,7 @@ export default function Explore() {
             <Link to="/about" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('about')}</Link>
             <Link to="/explore" className="text-sm text-pink-600 font-medium transition px-3 py-2">{t('explore')}</Link>
             <select value={lang} onChange={e => switchLang(e.target.value)} className="text-xs bg-transparent border border-gray-200 rounded px-1.5 py-1 text-gray-600 cursor-pointer">
-              <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option>
+              <option value="en">EN</option><option value="vi">VI</option><option value="mi">MI</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
             </select>
             <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 transition px-3 py-2">{t('signIn')}</Link>
             <Link to="/register" className="text-sm bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition ml-1">{t('getStarted')}</Link>
