@@ -233,7 +233,7 @@ export default function Kiosk() {
             {salon?.logo_url ? (
               <img src={salon.logo_url} alt={salon.name} className="kiosk-logo-img" />
             ) : (
-              <div className="kiosk-logo-placeholder">💅</div>
+              <div className="kiosk-logo-placeholder">✂️</div>
             )}
           </div>
           <h1 className="kiosk-salon-name">{salon?.name || 'Loading...'}</h1>
@@ -543,7 +543,7 @@ export default function Kiosk() {
           width: 48px;
           height: 48px;
           border-radius: 12px;
-          background: linear-gradient(135deg, #e91e8c, #9c27b0);
+          background: linear-gradient(135deg, #ff6b9d, #c084fc);
           display: flex;
           align-items: center;
           justify-content: center;
