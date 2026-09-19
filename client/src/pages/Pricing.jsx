@@ -1,21 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 import { useI18n } from '../utils/i18n'
-
-const EARLY_BIRD_TOTAL = 50
-const EARLY_BIRD_BASE_DATE = new Date('2026-05-12')
-const EARLY_BIRD_BASE_TAKEN = 10
-const EARLY_BIRD_RATE_PER_DAY = 1.2
-const EARLY_BIRD_CAP = 40
-
-function getEarlyBirdSlots() {
-  const now = new Date()
-  const daysSinceLaunch = Math.max(0, (now - EARLY_BIRD_BASE_DATE) / (1000 * 60 * 60 * 24))
-  const slotsTaken = Math.min(EARLY_BIRD_CAP, Math.floor(EARLY_BIRD_BASE_TAKEN + daysSinceLaunch * EARLY_BIRD_RATE_PER_DAY))
-  const slotsRemaining = EARLY_BIRD_TOTAL - slotsTaken
-  return { slotsTaken, slotsRemaining, totalSlots: EARLY_BIRD_TOTAL, soldOut: slotsRemaining <= 0 }
-}
 
 function Navbar() {
   const [open, setOpen] = useState(false)
@@ -67,61 +53,14 @@ function Navbar() {
   )
 }
 
-function EarlyBirdBanner() {
-  const { t } = useI18n()
-  const [slots, setSlots] = useState(null)
-
-  useEffect(() => {
-    fetch('/api/early-bird/status').then(r => r.json()).then(data => {
-      if (!data.error) setSlots(data)
-    }).catch(() => {})
-    const interval = setInterval(() => {
-      fetch('/api/early-bird/status').then(r => r.json()).then(data => {
-        if (!data.error) setSlots(data)
-      }).catch(() => {})
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [])
-
-  if (!slots || slots.soldOut) return null
-
-  const pct = (slots.slotsTaken / slots.totalSlots) * 100
-
-  return (
-    <div className="max-w-5xl mx-auto mb-8 px-4 md:px-6">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-5 md:p-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🔥</span>
-            <span className="font-bold text-lg">{t('pricing_earlybird_title')}</span>
-          </div>
-          <p className="text-amber-100 mb-3 text-sm md:text-base">{t('pricing_earlybird_desc')}</p>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
-              <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
-            </div>
-            <span className="text-sm font-bold whitespace-nowrap">{slots.slotsRemaining} {t('pricing_earlybird_slots_left')}</span>
-          </div>
-          <p className="text-amber-200 text-xs mb-3">{slots.slotsTaken}/{slots.totalSlots} {t('pricing_earlybird_claimed')}</p>
-          <div className="flex flex-wrap gap-3 mt-1">
-            <Link to="/register" className="bg-white text-amber-600 px-5 py-2 rounded-full font-semibold text-sm hover:bg-amber-50 transition">{t('pricing_claim_spot')}</Link>
-            <span className="text-amber-200 text-sm self-center">⭐ {t('pricing_founder_badge')}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Pricing() {
   const { t } = useI18n()
   const [isAnnual, setIsAnnual] = useState(false)
 
   const basePlans = [
-    { name: t('pricing_starter_name'), price: 0, annualPrice: 0, desc: t('pricing_starter_desc'), features: [t('pricing_starter_f1'), t('pricing_starter_f2'), t('pricing_starter_f3'), t('pricing_starter_f4'), t('pricing_starter_f5'), t('pricing_starter_f6')], cta: t('pricing_starter_cta'), popular: false, trial: null },
-    { name: t('pricing_plus_name'), price: 11, annualPrice: 8.80, desc: t('pricing_plus_desc'), features: [t('pricing_plus_f1'), t('pricing_plus_f2'), t('pricing_plus_f3'), t('pricing_plus_f4'), t('pricing_plus_f5'), t('pricing_plus_f6')], cta: t('pricing_plus_cta'), popular: true, trial: t('pricing_plus_trial') },
-    { name: t('pricing_growth_name'), price: 29, annualPrice: 23.20, desc: t('pricing_growth_desc'), features: [t('pricing_growth_f1'), t('pricing_growth_f2'), t('pricing_growth_f3'), t('pricing_growth_f4'), t('pricing_growth_f5'), t('pricing_growth_f6'), t('pricing_growth_f7')], cta: t('pricing_growth_cta'), popular: false, trial: t('pricing_growth_trial') },
+    { name: t('pricing_starter_name'), price: 0, annualPrice: 0, desc: t('pricing_starter_desc'), features: [t('pricing_starter_f1'), t('pricing_starter_f2'), t('pricing_starter_f3'), t('pricing_starter_f4'), t('pricing_starter_f5'), t('pricing_starter_f6')], cta: t('pricing_starter_cta'), popular: false },
+    { name: t('pricing_plus_name'), price: 11, annualPrice: 8.80, desc: t('pricing_plus_desc'), features: [t('pricing_plus_f1'), t('pricing_plus_f2'), t('pricing_plus_f3'), t('pricing_plus_f4'), t('pricing_plus_f5'), t('pricing_plus_f6')], cta: t('pricing_plus_cta'), popular: true },
+    { name: t('pricing_growth_name'), price: 29, annualPrice: 23.20, desc: t('pricing_growth_desc'), features: [t('pricing_growth_f1'), t('pricing_growth_f2'), t('pricing_growth_f3'), t('pricing_growth_f4'), t('pricing_growth_f5'), t('pricing_growth_f6'), t('pricing_growth_f7')], cta: t('pricing_growth_cta'), popular: false },
   ]
 
   const faqs = [
@@ -164,14 +103,12 @@ export default function Pricing() {
           </div>
         </div>
       </section>
-      <EarlyBirdBanner />
       <section className="pb-12 md:pb-20 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {plans.map((plan, i) => (
               <div key={i} className={`relative bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border-2 transition hover:shadow-lg ${plan.popular ? 'border-pink-500 shadow-lg shadow-pink-500/10' : 'border-gray-100'}`}>
                 {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold px-4 py-1 rounded-full">{t('pricing_most_popular')}</div>}
-                {plan.trial && <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">🆓 {plan.trial}</div>}
                 <h3 className="font-bold text-gray-900 text-lg md:text-xl mb-2">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mb-1">
                   {plan.price > 0 ? (
