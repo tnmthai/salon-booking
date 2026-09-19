@@ -9,7 +9,9 @@ export default function Dashboard() {
   const [tab, setTab] = useState('bookings')
   const [appts, setAppts] = useState([])
   const [customers, setCustomers] = useState([])
-  const [stats, setStats] = useState({ services: 0, staff: 0 })
+  // null = not loaded yet; treated as "done" so the checklist never
+  // flashes into view for salons that already finished setup.
+  const [stats, setStats] = useState({ services: null, staff: null })
   const [visitStats, setVisitStats] = useState(null)
   const [filterDate, setFilterDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: getSalonTimezone() }))
   const [filterStatus, setFilterStatus] = useState('')
@@ -83,8 +85,8 @@ export default function Dashboard() {
 
   // Setup steps a brand-new salon still has to finish before it can take a booking.
   const setupSteps = [
-    { done: stats.services > 0, label: t('setupAddServices'), to: '/admin/services' },
-    { done: stats.staff > 0, label: t('setupAddStaff'), to: '/admin/staff' },
+    { done: stats.services === null || stats.services > 0, label: t('setupAddServices'), to: '/admin/services' },
+    { done: stats.staff === null || stats.staff > 0, label: t('setupAddStaff'), to: '/admin/staff' },
     { done: hasHours !== false, label: t('setupSetHours'), to: '/admin/schedule' },
   ]
   const setupDone = setupSteps.every(s => s.done)
@@ -149,11 +151,11 @@ export default function Dashboard() {
           <div className="text-gray-500 text-sm">{t('totalCustomers')}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-2xl font-bold text-pink-600">{stats.services}</div>
+          <div className="text-2xl font-bold text-pink-600">{stats.services === null ? '—' : stats.services}</div>
           <div className="text-gray-500 text-sm">{t('totalServices')}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4">
-          <div className="text-2xl font-bold text-purple-600">{stats.staff}</div>
+          <div className="text-2xl font-bold text-purple-600">{stats.staff === null ? '—' : stats.staff}</div>
           <div className="text-gray-500 text-sm">{t('totalStaff')}</div>
         </div>
       </div>
