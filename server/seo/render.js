@@ -99,6 +99,11 @@ function setJsonLd(html, jsonLd) {
   return stripped.replace('</head>', `  ${scripts}\n  </head>`);
 }
 
+// Visually hidden but still present in the DOM: crawlers and screen readers
+// read it, sighted users never see it flash before React mounts and clears
+// the container.
+const SEO_PRERENDER_STYLE = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+
 /**
  * Inject crawlable markup into #root. React's createRoot() clears the container
  * on mount, so visitors see the normal app; crawlers that do not run JS see the
@@ -108,7 +113,7 @@ function setBody(html, contentHtml) {
   if (!contentHtml) return html;
   return html.replace(
     /<div id="root">[\s\S]*?<\/div>/,
-    `<div id="root"><div id="seo-prerender">${contentHtml}</div></div>`
+    `<div id="root"><div id="seo-prerender" style="${SEO_PRERENDER_STYLE}">${contentHtml}</div></div>`
   );
 }
 
