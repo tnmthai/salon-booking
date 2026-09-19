@@ -306,6 +306,61 @@ async function refreshDates(salonId, anchor, today) {
   return 'shifted';
 }
 
+/* ------------------------------------------------------------- customers */
+
+const GOOD_CUSTOMERS = [
+  ['Sarah Kim', '021-555-0001', 'sarah@email.com'],
+  ['Emily Chen', '021-555-0002', 'emily@email.com'],
+  ['Jessica Park', '021-555-0003', 'jess@email.com'],
+  ['Anna Lee', '021-555-0004', 'anna@email.com'],
+  ['Mika Patel', '021-555-0005', 'mika@email.com'],
+];
+
+/**
+ * The public kiosk and booking pages let anyone create a customer on the demo
+ * salon, and testers reliably type "Test Customer" — which then shows up in
+ * the calendar and in screenshots. Keep the roster to the fixed, presentable
+ * five: insert whichever are missing, repoint any appointment sitting on a
+ * stray customer onto one of them, then remove the stray rows.
+ */
+async function ensureCustomerRoster(salonId) {
+  const { rows: existing } = await db.query(
+    'SELECT id, email FROM customers WHERE salon_id = $1', [salonId]
+  );
+  const existingEmails = new Set(existing.map(r => r.email));
+  const missing = GOOD_CUSTOMERS.filter(([, , email]) => !existingEmails.has(email));
+  if (missing.length) {
+    const values = missing.map((_, i) => `($1,$${i * 3 + 2},$${i * 3 + 3},$${i * 3 + 4})`).join(',');
+    await db.query(
+      `INSERT INTO customers (salon_id, name, phone, email) VALUES ${values}`,
+      [salonId, ...missing.flat()]
+    );
+  }
+
+  const { rows: keep } = await db.query(
+    'SELECT id FROM customers WHERE salon_id = $1 AND email = ANY($2)',
+    [salonId, GOOD_CUSTOMERS.map(c => c[2])]
+  );
+  const keepIds = keep.map(r => r.id);
+  if (!keepIds.length) return;
+
+  const { rows: strays } = await db.query(
+    'SELECT id FROM customers WHERE salon_id = $1 AND id <> ALL($2)',
+    [salonId, keepIds]
+  );
+  if (!strays.length) return;
+  const strayIds = strays.map(r => r.id);
+
+  const { rows: appts } = await db.query(
+    'SELECT id FROM appointments WHERE customer_id = ANY($1)', [strayIds]
+  );
+  for (const a of appts) {
+    const pick = keepIds[Math.floor(Math.random() * keepIds.length)];
+    await db.query('UPDATE appointments SET customer_id = $1 WHERE id = $2', [pick, a.id]);
+  }
+  await db.query('DELETE FROM customers WHERE id = ANY($1)', [strayIds]);
+}
+
 /* --------------------------------------------------------------- the route */
 
 router.post('/start', async (req, res) => {
@@ -337,6 +392,7 @@ router.post('/start', async (req, res) => {
       salon = await db.query('SELECT * FROM salons WHERE slug = $1', [DEMO_SLUG]);
     } else {
       const s = salon.rows[0];
+      await ensureCustomerRoster(s.id);
       const anchor = toDateStr(s.demo_anchor);
       if (!anchor) {
         // Salon predates the anchor column (or was left half-built by the old
