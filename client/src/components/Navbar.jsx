@@ -9,6 +9,7 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path
 
   const navLinks = [
+    { to: '/', label: t('home') },
     { to: '/features', label: t('features') },
     { to: '/pricing', label: t('pricing') },
     { to: '/about', label: t('about') },
