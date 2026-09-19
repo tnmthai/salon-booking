@@ -98,7 +98,7 @@ export default function About() {
             </div>
             <div className="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl md:rounded-3xl p-8 md:p-10 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-5xl md:text-6xl mb-4">💅</div>
+                <div className="text-5xl md:text-6xl mb-4">📍</div>
                 <p className="text-gray-700 font-medium text-sm md:text-base">{t('about_started_in')}</p>
                 <p className="text-gray-500 text-xs md:text-sm mt-1">{t('about_built_nz')}</p>
               </div>
